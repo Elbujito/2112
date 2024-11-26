@@ -77,6 +77,11 @@ func (model *Satellite) Save(satellite *Satellite) error {
 	return db.Model(model).Create(&model).Error
 }
 
+// Create inserts a new Satellite record with auto-generated ID
+func (model *Satellite) Create() error {
+	return db.Create(model).Error
+}
+
 func (model *Satellite) Update(satellite *Satellite) error {
 	return db.Model(model).Updates(&model).Error
 }
@@ -127,6 +132,11 @@ func (model *TLE) FindByNoradID(noradID string) (models []*TLE, err error) {
 // Save persists a new TLE record
 func (model *TLE) Save(m *TLE) error {
 	return db.Model(model).Create(&model).Error
+}
+
+// Create persists a new TLE record
+func (model *TLE) Create() error {
+	return db.Create(model).Error
 }
 
 // Update modifies an existing TLE record

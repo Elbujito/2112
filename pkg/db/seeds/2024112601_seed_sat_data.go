@@ -43,7 +43,7 @@ func init() {
 		}
 
 		for _, satellite := range satellites {
-			if err := models.SatelliteModel().Save(satellite); err != nil {
+			if err := satellite.Create(); err != nil {
 				logFail(s.ID, err)
 				return err
 			}
@@ -66,7 +66,7 @@ func init() {
 		}
 
 		for _, tle := range tles {
-			if err := models.TLEModel().Save(tle); err != nil {
+			if err := tle.Create(); err != nil {
 				logFail(s.ID, err)
 				return err
 			}

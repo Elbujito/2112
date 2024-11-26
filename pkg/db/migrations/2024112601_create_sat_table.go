@@ -21,10 +21,10 @@ func init() {
 
 			type TLE struct {
 				models.ModelBase
-				SatelliteID uint      `gorm:"not null;index"` // Foreign key to Satellite table
-				Line1       string    `gorm:"size:255;not null"`
-				Line2       string    `gorm:"size:255;not null"`
-				Epoch       time.Time `gorm:"not null"` // Time associated with the TLE
+				NoradID string    `gorm:"not null;index"` // Foreign key to Satellite table
+				Line1   string    `gorm:"size:255;not null"`
+				Line2   string    `gorm:"size:255;not null"`
+				Epoch   time.Time `gorm:"not null"` // Time associated with the TLE
 			}
 
 			type Tile struct {
@@ -37,7 +37,7 @@ func init() {
 
 			type Visibility struct {
 				models.ModelBase
-				SatelliteID  uint      `gorm:"not null;index"` // Foreign key to Satellite table
+				NoradID      string    `gorm:"not null;index"` // Foreign key to Satellite table
 				TileID       uint      `gorm:"not null;index"` // Foreign key to Tile table
 				StartTime    time.Time `gorm:"not null"`       // Visibility start time
 				EndTime      time.Time `gorm:"not null"`       // Visibility end time

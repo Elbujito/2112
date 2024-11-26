@@ -1,6 +1,7 @@
 package routers
 
 import (
+	celestrackHandlers "github.com/Elbujito/2112/pkg/api/handlers/celestrack"
 	"github.com/Elbujito/2112/pkg/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/pkg/api/handlers/healthz"
 	satellitesHandlers "github.com/Elbujito/2112/pkg/api/handlers/satellites"
@@ -41,12 +42,16 @@ func InitPublicAPIRouter() {
 	logger.Debug("Registering public api public routes ...")
 	registerPublicAPIRoutes()
 
+	logger.Debug("Registering public celestrack api handlers ...")
+	registerPublicCelestrackAPIRoutes()
+
 	// finally register default fallback error handlers
 	// 404 is handled here as the last route
 	logger.Debug("Registering public api error handlers ...")
 	registerPublicApiErrorHandlers()
 
 	logger.Debug("Public api registration complete.")
+
 }
 
 func PublicAPIRouter() *Router {
@@ -91,11 +96,17 @@ func registerPublicApiHealthCheckHandlers() {
 }
 
 func registerPublicAPIRoutes() {
-	cats := publicApiRouter.Echo.Group("/satellites")
-	cats.GET("", satellitesHandlers.Index)
-	cats.GET("/:id", satellitesHandlers.Get)
-	cats.POST("", satellitesHandlers.Post)
-	cats.PUT("/:id", satellitesHandlers.Put)
-	cats.DELETE("/:id", satellitesHandlers.Delete)
+	satellites := publicApiRouter.Echo.Group("/satellites")
+	satellites.GET("", satellitesHandlers.Index)
+	satellites.GET("/:id", satellitesHandlers.Get)
+	satellites.POST("", satellitesHandlers.Post)
+	satellites.PUT("/:id", satellitesHandlers.Put)
+	satellites.DELETE("/:id", satellitesHandlers.Delete)
+	// add more routes here ...
+}
+
+func registerPublicCelestrackAPIRoutes() {
+	celestrack := publicApiRouter.Echo.Group("/celestrack")
+	celestrack.GET("/:category", celestrackHandlers.FetchCategoryTLEHandler)
 	// add more routes here ...
 }
