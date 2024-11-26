@@ -12,13 +12,13 @@ import (
 
 func Index(c echo.Context) error {
 
-	ms, err := models.CatModel().FindAll()
+	ms, err := models.SatelliteModel().FindAll()
 
 	if err != nil {
 		return helpers.Error(c, err, nil)
 	}
 
-	var payload []*models.CatForm
+	var payload []*models.SatelliteForm
 
 	for _, m := range ms {
 		f := m.MapToForm()

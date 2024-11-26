@@ -1,9 +1,9 @@
 package routers
 
 import (
-	catsHandlers "github.com/Elbujito/2112/pkg/api/handlers/cats"
 	"github.com/Elbujito/2112/pkg/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/pkg/api/handlers/healthz"
+	satellitesHandlers "github.com/Elbujito/2112/pkg/api/handlers/satellites"
 	usersHandlers "github.com/Elbujito/2112/pkg/api/handlers/users"
 	"github.com/Elbujito/2112/pkg/api/middlewares"
 	"github.com/Elbujito/2112/pkg/clients/logger"
@@ -100,12 +100,12 @@ func registerProtectedApiHealthCheckHandlers() {
 }
 
 func registerProtectedAPIRoutes() {
-	cats := protectedApiRouter.Echo.Group("/cats")
-	cats.GET("", catsHandlers.Index)
-	cats.GET("/:id", catsHandlers.Get)
-	cats.POST("", catsHandlers.Post)
-	cats.PUT("/:id", catsHandlers.Put)
-	cats.DELETE("/:id", catsHandlers.Delete)
+	cats := protectedApiRouter.Echo.Group("/satellites")
+	cats.GET("", satellitesHandlers.Index)
+	cats.GET("/:id", satellitesHandlers.Get)
+	cats.POST("", satellitesHandlers.Post)
+	cats.PUT("/:id", satellitesHandlers.Put)
+	cats.DELETE("/:id", satellitesHandlers.Delete)
 
 	users := protectedApiRouter.Echo.Group("/users")
 	users.GET("", usersHandlers.Index)

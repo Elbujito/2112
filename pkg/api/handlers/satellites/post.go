@@ -13,7 +13,7 @@ import (
 
 func Post(c echo.Context) error {
 
-	f := &models.CatForm{}
+	f := &models.SatelliteForm{}
 
 	if err := c.Bind(f); err != nil {
 		return helpers.Error(c, constants.ERROR_BINDING_BODY, err)

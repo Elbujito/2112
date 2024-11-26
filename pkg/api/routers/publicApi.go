@@ -1,9 +1,9 @@
 package routers
 
 import (
-	catsHandlers "github.com/Elbujito/2112/pkg/api/handlers/cats"
 	"github.com/Elbujito/2112/pkg/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/pkg/api/handlers/healthz"
+	satellitesHandlers "github.com/Elbujito/2112/pkg/api/handlers/satellites"
 	"github.com/Elbujito/2112/pkg/api/middlewares"
 	"github.com/Elbujito/2112/pkg/clients/logger"
 	"github.com/Elbujito/2112/pkg/config"
@@ -92,10 +92,10 @@ func registerPublicApiHealthCheckHandlers() {
 
 func registerPublicAPIRoutes() {
 	cats := publicApiRouter.Echo.Group("/cats")
-	cats.GET("", catsHandlers.Index)
-	cats.GET("/:id", catsHandlers.Get)
-	cats.POST("", catsHandlers.Post)
-	cats.PUT("/:id", catsHandlers.Put)
-	cats.DELETE("/:id", catsHandlers.Delete)
+	cats.GET("", satellitesHandlers.Index)
+	cats.GET("/:id", satellitesHandlers.Get)
+	cats.POST("", satellitesHandlers.Post)
+	cats.PUT("/:id", satellitesHandlers.Put)
+	cats.DELETE("/:id", satellitesHandlers.Delete)
 	// add more routes here ...
 }

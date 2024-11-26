@@ -19,7 +19,7 @@ func Put(c echo.Context) error {
 		return helpers.Error(c, constants.ERROR_ID_NOT_FOUND, nil)
 	}
 
-	f := &models.CatForm{}
+	f := &models.SatelliteForm{}
 
 	if err := c.Bind(f); err != nil {
 		return helpers.Error(c, constants.ERROR_BINDING_BODY, err)
