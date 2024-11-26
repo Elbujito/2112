@@ -169,10 +169,10 @@ func (model *TLE) MapToForm() *TLEForm {
 // Tile Model
 type Tile struct {
 	ModelBase
-	Quadkey   string  `gorm:"size:25;unique;not null"` // Unique identifier for the tile (Quadkey)
-	ZoomLevel int     `gorm:"not null"`                // Zoom level for the tile
-	CenterLat float64 `gorm:"not null"`                // Center latitude of the tile
-	CenterLon float64 `gorm:"not null"`                // Center longitude of the tile
+	Quadkey   string  `gorm:"size:256;unique;not null"` // Unique identifier for the tile (Quadkey)
+	ZoomLevel int     `gorm:"not null"`                 // Zoom level for the tile
+	CenterLat float64 `gorm:"not null"`                 // Center latitude of the tile
+	CenterLon float64 `gorm:"not null"`                 // Center longitude of the tile
 }
 
 func TileModel() *Tile {
@@ -194,11 +194,11 @@ func (model *Tile) Save(m *Tile) error {
 }
 
 func (model *Tile) Create() error {
-	return db.Create(&model).Error
+	return db.Create(model).Error
 }
 
 func (model *Tile) Update(m *Tile) error {
-	return db.Model(model).Save(&model).Error
+	return db.Model(model).Save(m).Error
 }
 
 func (model *Tile) Delete(id string) error {

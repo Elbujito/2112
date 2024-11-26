@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"strconv"
 
 	"github.com/Elbujito/2112/pkg/api/handlers/tiles"
 	"github.com/Elbujito/2112/pkg/db/models"
@@ -13,45 +14,48 @@ import (
 func init() {
 	// Initialize the fetch and store tiles task
 	task := &Task{
-		Name:         "fetchAndStoreTiles",
-		Description:  "Fetches tiles and stores them in the database",
-		RequiredArgs: []string{}, // No required arguments
-		Run:          execFetchAndStoreTilesTask,
+		Name:        "fetchAndStoreTiles",
+		Description: "Fetches tiles and stores them in the database",
+		RequiredArgs: []string{
+			"desiredTiles", // Number of tiles to generate
+		},
+		Run: execFetchAndStoreTilesTask,
 	}
 	Tasks.AddTask(task)
 }
 
-// Task that will fetch and store tiles
 func execFetchAndStoreTilesTask(env *TaskEnv, args map[string]string) error {
-	// Define the zoom level and geographical bounds for the area you want to cover
-	zoomLevel := 10                  // Define the zoom level you want to use
-	latMin, latMax := 37.0, 38.0     // Example latitude range (e.g., San Francisco to Oakland)
-	lonMin, lonMax := -123.0, -122.0 // Example longitude range
-
-	// Calculate the number of tiles required to cover this area at the given zoom level
-	tileWidth, tileHeight, totalTiles := calculateTileDimensions(latMin, latMax, lonMin, lonMax, zoomLevel)
-
-	// Limit to generating 1000 tiles
-	if totalTiles > 1000 {
-		// Adjust the range to ensure no more than 1000 tiles are generated
-		scaleFactor := math.Sqrt(float64(1000) / float64(totalTiles))
-		latRange := (latMax - latMin) * scaleFactor
-		lonRange := (lonMax - lonMin) * scaleFactor
-
-		// Recalculate the number of tiles for the adjusted area
-		tileWidth, tileHeight, _ = calculateTileDimensions(latMin, latMin+latRange, lonMin, lonMin+lonRange, zoomLevel)
+	// Parse the desiredTiles argument
+	desiredTilesStr, ok := args["desiredTiles"]
+	if !ok {
+		return fmt.Errorf("required argument 'desiredTiles' is missing")
 	}
 
-	log.Printf("Using zoom level %d, generating %d tiles", zoomLevel, tileWidth*tileHeight)
+	desiredTiles, err := strconv.Atoi(desiredTilesStr)
+	if err != nil {
+		return fmt.Errorf("invalid 'desiredTiles' value: %v", err)
+	}
+
+	// Define the initial geographical bounds (entire globe)
+	latMin, latMax := -85.0511, 85.0511
+	lonMin, lonMax := -180.0, 180.0
+
+	// Dynamically calculate the appropriate zoom level to meet the desired number of tiles
+	zoomLevel := calculateZoomLevelForGlobalCoverage(desiredTiles)
+
+	// Calculate the number of tiles at the calculated zoom level
+	tileWidth, tileHeight, totalTiles := calculateTileDimensions(latMin, latMax, lonMin, lonMax, zoomLevel)
+
+	log.Printf("Using zoom level %d, generating %d tiles (%dx%d)", zoomLevel, totalTiles, tileWidth, tileHeight)
 
 	// Get the TileService from the models package
 	tileService := models.TileModel()
 
-	// Iterate over the coordinate range and fetch/store tiles
+	// Iterate over the tile grid and fetch/store tiles
 	for x := 0; x < tileWidth; x++ {
 		for y := 0; y < tileHeight; y++ {
-			// Convert lat, lon to tile x, y and fetch the tile data
-			lat, lon := calculateTileCenter(latMin, lonMin, x, y, zoomLevel)
+			// Convert tile coordinates to lat/lon and fetch the tile data
+			lat, lon := tileXYToLatLon(x, y, zoomLevel)
 			err := fetchTileAndStore(zoomLevel, lat, lon, tileService)
 			if err != nil {
 				log.Printf("Failed to fetch and store tile at zoom %d, lat %f, lon %f: %v", zoomLevel, lat, lon, err)
@@ -64,35 +68,69 @@ func execFetchAndStoreTilesTask(env *TaskEnv, args map[string]string) error {
 	return nil
 }
 
-// calculateTileDimensions calculates the number of tiles needed to cover a specified geographical area
-func calculateTileDimensions(latMin, latMax, lonMin, lonMax float64, zoom int) (int, int, int) {
-	// Calculate the number of tiles in both x and y directions for a given zoom level
-	tileWidth := int(math.Pow(2, float64(zoom)) * (lonMax - lonMin) / 360)
-	tileHeight := int(math.Pow(2, float64(zoom)) * (latMax - latMin) / 180)
+// calculateZoomLevelForGlobalCoverage calculates the zoom level needed for the desired number of tiles
+func calculateZoomLevelForGlobalCoverage(desiredTiles int) int {
+	for zoom := 0; zoom <= 21; zoom++ {
+		// Total tiles at zoom level = (2^zoom) * (2^zoom)
+		totalTiles := int(math.Pow(2, float64(zoom)) * math.Pow(2, float64(zoom)))
+		if totalTiles >= desiredTiles {
+			return zoom
+		}
+	}
+	return 21 // Default to max zoom if desiredTiles is very high
+}
 
-	// Total number of tiles is the product of the width and height in tiles
+func calculateTileDimensions(latMin, latMax, lonMin, lonMax float64, zoom int) (int, int, int) {
+	tileXMin, tileYMin := latLonToTileXY(latMin, lonMin, zoom)
+	tileXMax, tileYMax := latLonToTileXY(latMax, lonMax, zoom)
+
+	// Ensure the tile ranges are ordered correctly
+	if tileXMax < tileXMin {
+		tileXMin, tileXMax = tileXMax, tileXMin
+	}
+	if tileYMax < tileYMin {
+		tileYMin, tileYMax = tileYMax, tileYMin
+	}
+
+	tileWidth := tileXMax - tileXMin + 1
+	tileHeight := tileYMax - tileYMin + 1
 	totalTiles := tileWidth * tileHeight
+
 	return tileWidth, tileHeight, totalTiles
 }
 
-// calculateTileCenter calculates the center latitude and longitude for a specific tile
-func calculateTileCenter(latMin, lonMin float64, x int, y int, zoom int) (float64, float64) {
-	// Number of tiles at the zoom level
+// tileXYToLatLon converts tile coordinates to lat/lon
+func tileXYToLatLon(x, y, zoom int) (float64, float64) {
 	n := math.Pow(2, float64(zoom))
-
-	// Calculate the longitude of the top-left corner of the tile
 	lon := float64(x)/n*360.0 - 180.0
 
-	// Calculate the latitude of the top-left corner of the tile using the Mercator projection
 	latRad := math.Atan(math.Sinh(math.Pi * (1 - 2*float64(y)/n)))
 	lat := latRad * 180.0 / math.Pi
 
-	// Now we calculate the center latitude and longitude for the tile
-	// The range of latitudes and longitudes are scaled by x and y coordinates
-	centerLat := latMin + (lat - latMin) // latitude center
-	centerLon := lonMin + (lon - lonMin) // longitude center
+	return lat, lon
+}
 
-	return centerLat, centerLon
+// latLonToTileXY converts lat/lon to tile coordinates
+func latLonToTileXY(lat, lon float64, zoom int) (int, int) {
+	n := math.Pow(2, float64(zoom))
+
+	tileX := int((lon + 180.0) / 360.0 * n)
+	tileY := int((1.0 - math.Log(math.Tan(lat*math.Pi/180.0)+1.0/math.Cos(lat*math.Pi/180.0))/math.Pi) / 2.0 * n)
+
+	return tileX, tileY
+}
+
+// calculateTileCenter calculates the center latitude and longitude for a specific tile
+func calculateTileCenter(latMax, lonMax, latMin, lonMin float64, x, y, tileWidth, tileHeight int) (float64, float64) {
+	// Calculate the size of each tile in degrees for latitude and longitude
+	tileLatSize := (latMax - latMin) / float64(tileHeight)
+	tileLonSize := (lonMax - lonMin) / float64(tileWidth)
+
+	// Compute the center of the tile at (x, y)
+	lat := latMin + float64(y)*tileLatSize + tileLatSize/2
+	lon := lonMin + float64(x)*tileLonSize + tileLonSize/2
+
+	return lat, lon
 }
 
 // fetchTileAndStore fetches the tile and stores it in the database
@@ -126,6 +164,7 @@ func upsertTileInDB(quadkey string, zoom int, lat float64, lon float64, tileData
 
 	// If the tile exists, update it
 	if existingTile != nil {
+		existingTile.Quadkey = quadkey
 		existingTile.ZoomLevel = zoom
 		existingTile.CenterLat = lat
 		existingTile.CenterLon = lon
