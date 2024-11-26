@@ -87,14 +87,14 @@ func upsertTLE(rawTLE *mappers.RawTLE, satelliteService models.SatelliteService,
 		Line2:   rawTLE.Line2,
 		Epoch:   newEpoch,
 	}
-	return tleService.Save(newTLE)
+	return newTLE.Create()
 }
 
 func ensureSatelliteExists(noradID string, satelliteService models.SatelliteService) (string, error) {
 	// Try to find the satellite by NORAD ID
 	satellite, err := satelliteService.FindByNoradID(noradID)
-	if err == nil && satellite != nil {
-		return satellite.NoradID, nil
+	if err == nil && satellite != nil && satellite.NoradID == noradID {
+		return satellite.NoradID, err
 	}
 
 	// Satellite not found; create a new one
@@ -102,10 +102,12 @@ func ensureSatelliteExists(noradID string, satelliteService models.SatelliteServ
 		Name:    fmt.Sprintf("Unknown Satellite %s", noradID),
 		NoradID: noradID,
 	}
-	if err := satelliteService.Save(newSatellite); err != nil {
-		return "", fmt.Errorf("failed to create satellite: %v", err)
+	if err := newSatellite.Create(); err != nil {
+		log.Printf("Failed to create satellite: %v %s", noradID, err)
+	} else {
+		log.Printf("Successfully inserted satellite for NORAD ID %s", noradID)
 	}
-	return newSatellite.ID, nil
+	return newSatellite.ID, err
 }
 
 func parseEpoch(line1 string) (time.Time, error) {
