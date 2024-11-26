@@ -1,0 +1,19 @@
+version: "3.7"
+services:
+  2112-db-creator:
+    container_name: 2112e-db-creator
+    build:
+      context: ../../
+      dockerfile: ./ci/docker/Dockerfile
+    env_file: ./docker.dev.env
+    command: ["service", "-e", "-d", "db", "create"]
+  2112-db-migrator:
+    container_name: 2112e-db-migrator
+    build:
+      context: ../../
+      dockerfile: ./ci/docker/Dockerfile
+    env_file: ./docker.dev.env
+    command: ["service", "-e", "-d", "db", "migrate"]
+    depends_on:
+      2112-db-creator:
+        condition: service_completed_successfully

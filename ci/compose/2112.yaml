@@ -1,0 +1,23 @@
+version: "3.7"
+services:
+  2112-service:
+    container_name: 2112-service
+    build:
+      context: ../../
+      dockerfile: ./ci/docker/Dockerfile
+    ports:
+      - "8081:8081"
+      - "8080:8080"
+      - "8079:8079"
+    env_file: ../config/2112/2112.dev-env
+    volumes:
+      - type: bind
+        source: ../data/sqlite/sqlite.db
+        target: /app/sqlite.db
+    command:
+      - "service" 
+      - "start"
+      - "-d"
+      - "-e"
+      - "-H"
+      - "0.0.0.0"
