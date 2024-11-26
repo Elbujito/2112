@@ -19,19 +19,20 @@ func (form *SatelliteForm) MapToModel() *Satellite {
 
 type TLEForm struct {
 	FormBase
-	SatelliteID uint   `json:"satellite_id" validate:"required"`                        // Reference to the Satellite
-	Line1       string `json:"line1" validate:"required"`                               // First line of TLE
-	Line2       string `json:"line2" validate:"required"`                               // Second line of TLE
-	Epoch       string `json:"epoch" validate:"required,datetime=2006-01-02T15:04:05Z"` // Epoch time (ISO8601 format)
+	NoradID string `json:"norad_id" validate:"required"`                            // Reference to the Satellite via NORAD ID
+	Line1   string `json:"line1" validate:"required"`                               // First line of TLE
+	Line2   string `json:"line2" validate:"required"`                               // Second line of TLE
+	Epoch   string `json:"epoch" validate:"required,datetime=2006-01-02T15:04:05Z"` // Epoch time (ISO8601 format)
 }
 
+// MapToModel maps TLEForm to a TLE model
 func (form *TLEForm) MapToModel() *TLE {
 	epochTime, _ := time.Parse(time.RFC3339, form.Epoch) // Assuming validation ensures correct parsing
 	return &TLE{
-		SatelliteID: form.SatelliteID,
-		Line1:       form.Line1,
-		Line2:       form.Line2,
-		Epoch:       epochTime,
+		NoradID: form.NoradID,
+		Line1:   form.Line1,
+		Line2:   form.Line2,
+		Epoch:   epochTime,
 	}
 }
 
@@ -54,18 +55,18 @@ func (form *TileForm) MapToModel() *Tile {
 
 type VisibilityForm struct {
 	FormBase
-	SatelliteID  uint    `json:"satellite_id" validate:"required"`                             // Reference to the Satellite
-	TileID       uint    `json:"tile_id" validate:"required"`                                  // Reference to the Tile
-	StartTime    string  `json:"start_time" validate:"required,datetime=2006-01-02T15:04:05Z"` // Start time (ISO8601)
-	EndTime      string  `json:"end_time" validate:"required,datetime=2006-01-02T15:04:05Z"`   // End time (ISO8601)
-	MaxElevation float64 `json:"max_elevation" validate:"required,min=0,max=90"`               // Maximum elevation (degrees)
+	NoradID      string  `json:"norad_id"`   // NORAD ID for the satellite
+	TileID       uint    `json:"tile_id"`    // Tile ID
+	StartTime    string  `json:"start_time"` // ISO8601 format
+	EndTime      string  `json:"end_time"`   // ISO8601 format
+	MaxElevation float64 `json:"max_elevation"`
 }
 
 func (form *VisibilityForm) MapToModel() *Visibility {
 	startTime, _ := time.Parse(time.RFC3339, form.StartTime) // Assuming validation ensures correct parsing
 	endTime, _ := time.Parse(time.RFC3339, form.EndTime)
 	return &Visibility{
-		SatelliteID:  form.SatelliteID,
+		NoradID:      form.NoradID,
 		TileID:       form.TileID,
 		StartTime:    startTime,
 		EndTime:      endTime,

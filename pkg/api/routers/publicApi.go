@@ -91,7 +91,7 @@ func registerPublicApiHealthCheckHandlers() {
 }
 
 func registerPublicAPIRoutes() {
-	cats := publicApiRouter.Echo.Group("/cats")
+	cats := publicApiRouter.Echo.Group("/satellites")
 	cats.GET("", satellitesHandlers.Index)
 	cats.GET("/:id", satellitesHandlers.Get)
 	cats.POST("", satellitesHandlers.Post)

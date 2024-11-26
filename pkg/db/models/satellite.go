@@ -4,6 +4,42 @@ import (
 	"time"
 )
 
+// SatelliteService defines the operations required for Satellite management
+type SatelliteService interface {
+	FindByNoradID(noradID string) (*Satellite, error)
+	Find(id string) (*Satellite, error)
+	FindAll() ([]*Satellite, error)
+	Save(satellite *Satellite) error
+	Update(satellite *Satellite) error
+	Delete(id string) error
+}
+
+// TLEService defines the operations required for TLE management
+type TLEService interface {
+	FindByNoradID(noradID string) ([]*TLE, error)
+	FindAll() ([]*TLE, error)
+	Save(tle *TLE) error
+	Update(tle *TLE) error
+	Delete(id string) error
+}
+
+// TileService defines the operations required for Tile management
+type TileService interface {
+	FindByQuadkey(quadkey string) (*Tile, error)
+	FindAll() ([]*Tile, error)
+	Save(tile *Tile) error
+	Delete(id string) error
+}
+
+// VisibilityService defines the operations required for Visibility management
+type VisibilityService interface {
+	FindByNoradIDAndTile(noradID string, tileID uint) ([]*Visibility, error)
+	FindAll() ([]*Visibility, error)
+	Save(visibility *Visibility) error
+	Update(visibility *Visibility) error
+	Delete(id string) error
+}
+
 var satellite *Satellite = &Satellite{}
 var tile *Tile = &Tile{}
 var tle *TLE = &TLE{}
@@ -21,6 +57,12 @@ func SatelliteModel() *Satellite {
 	return satellite
 }
 
+// FindByNoradID retrieves all TLE records for a given NoradID
+func (model *Satellite) FindByNoradID(noradID string) (models *Satellite, err error) {
+	result := db.Model(model).Where("norad_id=?", noradID).Find(&models)
+	return models, result.Error
+}
+
 func (model *Satellite) FindAll() (models []*Satellite, err error) {
 	result := db.Model(model).Find(&models)
 	return models, result.Error
@@ -31,11 +73,11 @@ func (model *Satellite) Find(id string) (m *Satellite, err error) {
 	return m, result.Error
 }
 
-func (model *Satellite) Save() error {
+func (model *Satellite) Save(satellite *Satellite) error {
 	return db.Model(model).Create(&model).Error
 }
 
-func (model *Satellite) Update() error {
+func (model *Satellite) Update(satellite *Satellite) error {
 	return db.Model(model).Updates(&model).Error
 }
 
@@ -59,34 +101,45 @@ func (model *Satellite) MapToForm() *SatelliteForm {
 // TLE Model
 type TLE struct {
 	ModelBase
-	SatelliteID uint      `gorm:"not null;index"` // Foreign key to Satellite table
-	Line1       string    `gorm:"size:255;not null"`
-	Line2       string    `gorm:"size:255;not null"`
-	Epoch       time.Time `gorm:"not null"` // Time associated with the TLE
+	NoradID string    `gorm:"size:255;not null;index"` // Foreign key to Satellite table via Norad ID
+	Line1   string    `gorm:"size:255;not null"`
+	Line2   string    `gorm:"size:255;not null"`
+	Epoch   time.Time `gorm:"not null"` // Time associated with the TLE
 }
 
+// TLEModel returns a reference to the TLE model
 func TLEModel() *TLE {
 	return tle
 }
 
+// FindAll retrieves all TLE records
 func (model *TLE) FindAll() (models []*TLE, err error) {
 	result := db.Model(model).Find(&models)
 	return models, result.Error
 }
 
-func (model *TLE) FindBySatelliteID(satelliteID uint) (models []*TLE, err error) {
-	result := db.Model(model).Where("satellite_id=?", satelliteID).Find(&models)
+// FindByNoradID retrieves all TLE records for a given NoradID
+func (model *TLE) FindByNoradID(noradID string) (models []*TLE, err error) {
+	result := db.Model(model).Where("norad_id=?", noradID).Find(&models)
 	return models, result.Error
 }
 
-func (model *TLE) Save() error {
+// Save persists a new TLE record
+func (model *TLE) Save(m *TLE) error {
 	return db.Model(model).Create(&model).Error
 }
 
+// Update modifies an existing TLE record
+func (model *TLE) Update(m *TLE) error {
+	return db.Model(model).Save(&model).Error
+}
+
+// Delete removes a TLE record by its ID
 func (model *TLE) Delete(id string) error {
 	return db.Model(model).Where("ID=?", id).Delete(&model).Error
 }
 
+// MapToForm converts the TLE model to a TLEForm structure
 func (model *TLE) MapToForm() *TLEForm {
 	return &TLEForm{
 		FormBase: FormBase{
@@ -94,10 +147,10 @@ func (model *TLE) MapToForm() *TLEForm {
 			CreatedAt: model.CreatedAt,
 			UpdatedAt: model.UpdatedAt,
 		},
-		SatelliteID: model.SatelliteID,
-		Line1:       model.Line1,
-		Line2:       model.Line2,
-		Epoch:       model.Epoch.Format(time.RFC3339), // ISO8601 format
+		NoradID: model.NoradID,
+		Line1:   model.Line1,
+		Line2:   model.Line2,
+		Epoch:   model.Epoch.Format(time.RFC3339), // ISO8601 format
 	}
 }
 
@@ -146,14 +199,13 @@ func (model *Tile) MapToForm() *TileForm {
 	}
 }
 
-// Visibility Model
 type Visibility struct {
 	ModelBase
-	SatelliteID  uint      `gorm:"not null;index"` // Foreign key to Satellite table
-	TileID       uint      `gorm:"not null;index"` // Foreign key to Tile table
-	StartTime    time.Time `gorm:"not null"`       // Visibility start time
-	EndTime      time.Time `gorm:"not null"`       // Visibility end time
-	MaxElevation float64   `gorm:"not null"`       // Max elevation during visibility in degrees
+	NoradID      string    `gorm:"size:255;not null;index"` // Foreign key to Satellite table via NORAD ID
+	TileID       uint      `gorm:"not null;index"`          // Foreign key to Tile table
+	StartTime    time.Time `gorm:"not null"`                // Visibility start time
+	EndTime      time.Time `gorm:"not null"`                // Visibility end time
+	MaxElevation float64   `gorm:"not null"`                // Max elevation during visibility in degrees
 }
 
 func VisibilityModel() *Visibility {
@@ -165,13 +217,18 @@ func (model *Visibility) FindAll() (models []*Visibility, err error) {
 	return models, result.Error
 }
 
-func (model *Visibility) FindBySatelliteAndTile(satelliteID uint, tileID uint) (models []*Visibility, err error) {
-	result := db.Model(model).Where("satellite_id=? AND tile_id=?", satelliteID, tileID).Find(&models)
+// FindByNoradIDAndTile retrieves visibility records for a given NORAD ID and Tile ID
+func (model *Visibility) FindByNoradIDAndTile(noradID string, tileID uint) (models []*Visibility, err error) {
+	result := db.Model(model).Where("norad_id=? AND tile_id=?", noradID, tileID).Find(&models)
 	return models, result.Error
 }
 
 func (model *Visibility) Save() error {
 	return db.Model(model).Create(&model).Error
+}
+
+func (model *Visibility) Update() error {
+	return db.Model(model).Save(&model).Error
 }
 
 func (model *Visibility) Delete(id string) error {
@@ -185,7 +242,7 @@ func (model *Visibility) MapToForm() *VisibilityForm {
 			CreatedAt: model.CreatedAt,
 			UpdatedAt: model.UpdatedAt,
 		},
-		SatelliteID:  model.SatelliteID,
+		NoradID:      model.NoradID,
 		TileID:       model.TileID,
 		StartTime:    model.StartTime.Format(time.RFC3339), // ISO8601 format
 		EndTime:      model.EndTime.Format(time.RFC3339),   // ISO8601 format

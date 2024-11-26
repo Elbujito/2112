@@ -1,4 +1,4 @@
-package cats
+package satellites
 
 import (
 	"net/http"
@@ -7,28 +7,30 @@ import (
 	"github.com/Elbujito/2112/pkg/api/helpers"
 	"github.com/Elbujito/2112/pkg/db/models"
 	"github.com/Elbujito/2112/pkg/utils/constants"
-
 	"github.com/labstack/echo/v4"
 )
 
+// Post handles the creation of a new satellite
 func Post(c echo.Context) error {
-
-	f := &models.SatelliteForm{}
-
-	if err := c.Bind(f); err != nil {
+	// Parse and validate the request body
+	form := &models.SatelliteForm{}
+	if err := c.Bind(form); err != nil {
 		return helpers.Error(c, constants.ERROR_BINDING_BODY, err)
 	}
 
-	if err := helpers.Validate(f); err != nil {
+	if err := helpers.Validate(form); err != nil {
 		return c.JSON(http.StatusBadRequest, handlers.ValidationErrors(err))
 	}
 
-	m := f.MapToModel()
+	// Map the form to the model
+	model := form.MapToModel()
 
-	if err := m.Save(); err != nil {
-		return helpers.Error(c, err, nil)
+	// Use the SatelliteService to save the satellite
+	service := models.SatelliteModel()
+	if err := service.Save(model); err != nil {
+		return helpers.Error(c, constants.ERROR_ID_NOT_FOUND, err)
 	}
 
-	return c.JSON(http.StatusOK, handlers.Success(m.MapToForm()))
-
+	// Return success response
+	return c.JSON(http.StatusOK, handlers.Success(model.MapToForm()))
 }
