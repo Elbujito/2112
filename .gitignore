@@ -9,6 +9,7 @@ sqlite.db
 ci/data/sqlite/*
 ci/data/mysql/*
 ci/data/postgres/*
+ci/data/postgres
 
 # Logs #
 *.log
