@@ -89,7 +89,7 @@ func init() {
 		}
 
 		for _, tile := range tiles {
-			if err := tile.Save(); err != nil {
+			if err := tile.Create(); err != nil {
 				logFail(s.ID, err)
 				return err
 			}

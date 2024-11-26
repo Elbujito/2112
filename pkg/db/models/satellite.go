@@ -28,6 +28,8 @@ type TileService interface {
 	FindByQuadkey(quadkey string) (*Tile, error)
 	FindAll() ([]*Tile, error)
 	Save(tile *Tile) error
+	Create() error
+	Update(tile *Tile) error
 	Delete(id string) error
 }
 
@@ -187,8 +189,16 @@ func (model *Tile) FindByQuadkey(quadkey string) (m *Tile, err error) {
 	return m, result.Error
 }
 
-func (model *Tile) Save() error {
-	return db.Model(model).Create(&model).Error
+func (model *Tile) Save(m *Tile) error {
+	return db.Model(model).Create(&m).Error
+}
+
+func (model *Tile) Create() error {
+	return db.Create(&model).Error
+}
+
+func (model *Tile) Update(m *Tile) error {
+	return db.Model(model).Save(&model).Error
 }
 
 func (model *Tile) Delete(id string) error {
