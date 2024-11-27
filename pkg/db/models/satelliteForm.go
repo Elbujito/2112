@@ -56,18 +56,19 @@ func (form *TileForm) MapToModel() *Tile {
 type VisibilityForm struct {
 	FormBase
 	NoradID      string  `json:"norad_id"`   // NORAD ID for the satellite
-	TileID       uint    `json:"tile_id"`    // Tile ID
+	TileID       string  `json:"tile_id"`    // Tile ID (string to match updated schema)
 	StartTime    string  `json:"start_time"` // ISO8601 format
 	EndTime      string  `json:"end_time"`   // ISO8601 format
 	MaxElevation float64 `json:"max_elevation"`
 }
 
+// MapToModel converts a VisibilityForm to a Visibility model
 func (form *VisibilityForm) MapToModel() *Visibility {
 	startTime, _ := time.Parse(time.RFC3339, form.StartTime) // Assuming validation ensures correct parsing
 	endTime, _ := time.Parse(time.RFC3339, form.EndTime)
 	return &Visibility{
 		NoradID:      form.NoradID,
-		TileID:       form.TileID,
+		TileID:       form.TileID, // Now TileID is a string
 		StartTime:    startTime,
 		EndTime:      endTime,
 		MaxElevation: form.MaxElevation,

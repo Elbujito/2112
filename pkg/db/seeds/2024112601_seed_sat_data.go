@@ -99,14 +99,14 @@ func init() {
 		visibilities := []*models.Visibility{
 			{
 				NoradID:      "20580",
-				TileID:       1,
+				TileID:       "1",
 				StartTime:    time.Now(),
 				EndTime:      time.Now().Add(15 * time.Minute),
 				MaxElevation: 45.0,
 			},
 			{
 				NoradID:      "25544",
-				TileID:       2,
+				TileID:       "2",
 				StartTime:    time.Now().Add(30 * time.Minute),
 				EndTime:      time.Now().Add(45 * time.Minute),
 				MaxElevation: 60.0,

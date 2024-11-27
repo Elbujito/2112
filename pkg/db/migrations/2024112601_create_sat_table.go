@@ -38,10 +38,11 @@ func init() {
 			type Visibility struct {
 				models.ModelBase
 				NoradID      string    `gorm:"not null;index"` // Foreign key to Satellite table
-				TileID       uint      `gorm:"not null;index"` // Foreign key to Tile table
-				StartTime    time.Time `gorm:"not null"`       // Visibility start time
-				EndTime      time.Time `gorm:"not null"`       // Visibility end time
-				MaxElevation float64   `gorm:"not null"`       // Max elevation during visibility in degrees
+				TileID       string    `gorm:"not null;index"` // Foreign key to Tile table (string to match ModelBase.ID)
+				Tile         Tile      `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
+				StartTime    time.Time `gorm:"not null"` // Visibility start time
+				EndTime      time.Time `gorm:"not null"` // Visibility end time
+				MaxElevation float64   `gorm:"not null"` // Max elevation during visibility in degrees
 			}
 
 			// AutoMigrate all tables
