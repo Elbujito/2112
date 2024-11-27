@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"github.com/Elbujito/2112/pkg/config/features"
-	"github.com/Elbujito/2112/pkg/utils/constants"
+	"github.com/Elbujito/2112/internal/config/features"
+	"github.com/Elbujito/2112/pkg/fx/constants"
 
 	"gorm.io/gorm"
 )

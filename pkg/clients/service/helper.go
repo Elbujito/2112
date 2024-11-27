@@ -1,6 +1,6 @@
 package service
 
-import "github.com/Elbujito/2112/pkg/utils/constants"
+import "github.com/Elbujito/2112/pkg/fx/constants"
 
 var client *ServiceClient
 

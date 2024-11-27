@@ -201,7 +201,7 @@ This section is all about extending the service to create your own application a
 
 Migrations help create your database and track how it evolves overtime. Here, we use [GoMigrate](https://github.com/go-gormigrate/gormigrate) to achieve this. Some added complexity is added to enable easy extendability and generate better logs throughout your development process. 
 
-Migrations go under `pkg/db/migrations/<myNewMigration>.go`. Its implemention uses `Go`'s `init()` function, which means they're added to the list in alphabetical order. They migrate in that order (top to bottom) and rollback in the reverse order (bottom up). For this, it is best to maintain the naming convention of `YYYYMMDD[00-99]_migration_description`.
+Migrations go under `internal/data/migrations/<myNewMigration>.go`. Its implemention uses `Go`'s `init()` function, which means they're added to the list in alphabetical order. They migrate in that order (top to bottom) and rollback in the reverse order (bottom up). For this, it is best to maintain the naming convention of `YYYYMMDD[00-99]_migration_description`.
 
 
 Here's a sample migration to get you started:
@@ -665,9 +665,9 @@ You're encouraged to register and maintain as many errors as you can in the same
 <details>
 <summary><b>Adding Env Vars & Features</b></summary>
 
-All environment variables reside in `pkg/config/features`. They're categorised within their respective features such as `database.go` or `service.go`. Each env var must have a `mapstructure:` decoration that spells it in caps when parsing an ENV. You can add your own, it's as simple as adding a new line in any of these files, or create your own. 
+All environment variables reside in `internal/config/features`. They're categorised within their respective features such as `database.go` or `service.go`. Each env var must have a `mapstructure:` decoration that spells it in caps when parsing an ENV. You can add your own, it's as simple as adding a new line in any of these files, or create your own. 
 
-Below is a sample of `pkg/config/features/service.go`:
+Below is a sample of `internal/config/features/service.go`:
 ```Go
 type ServiceConfig struct {
 	Host                   string `mapstructure:"HOST"`
@@ -705,9 +705,9 @@ From the example above, you can find a type `ServiceConfig` that states what env
 
 If you wish to disable a feature, you can mention it in the list of `DISABLE_FEATURES` var in run-time. 
 
-Reading the env vars is the job of `pkg/config/envVars.go`. Each config struct must be registered in `envVars.go`. The config struct is then automatically injected to its respective feature after initialisation.
+Reading the env vars is the job of `internal/config/envVars.go`. Each config struct must be registered in `envVars.go`. The config struct is then automatically injected to its respective feature after initialisation.
 
-It is possible to set a default value for each variable, this can be done in `pkg/config/envVars.go` under `setDefaults()`.
+It is possible to set a default value for each variable, this can be done in `internal/config/envVars.go` under `setDefaults()`.
 
 By the time the CMD calls the Proc, all env vars should have already been read and injected into their features, making them available for the rest of the package. 
 
@@ -731,13 +731,13 @@ The package is split into 3 directories
 
 | Directory | Description |
 | --------- | ----------- |
-| `/pkg/api` | Everything related to `Echo`, routers and handlers go in here |
+| `/internal/api` | Everything related to `Echo`, routers and handlers go in here |
 | `/pkg/clients` | These are clients used throughout the service. They can be third-party services or simple config providers for workflows |
-| `/pkg/config` | Service configuration and environment variable management |
-| `/pkg/db` | Everything related to database entities and models, migrations, and seed data |
-| `/pkg/proc` | Entry points for all processes |
+| `/internal/config` | Service configuration and environment variable management |
+| `/internal/data` | Everything related to database entities and models, migrations, and seed data |
+| `/internal/proc` | Entry points for all processes |
 | `/pkg/tasks` | User-defined tasks available via the command line CLI |
-| `/pkg/utils` | General utilities used throughout the package that do not belong to any specific package |
+| `/pkg/fx` | General utilities used throughout the package that do not belong to any specific package |
 
 
 <details>
@@ -805,7 +805,7 @@ The package is split into 3 directories
 |  |  +- constants
 |  |  |  +- constants.go    <--- all literal values
 |  |  +- init.go
-|  |  +- utils.go           <--- reusable functions that don't belong anywhere else
+|  |  +- fx.go           <--- reusable functions that don't belong anywhere else
 +- go.mod
 +- main.go
 

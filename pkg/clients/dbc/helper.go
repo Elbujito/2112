@@ -2,7 +2,7 @@ package dbc
 
 import (
 	"github.com/Elbujito/2112/pkg/clients/dbc/adapters"
-	"github.com/Elbujito/2112/pkg/utils/constants"
+	"github.com/Elbujito/2112/pkg/fx/constants"
 
 	"gorm.io/gorm"
 	gLogger "gorm.io/gorm/logger"

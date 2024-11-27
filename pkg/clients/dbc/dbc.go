@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Elbujito/2112/internal/config/features"
 	"github.com/Elbujito/2112/pkg/clients/dbc/adapters"
 	"github.com/Elbujito/2112/pkg/clients/logger"
-	"github.com/Elbujito/2112/pkg/config/features"
-	"github.com/Elbujito/2112/pkg/utils"
+	"github.com/Elbujito/2112/pkg/fx"
 
 	"gorm.io/gorm"
 	gLogger "gorm.io/gorm/logger"
@@ -58,7 +58,7 @@ func (dbc *DBClient) Configure(v any) {
 	dbc.adapter.SetConfig(dbc.config)
 	if err := dbc.adapter.ValidateConfig(); err != nil {
 		logger.Error(err.Error())
-		utils.Exit(1)
+		fx.Exit(1)
 	}
 }
 
@@ -66,14 +66,14 @@ func (dbc *DBClient) ResolveDriver() {
 	dsn, err := dbc.adapter.GetDSN()
 	if err != nil {
 		logger.Error(err.Error())
-		utils.Exit(1)
+		fx.Exit(1)
 	}
 	dbc.dsn = dsn
 
 	driver, err := dbc.adapter.GetDriver()
 	if err != nil {
 		logger.Error(err.Error())
-		utils.Exit(1)
+		fx.Exit(1)
 	}
 	dbc.driver = driver
 }
@@ -82,14 +82,14 @@ func (dbc *DBClient) ResolveServerDriver() {
 	dsn, err := dbc.adapter.GetServerDSN()
 	if err != nil {
 		logger.Error(err.Error())
-		utils.Exit(1)
+		fx.Exit(1)
 	}
 	dbc.dsn = dsn
 
 	driver, err := dbc.adapter.GetServerDriver()
 	if err != nil {
 		logger.Error(err.Error())
-		utils.Exit(1)
+		fx.Exit(1)
 	}
 	dbc.driver = driver
 }

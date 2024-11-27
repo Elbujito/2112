@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/Elbujito/2112/pkg/utils/constants"
+	"github.com/Elbujito/2112/pkg/fx/constants"
 
 	"github.com/neko-neko/echo-logrus/v2/log"
 	"github.com/sirupsen/logrus"

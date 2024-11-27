@@ -3,7 +3,7 @@ package gzip
 import (
 	"reflect"
 
-	"github.com/Elbujito/2112/pkg/config/features"
+	"github.com/Elbujito/2112/internal/config/features"
 )
 
 type GzipClient struct {
