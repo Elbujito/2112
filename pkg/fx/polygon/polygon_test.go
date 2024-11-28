@@ -16,8 +16,8 @@ const (
 // TestNewPolygon verifies the creation of a new Polygon
 func TestNewPolygon(t *testing.T) {
 	center := LatLong{
-		Lat: Coordinate{c: 40.7128},
-		Lon: Coordinate{c: -74.0060},
+		Lat: Coordinate{C: 40.7128},
+		Lon: Coordinate{C: -74.0060},
 	}
 
 	polygon := NewPolygon(TestNbFaces, center, TestZoomLevel, TestTileRadius)
@@ -36,8 +36,8 @@ func TestNewPolygon(t *testing.T) {
 // TestGenerateBoundaries verifies that boundaries are calculated correctly
 func TestGenerateBoundaries(t *testing.T) {
 	center := LatLong{
-		Lat: Coordinate{c: 0.0},
-		Lon: Coordinate{c: 0.0},
+		Lat: Coordinate{C: 0.0},
+		Lon: Coordinate{C: 0.0},
 	}
 
 	boundaries := generateBoundaries(TestNbFaces, center, TestZoomLevel, TestTileRadius)

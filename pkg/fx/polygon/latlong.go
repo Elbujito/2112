@@ -4,17 +4,17 @@ import "math"
 
 // Coordinate represents a geographic coordinate value
 type Coordinate struct {
-	c float64 // Coordinate value in degrees
+	C float64 // Coordinate value in degrees
 }
 
 // ToRadians converts the Coordinate object from degrees to radians
 func (c Coordinate) ToRadians() float64 {
-	return c.c * math.Pi / 180
+	return c.C * math.Pi / 180
 }
 
 // ToDegrees converts the Coordinate object from radians to degrees
 func (c Coordinate) ToDegrees() float64 {
-	return c.c * 180 / math.Pi
+	return c.C * 180 / math.Pi
 }
 
 // LatLong represents a geographic coordinate pair in WGS84 format
@@ -35,26 +35,26 @@ func (ll LatLong) LonRadians() float64 {
 
 // LatDegrees returns the latitude in degrees
 func (ll LatLong) LatDegrees() float64 {
-	return ll.Lat.c
+	return ll.Lat.C
 }
 
 // LonDegrees returns the longitude in degrees
 func (ll LatLong) LonDegrees() float64 {
-	return ll.Lon.c
+	return ll.Lon.C
 }
 
 // ToRadians converts both latitude and longitude to radians
 func (ll LatLong) ToRadians() LatLong {
 	return LatLong{
-		Lat: Coordinate{c: ll.Lat.ToRadians()},
-		Lon: Coordinate{c: ll.Lon.ToRadians()},
+		Lat: Coordinate{C: ll.Lat.ToRadians()},
+		Lon: Coordinate{C: ll.Lon.ToRadians()},
 	}
 }
 
 // ToDegrees converts both latitude and longitude to degrees
 func (ll LatLong) ToDegrees() LatLong {
 	return LatLong{
-		Lat: Coordinate{c: ll.Lat.ToDegrees()},
-		Lon: Coordinate{c: ll.Lon.ToDegrees()},
+		Lat: Coordinate{C: ll.Lat.ToDegrees()},
+		Lon: Coordinate{C: ll.Lon.ToDegrees()},
 	}
 }

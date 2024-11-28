@@ -113,11 +113,11 @@ func (h *ComputeVisibilitiesHandler) computeSatelliteVisibility(
 		lat, lon := geoPosition.Latitude, geoPosition.Longitude
 
 		for _, tile := range tiles {
-			elevation := space.CalculateElevation(lat, lon, altitude, tile.Polygon.Center.Lat, tile.Polygon.Center.Long)
+			elevation := space.CalculateElevation(lat, lon, altitude, tile.CenterLat, tile.CenterLon)
 			if elevation > 0 { // Satellite is visible
 				aos := t
-				los := space.ComputeLOS(satrec, tile.Polygon.Center.Lat, tile.Polygon.Center.Long, t, endTime, timeStep)
-				maxElevation := space.CalculateMaxElevation(lat, lon, altitude, tile.Polygon.Center.Lat, tile.Polygon.Center.Long)
+				los := space.ComputeLOS(satrec, tile.CenterLat, tile.CenterLon, t, endTime, timeStep)
+				maxElevation := space.CalculateMaxElevation(lat, lon, altitude, tile.CenterLat, tile.CenterLon)
 				visibility := domain.NewVisibility(
 					sat.NoradID,
 					tile.ID,

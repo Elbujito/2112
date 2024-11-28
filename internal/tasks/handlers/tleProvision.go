@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Elbujito/2112/internal/domain"
 )
@@ -75,7 +76,7 @@ func (h *TLEProvisionHandler) ensureSatelliteExists(ctx context.Context, noradID
 	newSatellite, err := domain.NewSatellite(
 		fmt.Sprintf("Unknown Satellite %s", noradID),
 		noradID,
-		domain.SatelliteType(category),
+		domain.SatelliteType(strings.ToUpper(category)),
 	)
 
 	if err != nil {

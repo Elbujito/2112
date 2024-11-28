@@ -57,7 +57,7 @@ func (h *TileProvisionHandler) Run(ctx context.Context, args map[string]string) 
 		tile := domain.NewTile(p)
 		err := h.tileRepo.Upsert(ctx, tile)
 		if err != nil {
-			return fmt.Errorf("failed to upsert Tile for Key %s: %v", tile.Polygon.Center.Key(), err)
+			return fmt.Errorf("failed to upsert Tile for Key %s: %v", tile.Quadkey, err)
 		}
 	}
 	return nil
