@@ -26,10 +26,13 @@ func TaskExec(ctx context.Context, args []string) {
 	celestrackClient := celestrack.CelestrackClient{}
 
 	satelliteRepo := repository.NewSatelliteRepository(&database)
-	tleRepo := repository.NewTLERepository(database.DbHandler)
+	tleRepo := repository.NewTLERepository(&database)
+	visibilityRepo := repository.NewVisibilityRepository(&database)
+	tileRepo := repository.NewTileRepository(&database)
+
 	tleService := services.NewTleService(&celestrackClient)
 
-	monitor, err := tasks.NewTaskMonitor(satelliteRepo, tleRepo, tleService)
+	monitor, err := tasks.NewTaskMonitor(satelliteRepo, tleRepo, tileRepo, visibilityRepo, tleService)
 	if err != nil {
 		log.Println(err.Error())
 		return

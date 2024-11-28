@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"context"
 	"errors"
 
+	"github.com/Elbujito/2112/internal/data"
 	"github.com/Elbujito/2112/internal/data/models"
 	"github.com/Elbujito/2112/internal/domain"
 	"gorm.io/gorm"
@@ -10,11 +12,11 @@ import (
 
 // tleRepositoryImpl is the concrete implementation of the TLERepository interface.
 type tleRepositoryImpl struct {
-	db *gorm.DB
+	db *data.Database
 }
 
 // NewTLERepository creates a new instance of TLERepository.
-func NewTLERepository(db *gorm.DB) domain.TLERepository {
+func NewTLERepository(db *data.Database) domain.TLERepository {
 	return &tleRepositoryImpl{db: db}
 }
 
@@ -41,9 +43,9 @@ func mapToModelTLE(domainTLE domain.TLE) models.TLE {
 }
 
 // FindByNoradID retrieves all TLEs for a given NORAD ID.
-func (r *tleRepositoryImpl) FindByNoradID(noradID string) ([]domain.TLE, error) {
+func (r *tleRepositoryImpl) FindByNoradID(ctx context.Context, noradID string) ([]domain.TLE, error) {
 	var modelTLEs []models.TLE
-	result := r.db.Where("norad_id = ?", noradID).Find(&modelTLEs)
+	result := r.db.DbHandler.Where("norad_id = ?", noradID).Find(&modelTLEs)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -60,9 +62,9 @@ func (r *tleRepositoryImpl) FindByNoradID(noradID string) ([]domain.TLE, error) 
 }
 
 // FindAll retrieves all TLE records from the database.
-func (r *tleRepositoryImpl) FindAll() ([]domain.TLE, error) {
+func (r *tleRepositoryImpl) FindAll(ctx context.Context) ([]domain.TLE, error) {
 	var modelTLEs []models.TLE
-	result := r.db.Find(&modelTLEs)
+	result := r.db.DbHandler.Find(&modelTLEs)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -76,36 +78,34 @@ func (r *tleRepositoryImpl) FindAll() ([]domain.TLE, error) {
 }
 
 // Save inserts a new TLE record into the database.
-func (r *tleRepositoryImpl) Save(tle domain.TLE) error {
+func (r *tleRepositoryImpl) Save(ctx context.Context, tle domain.TLE) error {
 	modelTLE := mapToModelTLE(tle)
-	return r.db.Create(&modelTLE).Error
+	return r.db.DbHandler.Create(&modelTLE).Error
 }
 
 // Update modifies an existing TLE record in the database.
-func (r *tleRepositoryImpl) Update(tle domain.TLE) error {
+func (r *tleRepositoryImpl) Update(ctx context.Context, tle domain.TLE) error {
 	modelTLE := mapToModelTLE(tle)
-	return r.db.Save(&modelTLE).Error
+	return r.db.DbHandler.Save(&modelTLE).Error
 }
 
 // Upsert inserts or updates a TLE record in the database.
-func (r *tleRepositoryImpl) Upsert(tle domain.TLE) error {
-	existingTLEs, err := r.FindByNoradID(tle.NoradID)
+func (r *tleRepositoryImpl) Upsert(ctx context.Context, tle domain.TLE) error {
+	existingTLEs, err := r.FindByNoradID(ctx, tle.NoradID)
 	if err != nil {
 		return err
 	}
 	if len(existingTLEs) > 0 {
-		// Update the first matching record
 		existingTLE := existingTLEs[0]
 		existingTLE.Line1 = tle.Line1
 		existingTLE.Line2 = tle.Line2
 		existingTLE.Epoch = tle.Epoch
-		return r.Update(existingTLE)
+		return r.Update(ctx, existingTLE)
 	}
-	// Insert as a new record
-	return r.Save(tle)
+	return r.Save(ctx, tle)
 }
 
-// Delete removes a TLE record by its ID.
-func (r *tleRepositoryImpl) Delete(id string) error {
-	return r.db.Where("id = ?", id).Delete(&models.TLE{}).Error
+// Delete removes a TLE record by its noradID.
+func (r *tleRepositoryImpl) DeleteByNoradID(ctx context.Context, noradID string) error {
+	return r.db.DbHandler.Where("norad_id = ?", noradID).Delete(&models.TLE{}).Error
 }

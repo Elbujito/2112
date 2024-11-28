@@ -20,7 +20,7 @@ type TaskMonitor struct {
 	Tasks map[TaskName]TaskHandler
 }
 
-func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo domain.TLERepository, tleService services.TleService) (TaskMonitor, error) {
+func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo domain.TLERepository, tileRepo domain.TileRepository, visibilityRepo domain.VisibilityRepository, tleService services.TleService) (TaskMonitor, error) {
 
 	tleProvisionHandler := handlers.NewTLEProvisionHandler(
 		satelliteRepo,
@@ -28,8 +28,21 @@ func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo domain.TLE
 		&tleService,
 	)
 
+	tileProvisionHandler := handlers.NewTileProvisionHandler(
+		tileRepo,
+	)
+
+	computeVisibilitiesHandler := handlers.NewComputeVisibilitiesHandler(
+		tileRepo,
+		tleRepo,
+		satelliteRepo,
+		visibilityRepo,
+	)
+
 	tasks := map[TaskName]TaskHandler{
-		TaskName("fetchAndUpsertTLE"): &tleProvisionHandler,
+		TaskName("fetchAndUpsertTLE"):           &tleProvisionHandler,
+		TaskName("fetchAndStoreTiles"):          &tileProvisionHandler,
+		TaskName("execComputeVisibilitiesTask"): &computeVisibilitiesHandler,
 	}
 	return TaskMonitor{
 		Tasks: tasks,

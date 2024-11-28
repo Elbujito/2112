@@ -1,11 +1,13 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"time"
 
 	xtime "github.com/Elbujito/2112/pkg/fx/time"
+	"github.com/google/uuid"
 )
 
 // TLE represents the domain entity for Two-Line Element sets.
@@ -41,6 +43,7 @@ func NewTLE(noradID string, line1 string, line2 string) (TLE, error) {
 	}
 
 	tle := TLE{
+		ID:      uuid.NewString(),
 		NoradID: noradID,
 		Line1:   line1,
 		Line2:   line2,
@@ -54,10 +57,10 @@ func NewTLE(noradID string, line1 string, line2 string) (TLE, error) {
 
 // TLERepository defines the interface for TLE repository operations.
 type TLERepository interface {
-	FindByNoradID(noradID string) ([]TLE, error)
-	FindAll() ([]TLE, error)
-	Save(tle TLE) error
-	Update(tle TLE) error
-	Upsert(tle TLE) error
-	Delete(id string) error
+	FindByNoradID(ctx context.Context, noradID string) ([]TLE, error)
+	FindAll(ctx context.Context) ([]TLE, error)
+	Save(ctx context.Context, tle TLE) error
+	Update(ctx context.Context, tle TLE) error
+	Upsert(ctx context.Context, tle TLE) error
+	DeleteByNoradID(ctx context.Context, noradID string) error
 }

@@ -63,7 +63,7 @@ func (h *TLEProvisionHandler) upsertTLE(ctx context.Context, tle domain.TLE, cat
 	if err != nil {
 		return fmt.Errorf("failed to ensure satellite existence: %v", err)
 	}
-	return h.tleRepo.Upsert(tle)
+	return h.tleRepo.Upsert(ctx, tle)
 }
 
 func (h *TLEProvisionHandler) ensureSatelliteExists(ctx context.Context, noradID string, category string) error {
