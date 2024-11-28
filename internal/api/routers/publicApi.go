@@ -3,7 +3,6 @@ package routers
 import (
 	"github.com/Elbujito/2112/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/internal/api/handlers/healthz"
-	satellitesHandlers "github.com/Elbujito/2112/internal/api/handlers/satellites"
 	"github.com/Elbujito/2112/internal/api/middlewares"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
@@ -95,12 +94,6 @@ func registerPublicApiHealthCheckHandlers() {
 }
 
 func registerPublicAPIRoutes() {
-	satellites := publicApiRouter.Echo.Group("/satellites")
-	satellites.GET("", satellitesHandlers.Index)
-	satellites.GET("/:id", satellitesHandlers.Get)
-	satellites.POST("", satellitesHandlers.Post)
-	satellites.PUT("/:id", satellitesHandlers.Put)
-	satellites.DELETE("/:id", satellitesHandlers.Delete)
 	// add more routes here ...
 }
 
