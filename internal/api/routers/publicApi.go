@@ -1,7 +1,6 @@
 package routers
 
 import (
-	celestrackHandlers "github.com/Elbujito/2112/internal/api/clients/celestrack"
 	"github.com/Elbujito/2112/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/internal/api/handlers/healthz"
 	satellitesHandlers "github.com/Elbujito/2112/internal/api/handlers/satellites"
@@ -106,7 +105,5 @@ func registerPublicAPIRoutes() {
 }
 
 func registerPublicCelestrackAPIRoutes() {
-	celestrack := publicApiRouter.Echo.Group("/celestrack")
-	celestrack.GET("/:category", celestrackHandlers.FetchCategoryTLEHandler)
-	// add more routes here ...
+
 }

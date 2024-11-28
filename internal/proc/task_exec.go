@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Elbujito/2112/internal/clients/celestrack"
 	"github.com/Elbujito/2112/internal/data"
-	"github.com/Elbujito/2112/internal/repository"
+	repository "github.com/Elbujito/2112/internal/repositories"
 	"github.com/Elbujito/2112/internal/services"
 	"github.com/Elbujito/2112/internal/tasks"
 	"github.com/Elbujito/2112/pkg/fx"
@@ -22,11 +23,13 @@ func TaskExec(ctx context.Context, args []string) {
 
 	database := data.NewDatabase()
 
+	celestrackClient := celestrack.CelestrackClient{}
+
 	satelliteRepo := repository.NewSatelliteRepository(&database)
 	tleRepo := repository.NewTLERepository(database.DbHandler)
-	// tleService := services.NewTleService(celestrack.FetchCategoryTLEHandler)
+	tleService := services.NewTleService(&celestrackClient)
 
-	monitor, err := tasks.NewTaskMonitor(satelliteRepo, tleRepo, services.TleService{})
+	monitor, err := tasks.NewTaskMonitor(satelliteRepo, tleRepo, tleService)
 	if err != nil {
 		log.Println(err.Error())
 		return

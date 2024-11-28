@@ -1,7 +1,6 @@
 package routers
 
 import (
-	celestrackHandlers "github.com/Elbujito/2112/internal/api/clients/celestrack"
 	"github.com/Elbujito/2112/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/internal/api/handlers/healthz"
 	"github.com/Elbujito/2112/internal/api/middlewares"
@@ -99,12 +98,4 @@ func registerHiddenApiHealthCheckHandlers() {
 }
 
 func registerHiddenAPIRoutes() {
-	// Create a group for CelesTrak-related routes
-	celestrak := hiddenApiRouter.Echo.Group("/celestrak")
-
-	// Route to fetch TLE data by NORAD ID
-	celestrak.GET("/tle/:norad_id", celestrackHandlers.FetchTLEHandler)
-
-	// Route to fetch categorized TLE data
-	celestrak.GET("/categories/:category", celestrackHandlers.FetchCategoryTLEHandler)
 }
