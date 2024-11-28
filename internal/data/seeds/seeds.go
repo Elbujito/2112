@@ -1,7 +1,7 @@
 package seeds
 
 import (
-	"github.com/Elbujito/2112/pkg/clients/logger"
+	"github.com/Elbujito/2112/internal/clients/logger"
 
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"

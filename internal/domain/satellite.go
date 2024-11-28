@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -38,11 +39,11 @@ type Satellite struct {
 }
 
 // NewSatellite creates a new Satellite instance.
-func NewSatellite(name, noradID string, satType SatelliteType) (*Satellite, error) {
+func NewSatellite(name string, noradID string, satType SatelliteType) (Satellite, error) {
 	if err := satType.IsValid(); err != nil {
-		return nil, err
+		return Satellite{}, err
 	}
-	return &Satellite{
+	return Satellite{
 		ID:        uuid.NewString(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -54,10 +55,9 @@ func NewSatellite(name, noradID string, satType SatelliteType) (*Satellite, erro
 
 // SatelliteRepository defines the interface for Satellite operations.
 type SatelliteRepository interface {
-	FindByNoradID(noradID string) (Satellite, error)
-	Find(id string) (Satellite, error)
-	FindAll() ([]Satellite, error)
-	Save(satellite Satellite) error
-	Update(satellite Satellite) error
-	Delete(id string) error
+	FindByNoradID(ctx context.Context, noradID string) (Satellite, error)
+	FindAll(ctx context.Context) ([]Satellite, error)
+	Save(ctx context.Context, satellite Satellite) error
+	Update(ctx context.Context, satellite Satellite) error
+	DeleteByNoradID(ctx context.Context, noradID string) error
 }

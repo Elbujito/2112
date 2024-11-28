@@ -732,7 +732,7 @@ The package is split into 3 directories
 | Directory | Description |
 | --------- | ----------- |
 | `/internal/api` | Everything related to `Echo`, routers and handlers go in here |
-| `/pkg/clients` | These are clients used throughout the service. They can be third-party services or simple config providers for workflows |
+| `/internal/clients` | These are clients used throughout the service. They can be third-party services or simple config providers for workflows |
 | `/internal/config` | Service configuration and environment variable management |
 | `/internal/data` | Everything related to database entities and models, migrations, and seed data |
 | `/internal/proc` | Entry points for all processes |

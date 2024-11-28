@@ -2,6 +2,7 @@ package celestrack
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 
 const CELESTRACK_URL = "https://celestrak.com/NORAD/elements/gp.php"
 
-func FetchTLEHandler(c echo.Context) error {
+func FetchTLEeFromSatCat(c echo.Context) error {
 	noradID := c.Param("norad_id")
 	if noradID == "" {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "NORAD ID is required"})
@@ -103,8 +104,8 @@ func FetchTLE(noradID string) (*mappers.RawTLE, error) {
 	}, nil
 }
 
-// FetchCategoryTLE fetches TLEs for a given category from CelesTrak
-func FetchCategoryTLE(category string) ([]*mappers.RawTLE, error) {
+// FetchTLEFromSatCatByCategory fetches TLEs for a given category from CelesTrak
+func FetchTLEFromSatCatByCategory(ctx context.Context, category string) ([]*mappers.RawTLE, error) {
 	if category == "" {
 		return nil, fmt.Errorf("category is required")
 	}

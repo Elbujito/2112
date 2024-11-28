@@ -1,9 +1,9 @@
 package proc
 
 import (
+	"github.com/Elbujito/2112/internal/clients/dbc"
+	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/data/seeds"
-	"github.com/Elbujito/2112/pkg/clients/dbc"
-	"github.com/Elbujito/2112/pkg/clients/logger"
 )
 
 func DBSeed() {

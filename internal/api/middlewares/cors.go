@@ -3,7 +3,7 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/Elbujito/2112/pkg/clients/cors"
+	"github.com/Elbujito/2112/internal/clients/cors"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

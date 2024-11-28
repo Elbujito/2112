@@ -3,7 +3,7 @@ package middlewares
 import (
 	"time"
 
-	"github.com/Elbujito/2112/pkg/clients/service"
+	"github.com/Elbujito/2112/internal/clients/service"
 	"github.com/Elbujito/2112/pkg/fx"
 
 	"github.com/labstack/echo/v4"

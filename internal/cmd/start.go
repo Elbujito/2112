@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/cmd/start"
 	"github.com/Elbujito/2112/internal/config"
 	"github.com/Elbujito/2112/internal/proc"
-	"github.com/Elbujito/2112/pkg/clients/logger"
 
 	"github.com/spf13/cobra"
 )

@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/cmd/task"
 	"github.com/Elbujito/2112/internal/proc"
-	"github.com/Elbujito/2112/pkg/clients/logger"
 
 	"github.com/spf13/cobra"
 )
@@ -28,7 +28,6 @@ func init() {
 	// Initialization processes can go here ...
 
 	// Register sub commands
-	taskCmd.AddCommand(task.ListCmd)
 	taskCmd.AddCommand(task.ExecCmd)
 
 	// Register persistent function for all sub commands

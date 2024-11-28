@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"github.com/Elbujito/2112/internal/api/routers"
+	clientsPkg "github.com/Elbujito/2112/internal/clients"
+	"github.com/Elbujito/2112/internal/clients/cors"
+	"github.com/Elbujito/2112/internal/clients/dbc"
+	"github.com/Elbujito/2112/internal/clients/gzip"
+	"github.com/Elbujito/2112/internal/clients/kratos"
+	"github.com/Elbujito/2112/internal/clients/logger"
+	"github.com/Elbujito/2112/internal/clients/service"
 	"github.com/Elbujito/2112/internal/config"
 	"github.com/Elbujito/2112/internal/data/models"
-	clientsPkg "github.com/Elbujito/2112/pkg/clients"
-	"github.com/Elbujito/2112/pkg/clients/cors"
-	"github.com/Elbujito/2112/pkg/clients/dbc"
-	"github.com/Elbujito/2112/pkg/clients/gzip"
-	"github.com/Elbujito/2112/pkg/clients/kratos"
-	"github.com/Elbujito/2112/pkg/clients/logger"
-	"github.com/Elbujito/2112/pkg/clients/service"
 	"github.com/Elbujito/2112/pkg/fx"
 )
 

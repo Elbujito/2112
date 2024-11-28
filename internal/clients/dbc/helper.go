@@ -1,7 +1,7 @@
 package dbc
 
 import (
-	"github.com/Elbujito/2112/pkg/clients/dbc/adapters"
+	"github.com/Elbujito/2112/internal/clients/dbc/adapters"
 	"github.com/Elbujito/2112/pkg/fx/constants"
 
 	"gorm.io/gorm"

@@ -2,7 +2,10 @@ package domain
 
 import (
 	"errors"
+	"fmt"
 	"time"
+
+	xtime "github.com/Elbujito/2112/pkg/fx/time"
 )
 
 // TLE represents the domain entity for Two-Line Element sets.
@@ -30,15 +33,21 @@ func (tle *TLE) Validate() error {
 
 // NewTLE creates a new TLE instance with the provided data.
 // It validates the input and returns an error if any field is invalid.
-func NewTLE(noradID, line1, line2 string, epoch time.Time) (*TLE, error) {
-	tle := &TLE{
+func NewTLE(noradID string, line1 string, line2 string) (TLE, error) {
+
+	tleEpoch, err := xtime.ParseEpoch(line1)
+	if err != nil {
+		return TLE{}, fmt.Errorf("failed to parse epoch from TLE line: %v", err)
+	}
+
+	tle := TLE{
 		NoradID: noradID,
 		Line1:   line1,
 		Line2:   line2,
-		Epoch:   epoch,
+		Epoch:   tleEpoch,
 	}
 	if err := tle.Validate(); err != nil {
-		return nil, err
+		return TLE{}, err
 	}
 	return tle, nil
 }

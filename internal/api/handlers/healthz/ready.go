@@ -5,7 +5,7 @@ import (
 
 	"github.com/Elbujito/2112/internal/api/handlers"
 	"github.com/Elbujito/2112/internal/api/helpers"
-	"github.com/Elbujito/2112/pkg/clients/dbc"
+	"github.com/Elbujito/2112/internal/clients/dbc"
 
 	"github.com/labstack/echo/v4"
 )

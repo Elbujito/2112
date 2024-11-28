@@ -20,6 +20,5 @@ func init() {
 }
 
 func execExecCmd(cmd *cobra.Command, args []string) {
-	// Command execution goes here ...
-	proc.TaskExec(args)
+	proc.TaskExec(cmd.Context(), args)
 }

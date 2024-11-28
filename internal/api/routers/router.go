@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/Elbujito/2112/pkg/clients/logger"
+	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/pkg/fx/constants"
 
 	"github.com/labstack/echo/v4"

@@ -1,13 +1,13 @@
 package routers
 
 import (
-	celestrackHandlers "github.com/Elbujito/2112/internal/api/handlers/celestrack"
+	celestrackHandlers "github.com/Elbujito/2112/internal/api/clients/celestrack"
 	"github.com/Elbujito/2112/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/internal/api/handlers/healthz"
 	satellitesHandlers "github.com/Elbujito/2112/internal/api/handlers/satellites"
 	"github.com/Elbujito/2112/internal/api/middlewares"
+	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/pkg/clients/logger"
 	"github.com/Elbujito/2112/pkg/fx/constants"
 )
 

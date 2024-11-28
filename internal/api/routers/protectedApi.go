@@ -6,8 +6,8 @@ import (
 	satellitesHandlers "github.com/Elbujito/2112/internal/api/handlers/satellites"
 	usersHandlers "github.com/Elbujito/2112/internal/api/handlers/users"
 	"github.com/Elbujito/2112/internal/api/middlewares"
+	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/pkg/clients/logger"
 	"github.com/Elbujito/2112/pkg/fx/constants"
 )
 
