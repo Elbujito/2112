@@ -30,12 +30,12 @@ func (t SatelliteType) IsValid() error {
 
 // Satellite represents the domain entity for a satellite.
 type Satellite struct {
-	ID        string        // Unique identifier
-	CreatedAt time.Time     // Timestamp of creation
-	UpdatedAt time.Time     // Timestamp of last update
-	Name      string        // Satellite name
-	NoradID   string        // NORAD ID
-	Type      SatelliteType // Satellite type
+	ID        string // Unique identifier
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Name      string
+	NoradID   string
+	Type      SatelliteType
 }
 
 // NewSatellite creates a new Satellite instance.
