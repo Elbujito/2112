@@ -29,16 +29,17 @@ func init() {
 
 			type Tile struct {
 				models.ModelBase
-				Quadkey   string  `gorm:"size:25;unique;not null"` // Unique identifier for the tile (Quadkey)
-				ZoomLevel int     `gorm:"not null"`                // Zoom level for the tile
-				CenterLat float64 `gorm:"not null"`                // Center latitude of the tile
-				CenterLon float64 `gorm:"not null"`                // Center longitude of the tile
+				Quadkey      string  `gorm:"size:25;unique;not null"` // Unique identifier for the tile (Quadkey)
+				ZoomLevel    int     `gorm:"not null"`                // Zoom level for the tile
+				CenterLat    float64 `gorm:"not null"`                // Center latitude of the tile
+				CenterLon    float64 `gorm:"not null"`                // Center longitude of the tile
+				SpatialIndex string  `gorm:"type:geometry;spatialIndex"`
 			}
 
 			type Visibility struct {
 				models.ModelBase
 				NoradID      string    `gorm:"not null;index"` // Foreign key to Satellite table
-				TileID       string    `gorm:"not null;index"` // Foreign key to Tile table (string to match ModelBase.ID)
+				TileID       string    `gorm:"not null;index"` // Foreign key to Tile table
 				Tile         Tile      `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
 				StartTime    time.Time `gorm:"not null"` // Visibility start time
 				EndTime      time.Time `gorm:"not null"` // Visibility end time

@@ -3,12 +3,13 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
 	"github.com/Elbujito/2112/internal/domain"
+	"github.com/Elbujito/2112/pkg/fx/polygon"
 	"github.com/Elbujito/2112/pkg/fx/space"
-	"github.com/joshuaferrara/go-satellite"
 )
 
 type ComputeVisibilitiesHandler struct {
@@ -41,6 +42,7 @@ func (h *ComputeVisibilitiesHandler) GetTask() Task {
 }
 
 func (h *ComputeVisibilitiesHandler) Run(ctx context.Context, args map[string]string) error {
+	// Fetch all satellites, TLEs, and tiles
 	satellites, err := h.satelliteRepo.FindAll(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to fetch satellites: %w", err)
@@ -63,21 +65,39 @@ func (h *ComputeVisibilitiesHandler) Run(ctx context.Context, args map[string]st
 	startTime := time.Now()
 	endTime := startTime.Add(24 * time.Hour)
 
+	// Process satellites concurrently
+	const numWorkers = 4
+	satelliteChan := make(chan domain.Satellite, len(satellites))
+	errorChan := make(chan error, len(satellites))
 	var wg sync.WaitGroup
-	var mutex sync.Mutex
 
-	for _, sat := range satellites {
+	for i := 0; i < numWorkers; i++ {
 		wg.Add(1)
-		go func(sat domain.Satellite) {
+		go func() {
 			defer wg.Done()
-			err := h.computeSatelliteVisibility(ctx, sat, tleMap, tiles, startTime, endTime, &mutex)
-			if err != nil {
-				fmt.Printf("Error computing visibility for satellite %s: %v\n", sat.NoradID, err)
+			for sat := range satelliteChan {
+				err := h.computeSatelliteVisibility(ctx, sat, tleMap, tiles, startTime, endTime)
+				if err != nil {
+					errorChan <- fmt.Errorf("satellite %s: %w", sat.NoradID, err)
+				}
 			}
-		}(sat)
+		}()
 	}
 
+	// Send satellites to workers
+	for _, sat := range satellites {
+		satelliteChan <- sat
+	}
+	close(satelliteChan)
+
+	// Wait for workers to finish
 	wg.Wait()
+	close(errorChan)
+
+	// Collect errors
+	for err := range errorChan {
+		log.Printf("Error: %v\n", err)
+	}
 
 	return nil
 }
@@ -89,35 +109,28 @@ func (h *ComputeVisibilitiesHandler) computeSatelliteVisibility(
 	tleMap map[string]domain.TLE,
 	tiles []domain.Tile,
 	startTime, endTime time.Time,
-	mutex *sync.Mutex,
 ) error {
 	tle, ok := tleMap[sat.NoradID]
 	if !ok {
 		return fmt.Errorf("no TLE data found for satellite %s", sat.NoradID)
 	}
 
-	satrec := satellite.TLEToSat(tle.Line1, tle.Line2, satellite.GravityWGS84)
-
 	const timeStep = time.Minute
+	visibilityBatch := make([]domain.Visibility, 0, len(tiles))
+
 	for t := startTime; t.Before(endTime); t = t.Add(timeStep) {
-		year, month, day := t.Date()
-		hour, minute, second := t.Clock()
-
-		position, _ := satellite.Propagate(satrec, year, int(month), day, hour, minute, second)
-
-		// Calculate GST for ECI to LLA conversion
-		gmst := satellite.GSTimeFromDate(year, int(month), day, hour, minute, second)
-
-		// Convert ECI to Geodetic (lat, lon, alt)
-		altitude, _, geoPosition := satellite.ECIToLLA(position, gmst)
-		lat, lon := geoPosition.Latitude, geoPosition.Longitude
-
 		for _, tile := range tiles {
-			elevation := space.CalculateElevation(lat, lon, altitude, tile.CenterLat, tile.CenterLon)
-			if elevation > 0 { // Satellite is visible
-				aos := t
-				los := space.ComputeLOS(satrec, tile.CenterLat, tile.CenterLon, t, endTime, timeStep)
-				maxElevation := space.CalculateMaxElevation(lat, lon, altitude, tile.CenterLat, tile.CenterLon)
+			if len(tile.Vertices) == 0 {
+				log.Printf("Skipping tile %s due to invalid polygon data\n", tile.ID)
+				continue
+			}
+
+			aos, los, maxElevation := space.ComputeVisibilityWindow(
+				tle.NoradID, tle.Line1, tle.Line2,
+				polygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon}, tile.Radius, t, endTime, timeStep,
+			)
+
+			if !aos.IsZero() && !los.IsZero() {
 				visibility := domain.NewVisibility(
 					sat.NoradID,
 					tile.ID,
@@ -125,15 +138,25 @@ func (h *ComputeVisibilitiesHandler) computeSatelliteVisibility(
 					los,
 					maxElevation,
 				)
+				visibilityBatch = append(visibilityBatch, visibility)
+			}
 
-				mutex.Lock()
-				err := h.visibilityRepo.Save(ctx, visibility)
-				mutex.Unlock()
-				if err != nil {
-					fmt.Printf("Failed to save visibility record for satellite %s: %v\n", sat.NoradID, err)
+			// Save in batches
+			if len(visibilityBatch) >= 100 {
+				if err := h.visibilityRepo.SaveBatch(ctx, visibilityBatch); err != nil {
+					log.Printf("Failed to save batch for satellite %s: %v\n", sat.NoradID, err)
 				}
+				visibilityBatch = visibilityBatch[:0] // Reset batch
 			}
 		}
 	}
+
+	// Save remaining visibilities in batch
+	if len(visibilityBatch) > 0 {
+		if err := h.visibilityRepo.SaveBatch(ctx, visibilityBatch); err != nil {
+			log.Printf("Failed to save remaining batch for satellite %s: %v\n", sat.NoradID, err)
+		}
+	}
+
 	return nil
 }

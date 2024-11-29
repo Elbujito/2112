@@ -13,6 +13,7 @@ type VisibilityRepository interface {
 	Save(ctx context.Context, visibility Visibility) error
 	Update(ctx context.Context, visibility Visibility) error
 	Delete(ctx context.Context, id string) error
+	SaveBatch(ctx context.Context, visibilities []Visibility) error
 }
 
 // Visibility represents the domain entity Visibility

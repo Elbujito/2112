@@ -23,14 +23,34 @@ func NewTileRepository(db *data.Database) domain.TileRepository {
 // FindByQuadkey retrieves a Tile by its quadkey.
 func (r *TileRepository) FindByQuadkey(ctx context.Context, quadkey polygon.Quadkey) (*domain.Tile, error) {
 	var tile models.Tile
-
 	result := r.db.DbHandler.Where("quadkey = ?", quadkey.Key()).First(&tile)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
+	} else if result.Error != nil {
+		return nil, result.Error
 	}
 
-	tileMapped := MapToDomain(tile)
-	return &tileMapped, result.Error
+	tileMapped := models.MapToDomain(tile)
+	return &tileMapped, nil
+}
+
+// FindBySpatialLocation retrieves a Tile by a geographical location using spatial indexing.
+func (r *TileRepository) FindBySpatialLocation(ctx context.Context, lat, lon float64) (*domain.Tile, error) {
+	var tile models.Tile
+	result := r.db.DbHandler.Raw(`
+		SELECT *
+		FROM tiles
+		WHERE ST_Contains(spatial_index, ST_SetSRID(ST_Point(?, ?), 4326))
+		LIMIT 1
+	`, lon, lat).Scan(&tile)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) || result.RowsAffected == 0 {
+		return nil, nil
+	} else if result.Error != nil {
+		return nil, result.Error
+	}
+
+	tileMapped := models.MapToDomain(tile)
+	return &tileMapped, nil
 }
 
 // FindAll retrieves all Tiles.
@@ -44,64 +64,81 @@ func (r *TileRepository) FindAll(ctx context.Context) ([]domain.Tile, error) {
 	// Map models to domain
 	var domainTiles []domain.Tile
 	for _, t := range tiles {
-		domainTiles = append(domainTiles, MapToDomain(t))
+		domainTiles = append(domainTiles, models.MapToDomain(t))
 	}
 	return domainTiles, nil
 }
 
 // Save creates a new Tile record.
 func (r *TileRepository) Save(ctx context.Context, tile domain.Tile) error {
-	modelTile := MapToModel(tile)
+	modelTile := models.MapFromDomain(tile)
 	return r.db.DbHandler.Create(&modelTile).Error
 }
 
 // Update modifies an existing Tile record.
 func (r *TileRepository) Update(ctx context.Context, tile domain.Tile) error {
-	modelTile := MapToModel(tile)
+	modelTile := models.MapFromDomain(tile)
 	return r.db.DbHandler.Save(&modelTile).Error
 }
 
-// DeleteByQuadKey removes a Tile record by its quadkey.
-func (r *TileRepository) DeleteByQuadKey(ctx context.Context, key polygon.Quadkey) error {
+// DeleteByQuadkey removes a Tile record by its quadkey.
+func (r *TileRepository) DeleteByQuadkey(ctx context.Context, key polygon.Quadkey) error {
 	return r.db.DbHandler.Where("quadkey = ?", key.Key()).Delete(&models.Tile{}).Error
 }
 
 // Upsert inserts or updates a Tile record in the database.
 func (r *TileRepository) Upsert(ctx context.Context, tile domain.Tile) error {
+	// Check for an existing tile using the spatial location or quadkey
 	existingTile, err := r.FindByQuadkey(ctx, polygon.Quadkey{
-		Lat:   tile.CenterLat,
-		Long:  tile.CenterLon,
-		Level: tile.ZoomLevel,
+		Latitude:  tile.CenterLat,
+		Longitude: tile.CenterLon,
+		Level:     tile.ZoomLevel,
 	})
 	if err != nil {
 		return err
 	}
+
 	if existingTile != nil {
+		// Update if the tile exists
 		return r.Update(ctx, tile)
 	}
+
+	// Save if the tile doesn't exist
 	return r.Save(ctx, tile)
 }
 
-// MapToDomain maps a models.Tile to a domain.Tile.
-func MapToDomain(modelTile models.Tile) domain.Tile {
-	return domain.Tile{
-		ID:        modelTile.ID,
-		Quadkey:   modelTile.Quadkey,
-		ZoomLevel: modelTile.ZoomLevel,
-		CenterLat: modelTile.CenterLat,
-		CenterLon: modelTile.CenterLon,
+// DeleteBySpatialLocation removes a Tile record by its geographical location.
+func (r *TileRepository) DeleteBySpatialLocation(ctx context.Context, lat, lon float64) error {
+	var tile models.Tile
+	result := r.db.DbHandler.Raw(`
+		SELECT *
+		FROM tiles
+		WHERE ST_Contains(spatial_index, ST_SetSRID(ST_Point(?, ?), 4326))
+		LIMIT 1
+	`, lon, lat).Scan(&tile)
+	if result.Error != nil || result.RowsAffected == 0 {
+		return errors.New("tile not found")
 	}
+
+	return r.db.DbHandler.Delete(&tile).Error
 }
 
-// MapToModel maps a domain.Tile to a models.Tile.
-func MapToModel(domainTile domain.Tile) models.Tile {
-	return models.Tile{
-		ModelBase: models.ModelBase{
-			ID: domainTile.ID,
-		},
-		Quadkey:   domainTile.Quadkey,
-		ZoomLevel: domainTile.ZoomLevel,
-		CenterLat: domainTile.CenterLat,
-		CenterLon: domainTile.CenterLon,
+// FindTilesInRegion retrieves tiles that intersect a given bounding box.
+func (r *TileRepository) FindTilesInRegion(ctx context.Context, minLat, minLon, maxLat, maxLon float64) ([]domain.Tile, error) {
+	var tiles []models.Tile
+	result := r.db.DbHandler.Raw(`
+		SELECT *
+		FROM tiles
+		WHERE ST_Intersects(spatial_index, ST_MakeEnvelope(?, ?, ?, ?, 4326))
+	`, minLon, minLat, maxLon, maxLat).Scan(&tiles)
+	if result.Error != nil {
+		return nil, result.Error
 	}
+
+	// Map models to domain
+	var domainTiles []domain.Tile
+	for _, t := range tiles {
+		domainTiles = append(domainTiles, models.MapToDomain(t))
+	}
+	return domainTiles, nil
 }

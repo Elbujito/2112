@@ -8,17 +8,17 @@ import (
 	"github.com/Elbujito/2112/pkg/fx/constants"
 )
 
-// Polygon represents a geographic polygon
+// Polygon represents a geographic polygon.
 type Polygon struct {
-	Center     Quadkey
-	NbFaces    int
-	Radius     float64
-	Boundaries []Quadkey
+	Center     Quadkey // The center Quadkey of the polygon
+	NbFaces    int     // Number of faces in the polygon
+	Radius     float64 // Radius of the polygon in meters
+	Boundaries []Point // Vertices (points) of the polygon's boundary
 }
 
-// NewPolygon creates a new Polygon given the number of faces, center coordinates, zoom level, and radius
+// NewPolygon creates a new Polygon given the number of faces, center coordinates, zoom level, and radius.
 func NewPolygon(nbFaces int, center LatLong, level int, radius float64) Polygon {
-	boundaries := generateBoundaries(nbFaces, center, level, radius)
+	boundaries := generateBoundaries(nbFaces, center, radius)
 	return Polygon{
 		NbFaces:    nbFaces,
 		Radius:     radius,
@@ -27,9 +27,9 @@ func NewPolygon(nbFaces int, center LatLong, level int, radius float64) Polygon 
 	}
 }
 
-// generateBoundaries calculates the boundary points of the polygon
-func generateBoundaries(nbFaces int, center LatLong, level int, radius float64) []Quadkey {
-	boundaries := make([]Quadkey, 0, nbFaces)
+// generateBoundaries calculates the boundary points of the polygon.
+func generateBoundaries(nbFaces int, center LatLong, radius float64) []Point {
+	boundaries := make([]Point, 0, nbFaces)
 
 	centerLatRad := center.LatRadians()
 	centerLonRad := center.LonRadians()
@@ -48,13 +48,16 @@ func generateBoundaries(nbFaces int, center LatLong, level int, radius float64) 
 		newLatDeg := newLat * 180 / math.Pi
 		newLonDeg := newLon * 180 / math.Pi
 
-		boundary := NewQuadkey(newLatDeg, newLonDeg, level)
-		boundaries = append(boundaries, boundary)
+		boundaries = append(boundaries, Point{
+			Latitude:  newLatDeg,
+			Longitude: newLonDeg,
+		})
 	}
 
 	return boundaries
 }
 
+// calculateZoomLevelForTileRadius determines the optimal zoom level for a given tile radius.
 func calculateZoomLevelForTileRadius(tileRadius float64) int {
 	const earthCircumference = constants.EARTH_CIRCUMFERENCE_METER
 	for zoom := 0; zoom <= constants.MAX_ZOOM_LEVEL; zoom++ {
@@ -68,7 +71,7 @@ func calculateZoomLevelForTileRadius(tileRadius float64) int {
 	return constants.MAX_ZOOM_LEVEL
 }
 
-// GenerateAllTilesForRadius generates all tiles and their polygons for a given radius
+// GenerateAllTilesForRadius generates all tiles and their polygons for a given radius.
 func GenerateAllTilesForRadius(tileRadius float64, nbFaces int) map[Quadkey]Polygon {
 	zoom := calculateZoomLevelForTileRadius(tileRadius)
 	numTiles := int(math.Pow(2, float64(zoom)))
@@ -122,7 +125,7 @@ func GenerateAllTilesForRadius(tileRadius float64, nbFaces int) map[Quadkey]Poly
 	return tilePolygons
 }
 
-// TileXYToLatLon converts tile coordinates to lat/lon
+// TileXYToLatLon converts tile coordinates to lat/lon.
 func TileXYToLatLon(x, y, zoom int) (float64, float64) {
 	n := math.Pow(2, float64(zoom))
 	lon := float64(x)/n*360.0 - 180.0
@@ -133,7 +136,7 @@ func TileXYToLatLon(x, y, zoom int) (float64, float64) {
 	return lat, lon
 }
 
-// LatLonToTileXY converts lat/lon to tile coordinates
+// LatLonToTileXY converts lat/lon to tile coordinates.
 func LatLonToTileXY(lat, lon float64, zoom int) (int, int) {
 	n := math.Pow(2, float64(zoom))
 
