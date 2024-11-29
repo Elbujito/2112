@@ -29,25 +29,27 @@ func init() {
 
 			type Tile struct {
 				models.ModelBase
-				Quadkey      string  `gorm:"size:25;unique;not null"` // Unique identifier for the tile (Quadkey)
-				ZoomLevel    int     `gorm:"not null"`                // Zoom level for the tile
-				CenterLat    float64 `gorm:"not null"`                // Center latitude of the tile
-				CenterLon    float64 `gorm:"not null"`                // Center longitude of the tile
-				SpatialIndex string  `gorm:"type:geometry;spatialIndex"`
+				Quadkey        string  `gorm:"size:256;unique;not null"` // Unique identifier for the tile (Quadkey)
+				ZoomLevel      int     `gorm:"not null"`                 // Zoom level for the tile
+				CenterLat      float64 `gorm:"not null"`                 // Center latitude of the tile
+				CenterLon      float64 `gorm:"not null"`                 // Center longitude of the tile
+				NbFaces        int     `gorm:"not null"`                 // Number of faces in the tile's shape
+				Radius         float64 `gorm:"not null"`                 // Radius of the tile in meters
+				BoundariesJSON string  `gorm:"type:json"`                // Serialized JSON of the boundary vertices of the tile
+				SpatialIndex   string  `gorm:"type:geometry;spatialIndex"`
 			}
 
-			type Visibility struct {
+			type TileSatelliteMapping struct {
 				models.ModelBase
 				NoradID      string    `gorm:"not null;index"` // Foreign key to Satellite table
 				TileID       string    `gorm:"not null;index"` // Foreign key to Tile table
 				Tile         Tile      `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
-				StartTime    time.Time `gorm:"not null"` // Visibility start time
-				EndTime      time.Time `gorm:"not null"` // Visibility end time
+				Aos          time.Time `gorm:"not null"` // Visibility start time
 				MaxElevation float64   `gorm:"not null"` // Max elevation during visibility in degrees
 			}
 
 			// AutoMigrate all tables
-			return db.AutoMigrate(&Satellite{}, &TLE{}, &Tile{}, &Visibility{})
+			return db.AutoMigrate(&Satellite{}, &TLE{}, &Tile{}, &TileSatelliteMapping{})
 		},
 		Rollback: func(db *gorm.DB) error {
 			return db.Migrator().DropTable("visibilities", "tiles", "tles", "satellites")

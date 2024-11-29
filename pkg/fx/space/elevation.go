@@ -1,7 +1,6 @@
 package space
 
 import (
-	"log"
 	"math"
 
 	"github.com/Elbujito/2112/pkg/fx/polygon"
@@ -22,29 +21,28 @@ func LatLonToCartesian(latitude, longitude, altitude float64) (float64, float64,
 	z := (earthRadiusKm + altitude) * math.Sin(latRad)
 
 	// Log the calculated Cartesian coordinates for debugging purposes
-	log.Printf("Converted to Cartesian Coordinates: X=%.2f, Y=%.2f, Z=%.2f", x, y, z)
+	// log.Printf("Converted to Cartesian Coordinates: X=%.2f, Y=%.2f, Z=%.2f", x, y, z)
 
 	// Return the Cartesian coordinates (x, y, z)
 	return x, y, z
 }
 
+// Normalize normalizes a vector
 func Normalize(x, y, z float64) (float64, float64, float64) {
 	magnitude := math.Sqrt(x*x + y*y + z*z)
 	return x / magnitude, y / magnitude, z / magnitude
 }
 
+// DotProduct calculates the dot product of two vectors
 func DotProduct(x1, y1, z1, x2, y2, z2 float64) float64 {
 	return x1*x2 + y1*y2 + z1*z2
 }
 
+// CalculateIntegratedElevationFromPoint computes the elevation of a satellite relative to a ground point
 func CalculateIntegratedElevationFromPoint(satellitePos polygon.Point, satelliteAltKm float64, groundPoint polygon.Point) float64 {
 	// Convert the latitude/longitude of the ground point and satellite to 3D Cartesian coordinates
 	groundX, groundY, groundZ := LatLonToCartesian(groundPoint.Latitude, groundPoint.Longitude, 0)
 	satX, satY, satZ := LatLonToCartesian(satellitePos.Latitude, satellitePos.Longitude, satelliteAltKm)
-
-	// Log the ground and satellite positions
-	log.Printf("Ground Point (X, Y, Z): (%.2f, %.2f, %.2f)", groundX, groundY, groundZ)
-	log.Printf("Satellite Position (X, Y, Z): (%.2f, %.2f, %.2f)", satX, satY, satZ)
 
 	// Compute the vector from the ground to the satellite
 	vecX, vecY, vecZ := satX-groundX, satY-groundY, satZ-groundZ
@@ -52,49 +50,36 @@ func CalculateIntegratedElevationFromPoint(satellitePos polygon.Point, satellite
 	// Compute the vector from the ground to Earth's center (opposite of the ground point)
 	earthVecX, earthVecY, earthVecZ := Normalize(-groundX, -groundY, -groundZ)
 
-	// Log vectors before normalization
-	log.Printf("Vector from Ground to Satellite (X, Y, Z): (%.2f, %.2f, %.2f)", vecX, vecY, vecZ)
-	log.Printf("Vector from Ground to Earth's Center (X, Y, Z): (%.2f, %.2f, %.2f)", earthVecX, earthVecY, earthVecZ)
-
 	// Normalize the satellite vector
 	vecX, vecY, vecZ = Normalize(vecX, vecY, vecZ)
 
-	// Log normalized vectors
-	log.Printf("Normalized Vector from Ground to Earth's Center: (%.2f, %.2f, %.2f)", earthVecX, earthVecY, earthVecZ)
-	log.Printf("Normalized Vector from Ground to Satellite: (%.2f, %.2f, %.2f)", vecX, vecY, vecZ)
-
-	// Special case handling for direct overhead
-	if vecX == earthVecX && vecY == earthVecY && vecZ == earthVecZ {
-		log.Printf("Satellite directly overhead: Elevation is 90 degrees.")
+	// Special case handling for direct overhead (tolerance for floating point precision)
+	const epsilon = 1e-6
+	if math.Abs(vecX-earthVecX) < epsilon && math.Abs(vecY-earthVecY) < epsilon && math.Abs(vecZ-earthVecZ) < epsilon {
 		return 90.0
 	}
 
 	// Compute the dot product of the vectors
 	dotProd := DotProduct(vecX, vecY, vecZ, earthVecX, earthVecY, earthVecZ)
 
-	// Log dot product
-	log.Printf("Dot Product: %.2f", dotProd)
-
-	// Compute the cosine of the elevation angle
-	cosElevation := dotProd
-
-	// Ensure the cosine stays within [-1, 1] range
-	if cosElevation > 1.0 {
-		cosElevation = 1.0
-	} else if cosElevation < -1.0 {
-		cosElevation = -1.0
+	// Ensure the cosine value is between -1 and 1 for valid arc cosine computation
+	if dotProd > 1.0 {
+		dotProd = 1.0
+	} else if dotProd < -1.0 {
+		dotProd = -1.0
 	}
 
 	// Compute the elevation angle in radians
-	elevationRad := math.Acos(cosElevation)
+	elevationRad := math.Acos(dotProd)
 
 	// Convert the elevation angle from radians to degrees
 	elevation := RadiansToDegrees(elevationRad)
 
-	// Log the final elevation
-	log.Printf("Calculated Elevation: %.2f degrees", elevation)
+	// Elevation cannot be more than 90 degrees
+	if elevation > 90 {
+		elevation = 90.0
+	}
 
-	// Return the elevation
 	return elevation
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"sync"
 
 	"github.com/Elbujito/2112/internal/domain"
 	"github.com/Elbujito/2112/pkg/fx/polygon"
@@ -56,49 +55,14 @@ func (h *TileProvisionHandler) Run(ctx context.Context, args map[string]string) 
 		return fmt.Errorf("invalid faces value: %w", err)
 	}
 
-	// Generate all tiles for the given radius and number of faces
 	polygons := polygon.GenerateAllTilesForRadius(radius, faces)
 
-	// Batch size for database operations
-	const batchSize = 100
-	tileChan := make(chan domain.Tile, len(polygons))
-	errChan := make(chan error, len(polygons))
-	var wg sync.WaitGroup
-
-	// Concurrent workers for batch processing
-	numWorkers := 4
-	wg.Add(numWorkers)
-
-	for i := 0; i < numWorkers; i++ {
-		go func() {
-			defer wg.Done()
-			for tile := range tileChan {
-				// Batch Upsert operation
-				if err := h.tileRepo.Upsert(ctx, tile); err != nil {
-					errChan <- fmt.Errorf("failed to upsert tile with Quadkey %s: %w", tile.Quadkey, err)
-				}
-			}
-		}()
-	}
-
-	// Feed tiles into the worker channel
-	go func() {
-		for _, p := range polygons {
-			tile := domain.NewTile(p)
-			tileChan <- tile
+	for _, p := range polygons {
+		tile := domain.NewTile(p)
+		err := h.tileRepo.Upsert(ctx, tile)
+		if err != nil {
+			return fmt.Errorf("failed to upsert Tile for Key %s: %v", tile.Quadkey, err)
 		}
-		close(tileChan)
-	}()
-
-	// Wait for workers to finish
-	wg.Wait()
-	close(errChan)
-
-	// Collect errors
-	var combinedErr error
-	for err := range errChan {
-		combinedErr = fmt.Errorf("%v; %w", combinedErr, err)
 	}
-
-	return combinedErr
+	return nil
 }

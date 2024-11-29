@@ -55,21 +55,6 @@ func (t *Tile) Validate() error {
 	return nil
 }
 
-// MapToForm converts the Tile model to a TileForm structure.
-func (t *Tile) MapToForm() *TileForm {
-	return &TileForm{
-		FormBase: FormBase{
-			ID:        t.ID,
-			CreatedAt: t.CreatedAt,
-			UpdatedAt: t.UpdatedAt,
-		},
-		Quadkey:   t.Quadkey,
-		ZoomLevel: t.ZoomLevel,
-		CenterLat: t.CenterLat,
-		CenterLon: t.CenterLon,
-	}
-}
-
 // MapFromDomain converts a domain.Tile to a models.Tile.
 func MapFromDomain(domainTile domain.Tile) Tile {
 	// Serialize boundaries
@@ -96,13 +81,13 @@ func MapFromDomain(domainTile domain.Tile) Tile {
 
 // MapToDomain converts a models.Tile to a domain.Tile.
 func MapToDomain(modelTile Tile) domain.Tile {
-	var boundaries []polygon.Point
+	// var boundaries []polygon.Point
 
 	// Deserialize boundaries
-	err := json.Unmarshal([]byte(modelTile.BoundariesJSON), &boundaries)
-	if err != nil {
-		boundaries = nil // Default to nil if deserialization fails
-	}
+	// err := json.Unmarshal([]byte(modelTile.BoundariesJSON), &boundaries)
+	// if err != nil {
+	// 	boundaries = nil // Default to nil if deserialization fails
+	// }
 
 	// Convert to domain
 	return domain.Tile{
@@ -113,7 +98,7 @@ func MapToDomain(modelTile Tile) domain.Tile {
 		CenterLon: modelTile.CenterLon,
 		NbFaces:   modelTile.NbFaces,
 		Radius:    modelTile.Radius,
-		Vertices:  boundaries,
+		// Vertices:  boundaries,
 	}
 }
 

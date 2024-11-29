@@ -98,4 +98,5 @@ func registerHiddenApiHealthCheckHandlers() {
 }
 
 func registerHiddenAPIRoutes() {
+
 }

@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   2112-postgres:
-    image: postgres:alpine
+    image: postgis/postgis:latest
     container_name: 2112-postgres
     ports:
       - "5440:5432"

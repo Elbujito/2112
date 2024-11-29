@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"time"
 
 	"github.com/Elbujito/2112/pkg/fx/polygon"
 	"github.com/google/uuid"
@@ -22,7 +23,9 @@ type TileRepository interface {
 
 // Tile represents the domain entity Tile
 type Tile struct {
-	ID        string          // Unique identifier (UUID)
+	ID        string // Unique identifier (UUID)
+	CreatedAt time.Time
+	UpdatedAt time.Time
 	Quadkey   string          // Quadkey representing the tile
 	ZoomLevel int             // Zoom level of the tile
 	CenterLat float64         // Center latitude of the tile
@@ -36,7 +39,9 @@ type Tile struct {
 // NewTile constructor
 func NewTile(polygon polygon.Polygon) Tile {
 	return Tile{
-		ID:        uuid.NewString(),         // Generate a new UUID
+		ID:        uuid.NewString(), // Generate a new UUID
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 		Quadkey:   polygon.Center.Key(),     // Extract quadkey from the polygon center
 		ZoomLevel: polygon.Center.Level,     // Use the zoom level from the center
 		CenterLat: polygon.Center.Latitude,  // Use center latitude

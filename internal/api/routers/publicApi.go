@@ -3,6 +3,7 @@ package routers
 import (
 	"github.com/Elbujito/2112/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/internal/api/handlers/healthz"
+	tilesHandlers "github.com/Elbujito/2112/internal/api/handlers/tiles"
 	"github.com/Elbujito/2112/internal/api/middlewares"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
@@ -94,7 +95,9 @@ func registerPublicApiHealthCheckHandlers() {
 }
 
 func registerPublicAPIRoutes() {
-	// add more routes here ...
+	tile := publicApiRouter.Echo.Group("/tile")
+	tile.GET("/test", tilesHandlers.GetTilesByNoradID)
+	// tile.GET("/test", tilesHandlers.GetTileTest)
 }
 
 func registerPublicCelestrackAPIRoutes() {

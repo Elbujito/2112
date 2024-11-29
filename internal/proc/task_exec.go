@@ -27,7 +27,7 @@ func TaskExec(ctx context.Context, args []string) {
 
 	satelliteRepo := repository.NewSatelliteRepository(&database)
 	tleRepo := repository.NewTLERepository(&database)
-	visibilityRepo := repository.NewVisibilityRepository(&database)
+	visibilityRepo := repository.NewTileSatelliteMappingRepository(&database)
 	tileRepo := repository.NewTileRepository(&database)
 
 	tleService := services.NewTleService(&celestrackClient)

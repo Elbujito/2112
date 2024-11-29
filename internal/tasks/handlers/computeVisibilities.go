@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/Elbujito/2112/internal/domain"
@@ -16,14 +15,14 @@ type ComputeVisibilitiesHandler struct {
 	tileRepo       domain.TileRepository
 	tleRepo        domain.TLERepository
 	satelliteRepo  domain.SatelliteRepository
-	visibilityRepo domain.VisibilityRepository
+	visibilityRepo domain.TileSatelliteMappingRepository
 }
 
 func NewComputeVisibilitiesHandler(
 	tileRepo domain.TileRepository,
 	tleRepo domain.TLERepository,
 	satelliteRepo domain.SatelliteRepository,
-	visibilityRepo domain.VisibilityRepository,
+	visibilityRepo domain.TileSatelliteMappingRepository,
 ) ComputeVisibilitiesHandler {
 	return ComputeVisibilitiesHandler{
 		tileRepo:       tileRepo,
@@ -65,38 +64,11 @@ func (h *ComputeVisibilitiesHandler) Run(ctx context.Context, args map[string]st
 	startTime := time.Now()
 	endTime := startTime.Add(24 * time.Hour)
 
-	// Process satellites concurrently
-	const numWorkers = 4
-	satelliteChan := make(chan domain.Satellite, len(satellites))
-	errorChan := make(chan error, len(satellites))
-	var wg sync.WaitGroup
-
-	for i := 0; i < numWorkers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for sat := range satelliteChan {
-				err := h.computeSatelliteVisibility(ctx, sat, tleMap, tiles, startTime, endTime)
-				if err != nil {
-					errorChan <- fmt.Errorf("satellite %s: %w", sat.NoradID, err)
-				}
-			}
-		}()
-	}
-
-	// Send satellites to workers
 	for _, sat := range satellites {
-		satelliteChan <- sat
-	}
-	close(satelliteChan)
-
-	// Wait for workers to finish
-	wg.Wait()
-	close(errorChan)
-
-	// Collect errors
-	for err := range errorChan {
-		log.Printf("Error: %v\n", err)
+		err := h.computeSatelliteVisibility(ctx, sat, tleMap, tiles, startTime, endTime)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -115,27 +87,26 @@ func (h *ComputeVisibilitiesHandler) computeSatelliteVisibility(
 		return fmt.Errorf("no TLE data found for satellite %s", sat.NoradID)
 	}
 
-	const timeStep = time.Minute
-	visibilityBatch := make([]domain.Visibility, 0, len(tiles))
+	const timeStep = 1 * time.Hour
+	visibilityBatch := make([]domain.TileSatelliteMapping, 0, len(tiles))
 
 	for t := startTime; t.Before(endTime); t = t.Add(timeStep) {
 		for _, tile := range tiles {
-			if len(tile.Vertices) == 0 {
-				log.Printf("Skipping tile %s due to invalid polygon data\n", tile.ID)
-				continue
-			}
+			// if len(tile.Vertices) == 0 {
+			// 	log.Printf("Skipping tile %s due to invalid polygon data\n", tile.ID)
+			// 	continue
+			// }
 
-			aos, los, maxElevation := space.ComputeVisibilityWindow(
+			aos, maxElevation := space.ComputeVisibilityWindow(
 				tle.NoradID, tle.Line1, tle.Line2,
 				polygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon}, tile.Radius, t, endTime, timeStep,
 			)
 
-			if !aos.IsZero() && !los.IsZero() {
+			if !aos.IsZero() {
 				visibility := domain.NewVisibility(
 					sat.NoradID,
 					tile.ID,
 					aos,
-					los,
 					maxElevation,
 				)
 				visibilityBatch = append(visibilityBatch, visibility)
