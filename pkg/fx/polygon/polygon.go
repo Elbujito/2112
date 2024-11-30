@@ -3,7 +3,6 @@ package polygon
 import (
 	"log"
 	"math"
-	"sync"
 
 	"github.com/Elbujito/2112/pkg/fx/constants"
 )
@@ -73,55 +72,38 @@ func calculateZoomLevelForTileRadius(tileRadius float64) int {
 
 // GenerateAllTilesForRadius generates all tiles and their polygons for a given radius.
 func GenerateAllTilesForRadius(tileRadius float64, nbFaces int) map[Quadkey]Polygon {
+	// Calculate the zoom level based on the tile radius
 	zoom := calculateZoomLevelForTileRadius(tileRadius)
-	numTiles := int(math.Pow(2, float64(zoom)))
+	numTiles := int(math.Pow(2, float64(zoom))) // Total number of tiles at that zoom level
 
+	// Determine the range for X and Y coordinates of tiles
+	startX := 0
+	endX := numTiles
+
+	// Map to hold the generated tile polygons
 	tilePolygons := make(map[Quadkey]Polygon)
-	tileChan := make(chan struct {
-		Quadkey Quadkey
-		Polygon Polygon
-	})
 
-	var wg sync.WaitGroup
-	worker := func(startX, endX int) {
-		defer wg.Done()
-		for x := startX; x < endX; x++ {
-			for y := 0; y < numTiles; y++ {
-				lat, lon := TileXYToLatLon(x, y, zoom)
-				center := LatLong{Lat: Coordinate{lat}, Lon: Coordinate{lon}}
-				centerQuadkey := NewQuadkey(center.LatDegrees(), center.LonDegrees(), zoom)
-				polygon := NewPolygon(nbFaces, center, zoom, tileRadius)
+	// Iterate over all tile X and Y coordinates at the given zoom level
+	for x := startX; x < endX; x++ {
+		for y := 0; y < numTiles; y++ {
+			// Convert tile (x, y) coordinates to latitude and longitude
+			lat, lon := TileXYToLatLon(x, y, zoom)
 
-				tileChan <- struct {
-					Quadkey Quadkey
-					Polygon Polygon
-				}{centerQuadkey, polygon}
-			}
+			// Create the center coordinates of the tile
+			center := LatLong{Lat: Coordinate{lat}, Lon: Coordinate{lon}}
+
+			// Generate the quadkey for the center of the tile
+			centerQuadkey := NewQuadkey(center.LatDegrees(), center.LonDegrees(), zoom)
+
+			// Create the polygon for the tile using the given radius and number of faces
+			polygon := NewPolygon(nbFaces, center, zoom, tileRadius)
+
+			// Store the polygon with its corresponding quadkey
+			tilePolygons[centerQuadkey] = polygon
 		}
 	}
 
-	numWorkers := 4
-	batchSize := numTiles / numWorkers
-	for i := 0; i < numWorkers; i++ {
-		startX := i * batchSize
-		endX := startX + batchSize
-		if i == numWorkers-1 {
-			endX = numTiles
-		}
-
-		wg.Add(1)
-		go worker(startX, endX)
-	}
-
-	go func() {
-		wg.Wait()
-		close(tileChan)
-	}()
-
-	for result := range tileChan {
-		tilePolygons[result.Quadkey] = result.Polygon
-	}
-
+	// Return the generated polygons
 	return tilePolygons
 }
 

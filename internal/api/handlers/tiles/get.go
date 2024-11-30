@@ -10,9 +10,25 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// GetTileTest fetches tiles for a given NORAD ID
-func GetTileTest(c echo.Context) error {
-	return c.JSON(http.StatusOK, handlers.Success("test"))
+// GetTileTest fetches tiles
+func GetTiles(c echo.Context) error {
+	// Assuming you have a service or repository to fetch tiles by NORAD ID
+	database := data.NewDatabase()
+	tileRepo := repository.NewTileRepository(&database)
+	tiles, err := tileRepo.FindAll(c.Request().Context())
+	if err != nil {
+		c.Echo().Logger.Error("Failed to fetch tiles: ", err)
+		return err
+	}
+
+	// If no tiles are found
+	if len(tiles) == 0 {
+		c.Echo().Logger.Error(constants.ERROR_ID_NOT_FOUND)
+		return constants.ERROR_ID_NOT_FOUND
+	}
+
+	// Return tiles in the response
+	return c.JSON(http.StatusOK, handlers.Success(tiles))
 }
 
 // GetTilesByNoradID fetches tiles for a given NORAD ID

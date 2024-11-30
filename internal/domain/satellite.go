@@ -61,3 +61,10 @@ type SatelliteRepository interface {
 	Update(ctx context.Context, satellite Satellite) error
 	DeleteByNoradID(ctx context.Context, noradID string) error
 }
+
+type SatellitePosition struct {
+	Latitude  float64   `json:"latitude"`
+	Longitude float64   `json:"longitude"`
+	Altitude  float64   `json:"altitude"`
+	Time      time.Time `json:"time"`
+}
