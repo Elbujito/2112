@@ -23,3 +23,7 @@ service.env
 service-skeleton
 ./service
 ./2112
+
+web/node_modules/*
+web/node_modules/
+web/dist/

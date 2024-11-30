@@ -1,0 +1,10 @@
+services:
+  2112-web:
+    build:
+      context: .
+      dockerfile: ci/docker/Dockerfile.web
+    image: 2112-web
+    container_name: 2112-web-app
+    ports:
+      - "8082:80"
+    restart: unless-stopped

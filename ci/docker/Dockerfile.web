@@ -1,0 +1,28 @@
+# Use an official Node.js 18.x image for building the frontend
+FROM node:18 AS build
+
+# Install required build tools
+RUN apt-get update && apt-get install -y curl gnupg wget && rm -rf /var/lib/apt/lists/*
+
+# Set the working directory to /app
+WORKDIR /app
+
+# Copy the necessary files from the web directory in the build context
+COPY web/package.json web/package-lock.json ./
+COPY web/webpack.config.js ./
+COPY web/src ./src
+
+# Install project dependencies and build the project
+RUN npm install --legacy-peer-deps && npm run build
+
+# Use an official NGINX image for serving the built application
+FROM nginx:stable
+
+# Copy build files from the previous stage to NGINX's serving directory
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Expose port 80 to the host
+EXPOSE 80
+
+# Start NGINX in the foreground
+CMD ["nginx", "-g", "daemon off;"]
