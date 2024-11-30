@@ -1,0 +1,25 @@
+# Use an official Python image as a base
+FROM python:3.9-slim
+
+# Set working directory inside the container
+WORKDIR /app
+
+# Copy the requirements file into the container
+COPY python/satellite_server/requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code
+COPY python/satellite_server/ satellite_server/
+
+# Expose the Flask app port
+EXPOSE 5000
+
+# Set environment variables for Flask
+ENV FLASK_APP=satellite_server.server
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_RUN_PORT=5000
+
+# Default command to run the Flask server
+CMD ["flask", "run"]

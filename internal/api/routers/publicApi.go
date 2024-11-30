@@ -100,7 +100,7 @@ func registerPublicAPIRoutes() {
 	tile.GET("/mapping", tilesHandlers.GetTilesByNoradID)
 	tile.GET("/all", tilesHandlers.GetTiles)
 	satellite := publicApiRouter.Echo.Group("/satellites")
-	satellite.GET("/all", satellitesHandlers.GetSatellitePositionsByNoradID)
+	satellite.GET("/orbit", satellitesHandlers.GetSatellitePositionsByNoradID)
 }
 
 func registerPublicCelestrackAPIRoutes() {

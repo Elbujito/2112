@@ -1,88 +1,77 @@
 import axios from "axios";
-
 import './main.css';
 
 var Cesium = require('cesium/Cesium');
 require('./main.css');
 require('cesium/Widgets/widgets.css'); // Import Cesium's CSS
 
-// Cesium Viewer setup
-const viewer = new Cesium.Viewer("cesiumContainer", {
-  // terrainProvider: Cesium.createWorldTerrain(),
-});
+let viewer; // Declare viewer globally for access after data fetch
 
+// Fetch satellite orbit data from API
+async function fetchSatelliteOrbit(noradID) {
+  const SATELLITE_API_URL = "http://localhost:8081/satellites/orbit";
 
-// API endpoint to fetch satellite data
-const SATELLITE_API_URL = "http://localhost:8081/satellites/all";
-
-// Function to fetch satellite data
-async function fetchSatelliteData(noradID) {
   try {
     const response = await axios.get(`${SATELLITE_API_URL}`, {
-      params: { noradID }, // Pass parameters properly
-      headers: {
-        Accept: 'application/json', // Ensure proper Accept header
-      },
+      params: { noradID },
+      headers: { Accept: "application/json" },
     });
 
-    // Handle successful response
-    if (response.status === 200) {
-      if (response.data && response.data.payload) {
-        return response.data.payload;
-      } else {
-        console.warn("Response received but payload is empty or missing.");
-        return [];
-      }
+    if (response.status === 200 && Array.isArray(response.data.payload)) {
+      return response.data.payload.map((data) => ({
+        latitude: data.Latitude,
+        longitude: data.Longitude,
+        altitude: data.Altitude,
+        time: data.Time,
+      }));
     } else {
-      console.error(`Unexpected response status: ${response.status}`);
+      console.error("Unexpected API response structure:", response.data);
       return [];
     }
   } catch (error) {
-    // Handle errors more thoroughly
-    if (error.response) {
-      // Server responded with a status code outside 2xx
-      console.error(
-        `Error fetching satellite data: ${error.response.status} - ${error.response.statusText}`
-      );
-      console.error("Server response:", error.response.data);
-    } else if (error.request) {
-      // Request was made but no response received
-      console.error("No response received from server:", error.request);
-    } else {
-      // Other errors (e.g., invalid URL)
-      console.error("Error setting up the request:", error.message);
-    }
+    console.error("Error fetching satellite orbit data:", error.message);
     return [];
   }
 }
 
-// Function to display satellite trajectory on Cesium Viewer
-async function plotSatelliteTrajectory(noradID) {
-  // Fetch data
-  const data = await fetchSatelliteData(noradID);
-
-  if (!data || data.length === 0) {
-    console.error("No satellite data available.");
-    return;
-  }
-
-  // Extract latitude, longitude, altitude, and time
-  const positions = data.map((entry) => {
-    const { latitude, longitude, altitude } = entry;
-    const time = Cesium.JulianDate.fromIso8601(entry.time);
-    return {
-      position: Cesium.Cartesian3.fromDegrees(longitude, latitude, altitude * 1000),
-      time,
-    };
+// Initialize Cesium viewer
+function initializeViewer() {
+  viewer = new Cesium.Viewer("cesiumContainer", {
+    terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+    timeline: true,
+    animation: true,
   });
+}
 
-  // Prepare position property
+// Plot orbit data on Cesium viewer
+async function plotOrbitFromAPI(noradID, orbitData) {
   const positionProperty = new Cesium.SampledPositionProperty();
-  positions.forEach(({ position, time }) => {
-    positionProperty.addSample(time, position);
+
+  orbitData.forEach(({ latitude, longitude, altitude, time }) => {
+    const position = Cesium.Cartesian3.fromDegrees(longitude, latitude, altitude * 1000);
+    const julianTime = Cesium.JulianDate.fromIso8601(time);
+
+    if (!julianTime) {
+      console.error("Invalid time format:", time);
+      return;
+    }
+
+    positionProperty.addSample(julianTime, position);
   });
 
-  // Add satellite trajectory to the viewer
+  const orbitPositions = orbitData.map(({ latitude, longitude, altitude }) =>
+    Cesium.Cartesian3.fromDegrees(longitude, latitude, altitude * 1000)
+  );
+
+  viewer.entities.add({
+    name: `Orbit Path for NORAD ID: ${noradID}`,
+    polyline: {
+      positions: orbitPositions,
+      width: 1,
+      material: Cesium.Color.YELLOW,
+    },
+  });
+
   viewer.entities.add({
     name: `Satellite ${noradID}`,
     position: positionProperty,
@@ -90,18 +79,56 @@ async function plotSatelliteTrajectory(noradID) {
       pixelSize: 10,
       color: Cesium.Color.RED,
     },
+    label: {
+      text: `Satellite ${noradID}`,
+      font: "14pt sans-serif",
+      fillColor: Cesium.Color.WHITE,
+      showBackground: true,
+      backgroundColor: Cesium.Color.BLACK.withAlpha(0.7),
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset: new Cesium.Cartesian2(0, -15),
+    },
     path: {
       show: true,
-      leadTime: 0,
-      trailTime: 60 * 60 * 24, // 24 hours
-      width: 2,
+      leadTime: 60 * 60,
+      trailTime: 60 * 60 * 24,
       resolution: 1,
-      material: new Cesium.ColorMaterialProperty(Cesium.Color.YELLOW),
+      material: Cesium.Color.RED.withAlpha(0.5),
     },
   });
+
+  const startTime = Cesium.JulianDate.fromIso8601(orbitData[0].time);
+  const stopTime = Cesium.JulianDate.fromIso8601(orbitData[orbitData.length - 1].time);
+
+  viewer.clock.startTime = startTime;
+  viewer.clock.stopTime = stopTime;
+  viewer.clock.currentTime = startTime;
+  viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+  viewer.clock.multiplier = 60;
+  viewer.timeline.zoomTo(startTime, stopTime);
 
   viewer.zoomTo(viewer.entities);
 }
 
-// Call the function for the International Space Station (NORAD ID 25544)
-plotSatelliteTrajectory("25544");
+// Main application flow
+async function main() {
+  console.log("Fetching data...");
+  const noradID = "25544";
+
+  const orbitData = await fetchSatelliteOrbit(noradID);
+
+  if (orbitData.length === 0) {
+    console.error("No data available for NORAD ID:", noradID);
+    return;
+  }
+
+  console.log("Initializing viewer...");
+  initializeViewer();
+
+  console.log("Plotting orbit data...");
+  await plotOrbitFromAPI(noradID, orbitData);
+
+  console.log("Done!");
+}
+
+main();

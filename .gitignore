@@ -27,3 +27,4 @@ service-skeleton
 web/node_modules/*
 web/node_modules/
 web/dist/
+venv/

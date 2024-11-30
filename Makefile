@@ -1,6 +1,7 @@
 # Environment variables
 COMPOSE_FILE ?= ci/compose/postgres.yaml
 WEB_COMPOSE_FILE ?= ci/compose/2112-web.yaml
+PYTHON_COMPOSE_FILE ?= ci/compose/2112-python.yaml
 VERSION ?= latest
 
 # Targets
@@ -80,3 +81,26 @@ web-restart:
 web-logs:
 	@echo "Showing logs for the web service defined in $(WEB_COMPOSE_FILE)..."
 	@docker-compose -f $(WEB_COMPOSE_FILE) logs -f
+
+	# Build Python project Docker image
+python-build:
+	@echo "Building Python project Docker image..."
+	docker build -f ci/docker/Dockerfile.python -t 2112-python .
+
+# Start Python project container
+python-up:
+	@echo "Starting Python project container..."
+	@docker-compose -f $(PYTHON_COMPOSE_FILE) up -d
+
+# Stop Python project container
+python-down:
+	@echo "Stopping Python project container..."
+	@docker-compose -f $(PYTHON_COMPOSE_FILE) down
+
+# Show logs for Python project container
+python-logs:
+	@echo "Showing logs for Python project container..."
+	@docker-compose -f $(PYTHON_COMPOSE_FILE) logs -f
+
+# Restart Python project container
+python-restart: python-down python-up
