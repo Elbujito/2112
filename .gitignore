@@ -28,3 +28,5 @@ web/node_modules/*
 web/node_modules/
 web/dist/
 venv/
+
+python/satellite_server/__pycache__/*

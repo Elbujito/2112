@@ -1,13 +1,13 @@
 version: "3.8"
 
 services:
-  satellite-server:
+  propagator-server:
     build:
-      context: ../.. # Adjust this to the root directory
-      dockerfile: ci/docker/Dockerfile.python
-    container_name: satellite_server
+      context: ../.. # Adjust context to the project root
+      dockerfile: ci/docker/Dockerfile.python # Path to the Dockerfile relative to the context
+      args:
+        PYTHON_EXECUTABLE_NAME: propagator_server # Pass the executable name as a build argument
+    container_name: propagator_server # Assign a name to the container
     ports:
-      - "5000:5000"
-    environment:
-      - FLASK_ENV=development
-    restart: always
+      - "5000:5000" # Map container port 5000 to host port 5000
+    restart: always # Restart the container on failure

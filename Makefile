@@ -1,8 +1,13 @@
 # Environment variables
 COMPOSE_FILE ?= ci/compose/postgres.yaml
 WEB_COMPOSE_FILE ?= ci/compose/2112-web.yaml
-PYTHON_COMPOSE_FILE ?= ci/compose/2112-python.yaml
 VERSION ?= latest
+
+# Variables
+PYTHON_COMPOSE_FILE ?= ci/compose/2112-python.yaml
+PYTHON_EXECUTABLE_NAME := propagator_server
+PYTHON_DOCKER_IMAGE := 2112-python-exec
+
 
 # Targets
 .PHONY: all build start-dev quick-start-postgres up down restart logs docker-build web-build web-up web-down web-restart web-logs
@@ -82,16 +87,21 @@ web-logs:
 	@echo "Showing logs for the web service defined in $(WEB_COMPOSE_FILE)..."
 	@docker-compose -f $(WEB_COMPOSE_FILE) logs -f
 
-	# Build Python project Docker image
+# Build the web service
 python-build:
-	@echo "Building Python project Docker image..."
-	docker build -f ci/docker/Dockerfile.python -t 2112-python .
+	@echo "Building the Python application Docker image..."
+	docker build \
+		--build-arg PYTHON_EXECUTABLE_NAME=propagator_server \
+		-f ci/docker/Dockerfile.python \
+		-t 2112-python .
+	@echo "Python application build complete. Docker image '2112-python' created."
+
 
 # Start Python project container
 python-up:
-	@echo "Starting Python project container..."
-	@docker-compose -f $(PYTHON_COMPOSE_FILE) up -d
-
+	@echo "Starting Python project container in $(PYTHON_COMPOSE_FILE)..."
+	@docker-compose -f $(PYTHON_COMPOSE_FILE) up -d --build
+	
 # Stop Python project container
 python-down:
 	@echo "Stopping Python project container..."
@@ -104,3 +114,9 @@ python-logs:
 
 # Restart Python project container
 python-restart: python-down python-up
+
+# Clean PyInstaller build artifacts
+clean:
+	@echo "Cleaning up build artifacts..."
+	rm -rf build dist *.spec
+	@echo "Clean complete."
