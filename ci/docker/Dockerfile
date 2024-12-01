@@ -1,41 +1,41 @@
 # Stage 1: Build the Go application
-FROM golang:1.22.7-alpine AS builder
+FROM golang:1.22.7-alpine3.20 AS builder
 
-# Argument for the application version
-ARG APP_VERSION
+# Arguments for build
+ARG VERSION
+ARG GOARCH
+ARG GOOS
+ARG BUILDFLAGS="-mod=vendor"
+ARG LDFLAGS="-X main.Version=${VERSION}"
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy Go modules files from the backend directory
-COPY ./backend/go.mod ./backend/go.sum ./
+# Install dependencies
+RUN apk update && apk add --no-cache git make build-base
 
-# Download dependencies
-RUN go mod download
+# Copy Go modules and vendor
+COPY backend/go.mod backend/go.sum ./
+COPY backend/vendor ./vendor
 
-# Copy the application code from the backend/internal directory
-COPY ./backend/internal ./internal
+# Copy application source
+COPY backend ./
 
 # Build the application
-RUN CGO_ENABLED=1 GOOS=linux go build -o ./out/service \
-    -ldflags="-w -s -extldflags '-static' -X main.VERSION=$APP_VERSION" ./internal
+RUN GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 \
+    go build -o /out/service -ldflags="${LDFLAGS}" ${BUILDFLAGS} ./internal
 
-# Stage 2: Create a minimal final image
-FROM scratch
+# Stage 2: Create a lightweight image
+FROM alpine:3.18
 
-# Set the working directory
-WORKDIR /app
+# Create runtime directories
+RUN mkdir -p /var/service/logs /var/2112/config /var/2112/data
 
-# Add the binary to the PATH
-ENV PATH="${PATH}:/app"
+# Copy binary from builder stage
+COPY --from=builder /out/service /usr/local/bin/service
 
-# Copy the built binary from the builder stage
-COPY --from=builder /app/out/service ./service
+# Expose ports
+EXPOSE 8081 8080 8079
 
-# Expose the necessary ports
-EXPOSE 8081
-EXPOSE 8080
-EXPOSE 8079
-
-# Command to run the service
-CMD ["service", "start"]
+# Set default command (placeholder or shell)
+CMD ["/bin/sh"]

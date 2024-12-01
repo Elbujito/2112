@@ -30,3 +30,9 @@ web/dist/
 venv/
 
 python/satellite_server/__pycache__/*
+backend/vendor/*
+backend/vendor/
+
+.husky
+
+2112
