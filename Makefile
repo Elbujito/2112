@@ -1,56 +1,61 @@
 # Environment variables
-COMPOSE_FILE ?= ci/compose/postgres.yaml
+POSTGRES_COMPOSE_FILE ?= ci/compose/postgres.yaml
 WEB_COMPOSE_FILE ?= ci/compose/2112-web.yaml
+PYTHON_COMPOSE_FILE ?= ci/compose/2112-python.yaml
+SERVER_COMPOSE_FILE ?= ci/compose/2112-server.yaml
 VERSION ?= latest
 
-# Variables
-PYTHON_COMPOSE_FILE ?= ci/compose/2112-python.yaml
-PYTHON_EXECUTABLE_NAME := propagator_server
-PYTHON_DOCKER_IMAGE := 2112-python-exec
-
-
 # Targets
-.PHONY: all build start-dev quick-start-postgres up down restart logs docker-build web-build web-up web-down web-restart web-logs
+.PHONY: all build start-dev quick-start-postgres up down restart logs docker-build web-build web-up web-down web-restart web-logs python-build python-up python-down python-logs python-restart server-build server-up server-down server-logs server-restart clean
 
-# Build the Go backend binary
-build:
-	@echo "Building the backend application..."
-	@go build -ldflags="-w -s -extldflags '-static' -X main.VERSION=$(VERSION)" -o ./2112 .
-	@chmod +x ./2112
-	@echo "Backend build complete. Binary is located at ./2112."
+# Build the server Docker image
+server-build:
+	@echo "Building the server application..."
+	docker build -f ci/docker/Dockerfile -t server:latest .
+	@echo "Server application build complete. Docker image 'server:latest' created."
 
-# Start local development environment for backend
-start-dev:
-	@echo "Starting local development environment..."
-	@docker compose --project-directory ./ -f ./ci/compose/2112-local-dev.yaml up
+# Start the server service
+server-up:
+	@echo "Starting the server service using $(SERVER_COMPOSE_FILE)..."
+	@docker-compose -f $(SERVER_COMPOSE_FILE) up -d
+
+# Stop the server service
+server-down:
+	@echo "Stopping the server service using $(SERVER_COMPOSE_FILE)..."
+	@docker-compose -f $(SERVER_COMPOSE_FILE) down
+
+# Restart the server service
+server-restart:
+	@echo "Restarting the server service using $(SERVER_COMPOSE_FILE)..."
+	@docker-compose -f $(SERVER_COMPOSE_FILE) down
+	@docker-compose -f $(SERVER_COMPOSE_FILE) up -d
+
+# Show logs for the server service
+server-logs:
+	@echo "Showing logs for the server service defined in $(SERVER_COMPOSE_FILE)..."
+	@docker-compose -f $(SERVER_COMPOSE_FILE) logs -f
+
 
 # Bring up backend services
-up:
-	@echo "Starting backend services using $(COMPOSE_FILE)..."
-	@docker-compose -f $(COMPOSE_FILE) up -d
+db-up:
+	@echo "Starting backend services using $(POSTGRES_COMPOSE_FILE)..."
+	@docker-compose -f $(POSTGRES_COMPOSE_FILE) up -d
 
 # Bring down backend services
-down:
-	@echo "Stopping backend services using $(COMPOSE_FILE)..."
-	@docker-compose -f $(COMPOSE_FILE) down
+db-down:
+	@echo "Stopping backend services using $(POSTGRES_COMPOSE_FILE)..."
+	@docker-compose -f $(POSTGRES_COMPOSE_FILE) down
 
 # Restart backend services
-restart:
-	@echo "Restarting backend services using $(COMPOSE_FILE)..."
-	@docker-compose -f $(COMPOSE_FILE) down
-	@docker-compose -f $(COMPOSE_FILE) up -d
+db-restart:
+	@echo "Restarting backend services using $(POSTGRES_COMPOSE_FILE)..."
+	@docker-compose -f $(POSTGRES_COMPOSE_FILE) down
+	@docker-compose -f $(POSTGRES_COMPOSE_FILE) up -d
 
 # Show logs for backend services
-logs:
-	@echo "Showing logs for backend services defined in $(COMPOSE_FILE)..."
-	@docker-compose -f $(COMPOSE_FILE) logs -f
-
-# Build Docker images for backend services
-docker-build:
-	@echo "Building Docker images for backend services using $(COMPOSE_FILE)..."
-	@docker-compose -f $(COMPOSE_FILE) build
-
-# Web service management
+db-logs:
+	@echo "Showing logs for backend services defined in $(POSTGRES_COMPOSE_FILE)..."
+	@docker-compose -f $(POSTGRES_COMPOSE_FILE) logs -f
 
 # Build the web service
 web-build:
@@ -84,7 +89,6 @@ web-logs:
 python-build:
 	@echo "Building the Python application Docker image..."
 	docker build \
-		--build-arg PYTHON_EXECUTABLE_NAME=propagator_server \
 		-f ci/docker/Dockerfile.python \
 		-t 2112-python .
 	@echo "Python application build complete. Docker image '2112-python' created."

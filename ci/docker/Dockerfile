@@ -1,22 +1,41 @@
-
+# Stage 1: Build the Go application
 FROM golang:1.22.7-alpine AS builder
-ARG APP_VERSION
-WORKDIR /app
-COPY . .
-RUN go get -d -v \
-  && CGO_ENABLED=1 GOOS=linux go build -o ./out/service -ldflags="-w -s -extldflags '-static' -X main.VERSION=$APP_VERSION" . 
 
-# Final image is built from scratch because Go gives a binary
-FROM scratch
+# Argument for the application version
+ARG APP_VERSION
+
+# Set the working directory
 WORKDIR /app
-ENV PATH="${PATH}:/:/app"
+
+# Copy Go modules files from the backend directory
+COPY ./backend/go.mod ./backend/go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy the application code from the backend/internal directory
+COPY ./backend/internal ./internal
+
+# Build the application
+RUN CGO_ENABLED=1 GOOS=linux go build -o ./out/service \
+    -ldflags="-w -s -extldflags '-static' -X main.VERSION=$APP_VERSION" ./internal
+
+# Stage 2: Create a minimal final image
+FROM scratch
+
+# Set the working directory
+WORKDIR /app
+
+# Add the binary to the PATH
+ENV PATH="${PATH}:/app"
+
+# Copy the built binary from the builder stage
 COPY --from=builder /app/out/service ./service
+
+# Expose the necessary ports
 EXPOSE 8081
 EXPOSE 8080
 EXPOSE 8079
+
+# Command to run the service
 CMD ["service", "start"]
-
-# To build this manually on your dev env use the following
-# docker command
-
-# docker buildx build . -t {repo}:latest --platform linux/amd64 --build-arg API_VERSION=1.0.0
