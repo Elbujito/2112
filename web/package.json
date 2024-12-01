@@ -15,7 +15,6 @@
     "prettier": "prettier --write --ignore-unknown .",
     "prettier:check": "prettier --check --ignore-unknown .",
     "build-types": "tsc --noEmit --pretty",
-    "prepare": "cd .. && husky install",
     "test": "yarn prettier:check && yarn lint"
   },
   "dependencies": {

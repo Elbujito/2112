@@ -10,26 +10,17 @@ interface OrbitData {
 }
 
 interface CesiumViewerProps {
-  orbitData?: OrbitData[]; // Make orbitData optional
-  noradID?: string;        // Make noradID optional
+  orbitData?: OrbitData[];
+  noradID?: string;
 }
 
 const CesiumViewer: React.FC<CesiumViewerProps> = ({ orbitData = [], noradID = "Unknown" }) => {
   useEffect(() => {
-    let viewer: Cesium.Viewer | null = null;
-
-    const initializeViewer = () => {
-      viewer = new Cesium.Viewer("cesiumContainer", {
-        terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-        timeline: true,
-        animation: true,
-      });
-
-      // Adjust the camera to show Earth properly
-      viewer.scene.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000), // Overhead view
-      });
-    };
+    let viewer: Cesium.Viewer | null = new Cesium.Viewer("cesiumContainer", {
+      terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+      timeline: true,
+      animation: true,
+    });
 
     const plotOrbit = () => {
       if (!viewer || orbitData.length === 0) {
@@ -40,22 +31,20 @@ const CesiumViewer: React.FC<CesiumViewerProps> = ({ orbitData = [], noradID = "
       const positionProperty = new Cesium.SampledPositionProperty();
 
       orbitData.forEach(({ latitude, longitude, altitude, time }) => {
-        const position = Cesium.Cartesian3.fromDegrees(
-          longitude,
-          latitude,
-          altitude * 1000
-        );
-        const julianTime = Cesium.JulianDate.fromIso8601(time);
+        try {
+          const position = Cesium.Cartesian3.fromDegrees(
+            longitude,
+            latitude,
+            altitude * 1000
+          );
+          const julianTime = Cesium.JulianDate.fromIso8601(time);
 
-        if (!julianTime) {
-          console.error("Invalid time format:", time);
-          return;
+          positionProperty.addSample(julianTime, position);
+        } catch (error) {
+          console.error("Error processing orbit data:", error);
         }
-
-        positionProperty.addSample(julianTime, position);
       });
 
-      // Create polyline for orbit path
       const orbitPositions = orbitData.map(({ latitude, longitude, altitude }) =>
         Cesium.Cartesian3.fromDegrees(longitude, latitude, altitude * 1000)
       );
@@ -69,7 +58,6 @@ const CesiumViewer: React.FC<CesiumViewerProps> = ({ orbitData = [], noradID = "
         },
       });
 
-      // Add satellite entity with path
       viewer.entities.add({
         name: `Satellite ${noradID}`,
         position: positionProperty,
@@ -92,30 +80,35 @@ const CesiumViewer: React.FC<CesiumViewerProps> = ({ orbitData = [], noradID = "
         },
       });
 
-      // Configure the clock and timeline
-      const startTime = Cesium.JulianDate.fromIso8601(orbitData[0]?.time ?? "");
-      const stopTime = Cesium.JulianDate.fromIso8601(
-        orbitData[orbitData.length - 1]?.time ?? ""
-      );
+      try {
+        const startTime = Cesium.JulianDate.fromIso8601(orbitData[0]?.time ?? "");
+        const stopTime = Cesium.JulianDate.fromIso8601(orbitData[orbitData.length - 1]?.time ?? "");
 
-      if (startTime && stopTime) {
-        viewer.clock.startTime = startTime;
-        viewer.clock.stopTime = stopTime;
-        viewer.clock.currentTime = startTime;
-        viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
-        viewer.clock.multiplier = 60;
-        viewer.timeline.zoomTo(startTime, stopTime);
+        if (startTime && stopTime) {
+          viewer.clock.startTime = startTime.clone();
+          viewer.clock.stopTime = stopTime.clone();
+          viewer.clock.currentTime = startTime.clone();
+          viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+          viewer.clock.multiplier = 60;
+          viewer.timeline.zoomTo(startTime, stopTime);
 
-        // Zoom to entities
-        viewer.zoomTo(viewer.entities);
+          viewer.scene.camera.flyTo({
+            destination: Cesium.Cartesian3.fromDegrees(
+              orbitData[0]?.longitude ?? 0,
+              orbitData[0]?.latitude ?? 0,
+              (orbitData[0]?.altitude ?? 0) * 2000
+            ),
+          });
+        } else {
+          console.warn("Invalid orbit data times. Ensure time format is ISO8601.");
+        }
+      } catch (error) {
+        console.error("Error setting clock or camera:", error);
       }
     };
 
-    // Initialize and plot orbit
-    initializeViewer();
     plotOrbit();
 
-    // Cleanup function to destroy the viewer
     return () => {
       if (viewer) {
         viewer.destroy();
@@ -124,7 +117,16 @@ const CesiumViewer: React.FC<CesiumViewerProps> = ({ orbitData = [], noradID = "
     };
   }, [orbitData, noradID]);
 
-  return <div id="cesiumContainer" style={{ width: "100%", height: "100%" }} />;
+  return <div>
+  <style>
+    {`
+      .cesium-viewer .cesium-widget-credits {
+        display: none !important;
+      }
+    `}
+  </style>
+  <div id="cesiumContainer" style={{ width: "100%", height: "100%" }} />
+</div>
 };
 
 export default CesiumViewer;

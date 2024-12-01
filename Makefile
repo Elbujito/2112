@@ -28,15 +28,6 @@ export GOEXPERIMENT := boringcrypto
 .DEFAULT_GOAL := help
 
 ################################################################################
-# All
-################################################################################
-.PHONY: all
-all:
-	make db-up
-	make python-up
-	make backend-up
-
-################################################################################
 # Build
 ################################################################################
 
@@ -125,7 +116,7 @@ web-build: ## Build the web application Docker image
 
 .PHONY: web-up
 web-up: ## Start the web service
-	docker-compose -f $(WEB_COMPOSE_FILE) up -d
+	docker-compose -f $(WEB_COMPOSE_FILE) up --build -d --force-recreate
 
 .PHONY: web-down
 web-down: ## Stop the web service

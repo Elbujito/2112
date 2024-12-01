@@ -1,20 +1,38 @@
-# Base image
-FROM node:18-alpine
+# Use a lightweight Node.js base image for building the app
+FROM node:18-alpine AS builder
 
-# Set working directory
+# Set the working directory
 WORKDIR /app
 
-# Copy dependency files from `web/` directory
+# Copy only package files for dependency installation
 COPY web/package.json web/package-lock.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy the entire `web/` directory
+# Copy the rest of the application code, including the `public` directory
 COPY web/ ./
+
+# Build the Next.js app
+RUN npm run build
+
+# Use a lightweight Node.js base image for production
+FROM node:18-alpine
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the necessary files from the builder stage
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json /app/package-lock.json ./
+
+# Install only production dependencies
+RUN npm ci --production
 
 # Expose the application port
 EXPOSE 3000
 
-# Start the application
-CMD ["npm", "run", "dev"]
+# Start the application in production mode
+CMD ["npm", "run", "start"]
+

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import axios from "axios";
 import Skeleton from "@mui/material/Skeleton";
+import CircularProgress from "@mui/material/CircularProgress";
 
 type OrbitDataItem = {
   latitude: number;
@@ -10,10 +11,9 @@ type OrbitDataItem = {
   time: string; // ISO 8601 date string
 };
 
-// Define props for CesiumViewer
 interface CesiumViewerProps {
-  orbitData?: OrbitDataItem[]; // Orbit data is optional
-  noradID?: string;           // NORAD ID is optional
+  orbitData?: OrbitDataItem[];
+  noradID?: string;
 }
 
 // Dynamic import for CesiumViewer with type annotations
@@ -26,7 +26,7 @@ const CesiumViewer = dynamic<CesiumViewerProps>(
 );
 
 const Tracker: React.FC = () => {
-  const [noradID, setNoradID] = useState<string>("25544"); // Default NORAD ID for ISS
+  const [noradID, setNoradID] = useState<string>("25544");
   const [currentNoradID, setCurrentNoradID] = useState<string>("25544");
   const [orbitData, setOrbitData] = useState<OrbitDataItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -34,8 +34,8 @@ const Tracker: React.FC = () => {
 
   useEffect(() => {
     const fetchSatelliteOrbit = async () => {
-      setLoading(true);
-      setError(null);
+      setLoading(true); // Start loading
+      setError(null); // Clear previous errors
 
       try {
         const response = await axios.get("http://localhost:8081/satellites/orbit", {
@@ -58,7 +58,7 @@ const Tracker: React.FC = () => {
       } catch (err: any) {
         setError(`Error fetching data: ${err.message}`);
       } finally {
-        setLoading(false);
+        setLoading(false); // End loading
       }
     };
 
@@ -71,7 +71,7 @@ const Tracker: React.FC = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 relative">
       <div className="p-6 bg-gray-100">
         <form onSubmit={handleSubmit} className="mb-6">
           <label htmlFor="noradID" className="block text-gray-800 font-bold mb-2">
@@ -97,8 +97,19 @@ const Tracker: React.FC = () => {
       </div>
       {error && <div className="text-red-500 mb-4">{error}</div>}
 
-      <div className="w-full" style={{ height: "80vh" }}>
+      <div
+        className="relative w-full"
+        style={{ height: "80vh" }}
+      >
+        {/* Cesium Viewer */}
         <CesiumViewer orbitData={orbitData} noradID={currentNoradID} />
+
+        {/* Spinner Overlay (visible on hover) */}
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-25 z-10 opacity-0 hover:opacity-100 transition-opacity">
+            <CircularProgress color="primary" />
+          </div>
+        )}
       </div>
     </div>
   );

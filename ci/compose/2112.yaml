@@ -73,6 +73,12 @@ services:
     extends:
       file: ./2112-python.yaml
       service: 2112-propagator
+  
+  # Propagator Database
+  2112-web:
+    extends:
+      file: ./2112-web.yaml
+      service: 2112-web
 
 networks:
   default:
