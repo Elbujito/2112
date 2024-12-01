@@ -24,13 +24,6 @@ start-dev:
 	@echo "Starting local development environment..."
 	@docker compose --project-directory ./ -f ./ci/compose/2112-local-dev.yaml up
 
-# Quick start for PostgreSQL
-quick-start-postgres:
-	@echo "Starting PostgreSQL environment..."
-	@mkdir -p ./ci/data/postgres
-	@docker compose --project-directory ./ -f ./ci/compose/quick-start-postgres.yaml up --force-recreate --remove-orphans
-	@echo "PostgreSQL environment started."
-
 # Bring up backend services
 up:
 	@echo "Starting backend services using $(COMPOSE_FILE)..."
@@ -101,7 +94,7 @@ python-build:
 python-up:
 	@echo "Starting Python project container in $(PYTHON_COMPOSE_FILE)..."
 	@docker-compose -f $(PYTHON_COMPOSE_FILE) up -d --build
-	
+
 # Stop Python project container
 python-down:
 	@echo "Stopping Python project container..."
