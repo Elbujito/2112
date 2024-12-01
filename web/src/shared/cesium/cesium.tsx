@@ -10,11 +10,11 @@ interface OrbitData {
 }
 
 interface CesiumViewerProps {
-  orbitData: OrbitData[];
-  noradID: string;
+  orbitData?: OrbitData[]; // Make orbitData optional
+  noradID?: string;        // Make noradID optional
 }
 
-const CesiumViewer: React.FC<CesiumViewerProps> = ({ orbitData, noradID }) => {
+const CesiumViewer: React.FC<CesiumViewerProps> = ({ orbitData = [], noradID = "Unknown" }) => {
   useEffect(() => {
     let viewer: Cesium.Viewer | null = null;
 
@@ -24,20 +24,21 @@ const CesiumViewer: React.FC<CesiumViewerProps> = ({ orbitData, noradID }) => {
         timeline: true,
         animation: true,
       });
+
+      // Adjust the camera to show Earth properly
+      viewer.scene.camera.setView({
+        destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000), // Overhead view
+      });
     };
 
-    Cesium.Ion.defaultAccessToken = "null"
-
-    // Plot orbit data
     const plotOrbit = () => {
-      if (!viewer || !orbitData || orbitData.length === 0) {
-        console.error("Viewer not initialized or no orbit data provided.");
+      if (!viewer || orbitData.length === 0) {
+        console.warn("Orbit data not provided. Viewer will display Earth only.");
         return;
       }
 
       const positionProperty = new Cesium.SampledPositionProperty();
 
-      // Add samples to the position property
       orbitData.forEach(({ latitude, longitude, altitude, time }) => {
         const position = Cesium.Cartesian3.fromDegrees(
           longitude,
@@ -110,7 +111,7 @@ const CesiumViewer: React.FC<CesiumViewerProps> = ({ orbitData, noradID }) => {
       }
     };
 
-    // Initialize and plot
+    // Initialize and plot orbit
     initializeViewer();
     plotOrbit();
 

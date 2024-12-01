@@ -10,7 +10,10 @@ def propagate_satellite():
         data = request.json
         tle_line1 = data['tle_line1']
         tle_line2 = data['tle_line2']
-        start_time = datetime.fromisoformat(data['start_time'])
+        
+        # Preprocess start_time to handle "Z" in ISO 8601
+        start_time = datetime.fromisoformat(data['start_time'].replace("Z", "+00:00"))
+        
         duration_minutes = data.get('duration_minutes', 90)
         interval_seconds = data.get('interval_seconds', 15)
 

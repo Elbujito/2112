@@ -13,7 +13,7 @@ export default function Base() {
   <div className="antialiased text-white-100">
     <Meta title={AppConfig.title} description={AppConfig.description} />
     <Hero title="AI Gamification for Crisis-Ready Workforces"/>
-    <Tracker></Tracker>
+    <Tracker/>
     <VerticalFeatures/>
     <Footer />
     <Analytics />

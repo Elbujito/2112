@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-const PROPAGATION_API_URL = "http://localhost:5000/satellite/propagate"
+const DefaultPropagationAPIURL = "http://2112-propagator:5000/satellite/propagate"
 
 type PropagatorClient struct {
 	BaseURL string
@@ -35,7 +35,7 @@ type SatellitePosition struct {
 // NewPropagatorClient creates a new PropagatorClient with the given base URL.
 func NewPropagatorClient(baseURL string) *PropagatorClient {
 	if baseURL == "" {
-		baseURL = PROPAGATION_API_URL
+		baseURL = DefaultPropagationAPIURL
 	}
 	return &PropagatorClient{
 		BaseURL: baseURL,

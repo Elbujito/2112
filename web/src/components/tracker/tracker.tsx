@@ -12,13 +12,13 @@ type OrbitDataItem = {
 
 // Define props for CesiumViewer
 interface CesiumViewerProps {
-  orbitData: OrbitDataItem[];
-  noradID: string;
+  orbitData?: OrbitDataItem[]; // Orbit data is optional
+  noradID?: string;           // NORAD ID is optional
 }
 
 // Dynamic import for CesiumViewer with type annotations
 const CesiumViewer = dynamic<CesiumViewerProps>(
-() => import("../../shared/cesium/cesium"),
+  () => import("../../shared/cesium/cesium"),
   {
     ssr: false, // Ensure it only runs on the client
     loading: () => <Skeleton variant="rectangular" width="100%" height="80vh" />,
@@ -72,42 +72,34 @@ const Tracker: React.FC = () => {
 
   return (
     <div className="p-6">
-        <div className="p-6 bg-gray-100">
+      <div className="p-6 bg-gray-100">
         <form onSubmit={handleSubmit} className="mb-6">
-            <label htmlFor="noradID" className="block text-gray-800 font-bold mb-2">
+          <label htmlFor="noradID" className="block text-gray-800 font-bold mb-2">
             Enter NORAD ID:
-            </label>
-            <div className="flex items-center">
+          </label>
+          <div className="flex items-center">
             <input
-                id="noradID"
-                type="text"
-                value={noradID}
-                onChange={(e) => setNoradID(e.target.value)}
-                className="flex-1 p-2 border border-gray-300 rounded text-gray-700 placeholder-gray-500 mr-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                placeholder="e.g., 25544"
+              id="noradID"
+              type="text"
+              value={noradID}
+              onChange={(e) => setNoradID(e.target.value)}
+              className="flex-1 p-2 border border-gray-300 rounded text-gray-700 placeholder-gray-500 mr-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              placeholder="e.g., 25544"
             />
             <button
-                type="submit"
-                className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              type="submit"
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
             >
-                Fetch
+              Fetch
             </button>
-            </div>
+          </div>
         </form>
-        </div>
+      </div>
       {error && <div className="text-red-500 mb-4">{error}</div>}
 
-      {loading ? (
-        <Skeleton variant="rectangular" width="100%" height={500} />
-      ) : orbitData.length > 0 ? (
-        <div className="h-[500px] w-full">
-          <CesiumViewer orbitData={orbitData} noradID={currentNoradID} />
-        </div>
-      ) : (
-        <div className="text-gray-500">
-          No data available. Please fetch data using a valid NORAD ID.
-        </div>
-      )}
+      <div className="w-full" style={{ height: "80vh" }}>
+        <CesiumViewer orbitData={orbitData} noradID={currentNoradID} />
+      </div>
     </div>
   );
 };

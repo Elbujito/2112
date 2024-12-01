@@ -22,7 +22,7 @@ func GetSatellitePositionsByNoradID(c echo.Context) error {
 		return constants.ERROR_ID_NOT_FOUND
 	}
 
-	propagteClient := propagator.NewPropagatorClient(propagator.PROPAGATION_API_URL)
+	propagteClient := propagator.NewPropagatorClient(propagator.DefaultPropagationAPIURL)
 
 	// Assuming you have a service or repository to fetch tiles by NORAD ID
 	database := data.NewDatabase()
