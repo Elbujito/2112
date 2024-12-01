@@ -2,7 +2,7 @@
 POSTGRES_COMPOSE_FILE ?= ci/compose/2112-postgres.yaml
 WEB_COMPOSE_FILE ?= ci/compose/2112-web.yaml
 PYTHON_COMPOSE_FILE ?= ci/compose/2112-python.yaml
-SERVER_COMPOSE_FILE ?= ci/compose/2112-server.yaml
+SERVER_COMPOSE_FILE ?= ci/compose/2112.yaml
 VERSION ?= 0.0.1
 SERVER_IMAGE ?= 2112-server
 WEB_IMAGE ?= 2112-web
@@ -65,8 +65,8 @@ clean: ## Clean build artifacts
 ################################################################################
 
 
-.PHONY: backend-up
-backend-up: ## Start the database service
+.PHONY: 2112-up
+2112-up: ## Start the database service
 	docker-compose -f $(SERVER_COMPOSE_FILE) up --build -d --force-recreate
 
 .PHONY: docker-build

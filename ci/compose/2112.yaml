@@ -1,19 +1,80 @@
 version: "3.7"
 services:
+  # Main Application Service
   2112-service:
-    container_name: 2112-service
     build:
-      context: .
-      dockerfile: ci/docker/Dockerfile
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile # Path to the Dockerfile relative to the context
+    container_name: 2112-service # Assign a name to the container
+    env_file: ../config/2112/2112.dev-env
     ports:
       - "8081:8081"
       - "8080:8080"
       - "8079:8079"
+    depends_on:
+      2112-db-seeder:
+        condition: service_completed_successfully
+    restart: always # Restart the container on failure
+    command: ["service", "start"]
+
+  # Database Migration Service
+  2112-db-migrator:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile
+    container_name: 2112-db-migrator
     env_file: ../config/2112/2112.dev-env
-    command:
-      - "service" 
-      - "start"
-      - "-d"
-      - "-e"
-      - "-H"
-      - "0.0.0.0"
+    command: ["service","db", "migrate"] # Run migration
+    depends_on:
+      2112-postgres:
+        condition: service_healthy
+    restart: "no" # Run once and exit
+
+  # Database Seeding Service
+  2112-db-seeder:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile
+    container_name: 2112-db-seeder
+    env_file: ../config/2112/2112-postgres.dev-env
+    command: ["service","db", "seed"] # Run seeding
+    depends_on:
+      2112-db-migrator:
+        condition: service_completed_successfully
+    restart: "no" # Run once and exit
+
+
+  # Database Seeding tle
+  2112-task-tle-seeder:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile
+    container_name: 2112-task-tle-seeder
+    env_file: ../config/2112/2112-postgres.dev-env
+    command: ["service","task", "exec", "fetchAndUpsertTLE", "category=active"] # Run seeding
+    depends_on:
+      2112-db-migrator:
+        condition: service_completed_successfully
+    restart: "no" # Run once and exit
+
+  # PostgreSQL Database
+  2112-postgres:
+    extends:
+      file: ./2112-postgres.yaml
+      service: 2112-postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  # Propagator Database
+  2112-propagator:
+    extends:
+      file: ./2112-python.yaml
+      service: 2112-propagator
+
+networks:
+  default:
+    name: 2112_net
+    external: true
