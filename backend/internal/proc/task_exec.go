@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/Elbujito/2112/internal/clients/celestrack"
+	propagator "github.com/Elbujito/2112/internal/clients/propagate"
 	"github.com/Elbujito/2112/internal/data"
 	repository "github.com/Elbujito/2112/internal/repositories"
 	"github.com/Elbujito/2112/internal/services"
@@ -23,16 +24,19 @@ func TaskExec(ctx context.Context, args []string) {
 
 	database := data.NewDatabase()
 
-	celestrackClient := celestrack.CelestrackClient{}
+	propagteClient := propagator.NewPropagatorClient(propagator.DefaultPropagationAPIURL)
 
-	satelliteRepo := repository.NewSatelliteRepository(&database)
+	// Assuming you have a service or repository to fetch tiles by NORAD ID
 	tleRepo := repository.NewTLERepository(&database)
+	celestrackClient := celestrack.CelestrackClient{}
+	satelliteRepo := repository.NewSatelliteRepository(&database)
 	visibilityRepo := repository.NewTileSatelliteMappingRepository(&database)
 	tileRepo := repository.NewTileRepository(&database)
 
 	tleService := services.NewTleService(&celestrackClient)
+	satService := services.NewSatelliteService(tleRepo, propagteClient, &celestrackClient, satelliteRepo)
 
-	monitor, err := tasks.NewTaskMonitor(satelliteRepo, tleRepo, tileRepo, visibilityRepo, tleService)
+	monitor, err := tasks.NewTaskMonitor(satelliteRepo, tleRepo, tileRepo, visibilityRepo, tleService, satService)
 	if err != nil {
 		log.Println(err.Error())
 		return

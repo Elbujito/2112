@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/internal/api/handlers"
+	"github.com/Elbujito/2112/internal/clients/celestrack"
 	propagator "github.com/Elbujito/2112/internal/clients/propagate"
 	"github.com/Elbujito/2112/internal/data"
 	repository "github.com/Elbujito/2112/internal/repositories"
@@ -27,7 +28,9 @@ func GetSatellitePositionsByNoradID(c echo.Context) error {
 	// Assuming you have a service or repository to fetch tiles by NORAD ID
 	database := data.NewDatabase()
 	tleRepo := repository.NewTLERepository(&database)
-	satService := services.NewSatelliteService(tleRepo, propagteClient)
+	satelliteRepo := repository.NewSatelliteRepository(&database)
+	celestrackClient := celestrack.CelestrackClient{}
+	satService := services.NewSatelliteService(tleRepo, propagteClient, &celestrackClient, satelliteRepo)
 	positions, err := satService.Propagate(c.Request().Context(), noradID, 24*time.Hour, 1*time.Minute)
 	if err != nil {
 		c.Echo().Logger.Error("Failed to propagate positions: ", err)

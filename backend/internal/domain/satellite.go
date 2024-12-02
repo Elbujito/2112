@@ -28,14 +28,62 @@ func (t SatelliteType) IsValid() error {
 	}
 }
 
-// Satellite represents the domain entity for a satellite.
 type Satellite struct {
-	ID        string // Unique identifier
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Name      string
-	NoradID   string
-	Type      SatelliteType
+	ID             string // Unique identifier
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	Name           string
+	NoradID        string
+	Type           SatelliteType
+	LaunchDate     *time.Time // Added field for launch date
+	DecayDate      *time.Time // Added field for decay date, if applicable
+	IntlDesignator string     // Added field for international designator
+	Owner          string     // Added field for ownership information
+	ObjectType     string     // Added field for object type (e.g., PAYLOAD)
+	Period         *float64   // Added field for orbital period in minutes
+	Inclination    *float64   // Added field for orbital inclination in degrees
+	Apogee         *float64   // Added field for apogee altitude in kilometers
+	Perigee        *float64   // Added field for perigee altitude in kilometers
+	RCS            *float64   // Added field for radar cross-section in square meters
+}
+
+// NewSatelliteFromStatCat creates a new Satellite instance with optional SATCAT data.
+func NewSatelliteFromStatCat(
+	name string,
+	noradID string,
+	satType SatelliteType,
+	launchDate *time.Time,
+	decayDate *time.Time,
+	intlDesignator string,
+	owner string,
+	objectType string,
+	period *float64,
+	inclination *float64,
+	apogee *float64,
+	perigee *float64,
+	rcs *float64,
+) (Satellite, error) {
+	if err := satType.IsValid(); err != nil {
+		return Satellite{}, err
+	}
+	return Satellite{
+		ID:             uuid.NewString(),
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+		Name:           name,
+		NoradID:        noradID,
+		Type:           satType,
+		LaunchDate:     launchDate,
+		DecayDate:      decayDate,
+		IntlDesignator: intlDesignator,
+		Owner:          owner,
+		ObjectType:     objectType,
+		Period:         period,
+		Inclination:    inclination,
+		Apogee:         apogee,
+		Perigee:        perigee,
+		RCS:            rcs,
+	}, nil
 }
 
 // NewSatellite creates a new Satellite instance.
@@ -60,6 +108,7 @@ type SatelliteRepository interface {
 	Save(ctx context.Context, satellite Satellite) error
 	Update(ctx context.Context, satellite Satellite) error
 	DeleteByNoradID(ctx context.Context, noradID string) error
+	SaveBatch(ctx context.Context, satellites []Satellite) error
 }
 
 type SatellitePosition struct {

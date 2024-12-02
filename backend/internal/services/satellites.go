@@ -11,13 +11,15 @@ import (
 )
 
 type SatelliteService struct {
-	tleRepo         domain.TLERepository // Assuming you have a TLE repository to get TLEs from a database
-	propagateClient *propagator.PropagatorClient
+	tleRepo          domain.TLERepository // Assuming you have a TLE repository to get TLEs from a database
+	propagateClient  *propagator.PropagatorClient
+	celestrackClient celestrackClient
+	repo             domain.SatelliteRepository
 }
 
 // NewSatelliteService creates a new instance of SatelliteService.
-func NewSatelliteService(tleRepo domain.TLERepository, propagateClient *propagator.PropagatorClient) SatelliteService {
-	return SatelliteService{tleRepo: tleRepo, propagateClient: propagateClient}
+func NewSatelliteService(tleRepo domain.TLERepository, propagateClient *propagator.PropagatorClient, celestrackClient celestrackClient, repo domain.SatelliteRepository) SatelliteService {
+	return SatelliteService{tleRepo: tleRepo, propagateClient: propagateClient, celestrackClient: celestrackClient, repo: repo}
 }
 
 func (s *SatelliteService) Propagate(ctx context.Context, noradID string, duration time.Duration, interval time.Duration) ([]space.SatellitePosition, error) {
@@ -66,4 +68,58 @@ func (s *SatelliteService) Propagate(ctx context.Context, noradID string, durati
 	}
 
 	return positions, nil
+}
+
+// GetSatelliteByNoradID retrieves a satellite by NORAD ID.
+func (s *SatelliteService) GetSatelliteByNoradID(ctx context.Context, noradID string) (domain.Satellite, error) {
+	return s.repo.FindByNoradID(ctx, noradID)
+}
+
+// ListAllSatellites retrieves all stored satellites.
+func (s *SatelliteService) ListAllSatellites(ctx context.Context) ([]domain.Satellite, error) {
+	return s.repo.FindAll(ctx)
+}
+func (s *SatelliteService) FetchAndStoreAllSatellites(ctx context.Context) ([]domain.Satellite, error) {
+	// Fetch all satellite metadata from CelestrackClient
+	rawSatellites, err := s.celestrackClient.FetchSatelliteMetadata(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch satellite metadata: %w", err)
+	}
+
+	if len(rawSatellites) == 0 {
+		return nil, fmt.Errorf("no satellite metadata available")
+	}
+
+	var storedSatellites []domain.Satellite
+	for _, rawSatellite := range rawSatellites {
+
+		// Use the updated constructor to create a Satellite
+		satellite, err := domain.NewSatelliteFromStatCat(
+			rawSatellite.Name,
+			rawSatellite.NoradID,
+			domain.Other, // Default type; adjust based on metadata if available
+			&rawSatellite.LaunchDate,
+			rawSatellite.DecayDate,
+			rawSatellite.IntlDesignator,
+			rawSatellite.Owner,
+			rawSatellite.ObjectType,
+			rawSatellite.Period,
+			rawSatellite.Inclination,
+			rawSatellite.Apogee,
+			rawSatellite.Apogee,
+			rawSatellite.RCS,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create satellite for NORAD ID %s: %w", rawSatellite.NoradID, err)
+		}
+		// Add the satellite to the result list
+		storedSatellites = append(storedSatellites, satellite)
+	}
+
+	// Save the satellite to the repository
+	if err := s.repo.SaveBatch(ctx, storedSatellites); err != nil {
+		return nil, fmt.Errorf("failed to save satellite to database: %w", err)
+	}
+
+	return storedSatellites, nil
 }

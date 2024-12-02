@@ -12,16 +12,36 @@ type FormBase struct {
 
 type SatelliteForm struct {
 	FormBase
-	Name    string `json:"name" validate:"required,min=2,max=50"`     // Satellite name
-	NoradID string `json:"norad_id" validate:"required,min=1,max=10"` // NORAD ID (unique identifier)
-	Type    string `json:"type" validate:"required,min=2,max=80"`     // Satellite type
+	Name           string     `json:"name" validate:"required,min=2,max=255"`       // Satellite name
+	NoradID        string     `json:"norad_id" validate:"required,min=1,max=255"`   // NORAD ID (unique identifier)
+	Type           string     `json:"type" validate:"required,min=2,max=255"`       // Satellite type
+	LaunchDate     *time.Time `json:"launch_date" validate:"omitempty"`             // Launch date
+	DecayDate      *time.Time `json:"decay_date" validate:"omitempty"`              // Decay date (optional)
+	IntlDesignator string     `json:"intl_designator" validate:"omitempty,max=255"` // International designator
+	Owner          string     `json:"owner" validate:"omitempty,max=255"`           // Ownership information
+	ObjectType     string     `json:"object_type" validate:"omitempty,max=255"`     // Object type
+	Period         *float64   `json:"period" validate:"omitempty"`                  // Orbital period in minutes
+	Inclination    *float64   `json:"inclination" validate:"omitempty"`             // Orbital inclination in degrees
+	Apogee         *float64   `json:"apogee" validate:"omitempty"`                  // Apogee altitude in kilometers
+	Perigee        *float64   `json:"perigee" validate:"omitempty"`                 // Perigee altitude in kilometers
+	RCS            *float64   `json:"rcs" validate:"omitempty"`                     // Radar cross-section in square meters
 }
 
 func (form *SatelliteForm) MapToModel() *Satellite {
 	return &Satellite{
-		Name:    form.Name,
-		NoradID: form.NoradID,
-		Type:    form.Type,
+		Name:           form.Name,
+		NoradID:        form.NoradID,
+		Type:           form.Type,
+		LaunchDate:     form.LaunchDate,
+		DecayDate:      form.DecayDate,
+		IntlDesignator: form.IntlDesignator,
+		Owner:          form.Owner,
+		ObjectType:     form.ObjectType,
+		Period:         form.Period,
+		Inclination:    form.Inclination,
+		Apogee:         form.Apogee,
+		Perigee:        form.Perigee,
+		RCS:            form.RCS,
 	}
 }
 

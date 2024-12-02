@@ -9,6 +9,7 @@ import (
 
 type celestrackClient interface {
 	FetchTLEFromSatCatByCategory(ctx context.Context, category string) ([]*mappers.RawTLE, error)
+	FetchSatelliteMetadata(ctx context.Context) ([]*mappers.SatelliteMetadata, error)
 }
 
 type TleService struct {

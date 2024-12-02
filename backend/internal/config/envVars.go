@@ -90,6 +90,9 @@ func (c *EnvVars) setDefaults() {
 	viper.SetDefault("CORS_ALLOW_ORIGINS", constants.DEFAULT_CORS_ALLOW_ORIGINS)
 
 	viper.SetDefault("GZIP_LEVEL", constants.DEFAULT_GZIP_LEVEL)
+
+	viper.SetDefault("PUBLIC_CESLESTRACK_URL", constants.DEFAULT_PUBLIC_CESLESTRACK_URL)
+	viper.SetDefault("PRIVATE_PROPAGATOR_URL", constants.DEFAULT_PRIVATE_PROPAGATOR_URL)
 }
 
 func (c *EnvVars) OverrideUsingFlags() {

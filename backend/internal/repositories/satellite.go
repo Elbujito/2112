@@ -7,6 +7,7 @@ import (
 	"github.com/Elbujito/2112/internal/data"
 	"github.com/Elbujito/2112/internal/domain"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type SatelliteRepository struct {
@@ -48,4 +49,19 @@ func (r *SatelliteRepository) Update(ctx context.Context, satellite domain.Satel
 // DeleteByNoradID removes a satellite record by its NoradID.
 func (r *SatelliteRepository) DeleteByNoradID(ctx context.Context, noradID string) error {
 	return r.db.DbHandler.Where("noradID = ?", noradID).Delete(&domain.Satellite{}).Error
+}
+
+// SaveBatch performs a batch upsert (insert or update) for satellites.
+func (r *SatelliteRepository) SaveBatch(ctx context.Context, satellites []domain.Satellite) error {
+	if len(satellites) == 0 {
+		return nil // Nothing to save
+	}
+
+	// Use Gen's support for ON CONFLICT upsert
+	return r.db.DbHandler.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "norad_id"}}, // Define the unique constraint column
+			UpdateAll: true,                                // Update all fields in case of conflict
+		}).
+		CreateInBatches(satellites, 100).Error // Batch size: 100
 }

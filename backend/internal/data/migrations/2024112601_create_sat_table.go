@@ -14,9 +14,19 @@ func init() {
 		Migrate: func(db *gorm.DB) error {
 			type Satellite struct {
 				models.ModelBase
-				Name    string `gorm:"size:255;not null"`
-				NoradID string `gorm:"size:255;unique;not null"`
-				Type    string `gorm:"size:255"` // Optional satellite type
+				Name           string     `gorm:"size:255;not null"`        // Satellite name
+				NoradID        string     `gorm:"size:255;unique;not null"` // NORAD ID
+				Type           string     `gorm:"size:255"`                 // Satellite type (e.g., telescope, communication)
+				LaunchDate     *time.Time `gorm:"type:date"`                // Launch date
+				DecayDate      *time.Time `gorm:"type:date"`                // Decay date (optional)
+				IntlDesignator string     `gorm:"size:255"`                 // International designator
+				Owner          string     `gorm:"size:255"`                 // Ownership information
+				ObjectType     string     `gorm:"size:255"`                 // Object type (e.g., "PAYLOAD")
+				Period         *float64   `gorm:"type:float"`               // Orbital period in minutes (optional)
+				Inclination    *float64   `gorm:"type:float"`               // Orbital inclination in degrees (optional)
+				Apogee         *float64   `gorm:"type:float"`               // Apogee altitude in kilometers (optional)
+				Perigee        *float64   `gorm:"type:float"`               // Perigee altitude in kilometers (optional)
+				RCS            *float64   `gorm:"type:float"`               // Radar cross-section in square meters (optional)
 			}
 
 			type TLE struct {
