@@ -87,7 +87,7 @@ services:
       file: ./2112-python.yaml
       service: 2112-propagator
   
-  # Propagator Database
+  # Web
   2112-web:
     extends:
       file: ./2112-web.yaml

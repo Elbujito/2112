@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/Elbujito/2112/internal/domain"
 	"github.com/Elbujito/2112/internal/services"
 	"github.com/Elbujito/2112/pkg/fx/constants"
 	"github.com/labstack/echo/v4"
@@ -27,7 +28,7 @@ func (h *SatelliteHandler) GetSatellitePositionsByNoradID(c echo.Context) error 
 		return constants.ERROR_ID_NOT_FOUND
 	}
 
-	positions, err := h.Service.Propagate(c.Request().Context(), noradID, 24*time.Hour, 1*time.Minute)
+	positions, err := h.Service.Propagate(c.Request().Context(), noradID, 24*time.Hour, 10*time.Minute)
 	if err != nil {
 		c.Echo().Logger.Error("Failed to propagate positions: ", err)
 		return err
@@ -41,11 +42,12 @@ func (h *SatelliteHandler) GetSatellitePositionsByNoradID(c echo.Context) error 
 	return c.JSON(http.StatusOK, positions)
 }
 
-// GetPaginatedSatellites fetches a paginated list of satellites with their TLE status.
+// GetPaginatedSatellites fetches a paginated list of satellites with optional search filters.
 func (h *SatelliteHandler) GetPaginatedSatellites(c echo.Context) error {
 	// Parse query parameters for pagination
 	pageStr := c.QueryParam("page")
 	pageSizeStr := c.QueryParam("pageSize")
+	searchWildcard := c.QueryParam("search") // Retrieve optional search query
 
 	// Convert parameters to integers with defaults
 	page, err := strconv.Atoi(pageStr)
@@ -58,8 +60,13 @@ func (h *SatelliteHandler) GetPaginatedSatellites(c echo.Context) error {
 		pageSize = 10 // Default to 10 records per page if invalid
 	}
 
-	// Call the service method for pagination
-	satellites, totalRecords, err := h.Service.ListSatellitesWithPaginationAndTLE(c.Request().Context(), page, pageSize)
+	// Create SearchRequest object
+	searchRequest := &domain.SearchRequest{
+		Wildcard: searchWildcard,
+	}
+
+	// Call the service method for pagination with search filters
+	satellites, totalRecords, err := h.Service.ListSatellitesWithPagination(c.Request().Context(), page, pageSize, searchRequest)
 	if err != nil {
 		c.Echo().Logger.Error("Failed to fetch paginated satellites: ", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to fetch satellites")

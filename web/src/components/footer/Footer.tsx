@@ -1,57 +1,53 @@
-import Link from 'next/link';
+const Footer = () => {
+  return (
+    <div className="flex w-full flex-col items-center justify-between px-1 pb-8 pt-3 lg:px-8 xl:flex-row">
+      <p className="mb-4 text-center text-sm font-medium text-gray-600 sm:!mb-0 md:text-lg">
+        <span className="mb-4 text-center text-sm text-gray-600 sm:!mb-0 md:text-base">
+          ©{new Date().getFullYear()} 2112 Project. All Rights Reserved.
+        </span>
+      </p>
+      <div>
+        <ul className="flex flex-wrap items-center gap-3 sm:flex-nowrap md:gap-10">
+          <li>
+            <a
+              target="blank"
+              href="mailto:hello@simmmple.com"
+              className="text-base font-medium text-gray-600 hover:text-gray-600"
+            >
+              Support
+            </a>
+          </li>
+          <li>
+            <a
+              target="blank"
+              href="https://simmmple.com/licenses"
+              className="text-base font-medium text-gray-600 hover:text-gray-600"
+            >
+              License
+            </a>
+          </li>
+          <li>
+            <a
+              target="blank"
+              href="https://simmmple.com/terms-of-service"
+              className="text-base font-medium text-gray-600 hover:text-gray-600"
+            >
+              Terms of Use
+            </a>
+          </li>
+          <li>
+            <a
+              target="blank"
+              href="https://blog.horizon-ui.com/"
+              className="text-base font-medium text-gray-600 hover:text-gray-600"
+            >
+              Blog
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  );
+};
 
-import { Background } from '../../shared/background/Background';
-import { CenteredFooter } from '../../shared/footer/CenteredFooter';
-import { Section } from '../../shared/layout/Section';
-import { Logo } from '../../shared/logo/Logo';
-
-const Footer = () => (
-  <Background color="bg-black-100">
-    <Section styles={`py-2 max-w-screen-lg mx-auto px-3 `}>
-      <CenteredFooter
-        logo={<Logo />}
-        iconList={
-          <>
-
-            <Link href="/">
-              <a>
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M23.954 4.569a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.691 8.094 4.066 6.13 1.64 3.161a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.061a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.937 4.937 0 004.604 3.417 9.868 9.868 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.054 0 13.999-7.496 13.999-13.986 0-.209 0-.42-.015-.63a9.936 9.936 0 002.46-2.548l-.047-.02z" />
-                </svg>
-              </a>
-            </Link>
-
-            <Link href="https://www.youtube.com/@2112/featured">
-              <a>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z" />
-                </svg>
-              </a>
-            </Link>
-
-            <Link href="/">
-              <a>
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                </svg>
-              </a>
-            </Link>
-          </>
-        }
-      >
-        <li>
-          <Link href="/">
-            <a>Home</a>
-          </Link>
-        </li>
-        <li>
-          <Link href="/contact">
-            <a>Contact</a>
-          </Link>
-        </li>
-      </CenteredFooter>
-    </Section>
-  </Background>
-);
-
-export { Footer };
+export default Footer;
