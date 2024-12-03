@@ -127,7 +127,7 @@ export default function SatelliteTableComponent(props: {
 
   return (
     <Card extra="h-full w-full pb-8 px-8">
-      <div className="sticky top-0 z-10">
+      <div className="sticky top-0">
         <div className="flex items-center justify-between">
           <div className="relative flex h-[61px] w-[355px] items-center rounded-full bg-white px-2 py-2 shadow-xl shadow-shadow-500 dark:bg-navy-800 dark:shadow-none">
             <button
