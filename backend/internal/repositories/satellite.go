@@ -65,3 +65,32 @@ func (r *SatelliteRepository) SaveBatch(ctx context.Context, satellites []domain
 		}).
 		CreateInBatches(satellites, 100).Error // Batch size: 100
 }
+
+// FindAllWithPaginationAndTLE retrieves satellites with pagination and includes a field indicating if a TLE is present.
+func (r *SatelliteRepository) FindAllWithPagination(ctx context.Context, page int, pageSize int) ([]domain.Satellite, int64, error) {
+	var satellites []domain.Satellite
+	var totalRecords int64
+
+	// Calculate the offset
+	offset := (page - 1) * pageSize
+
+	// Count the total number of satellites that have a TLE
+	countQuery := r.db.DbHandler.Table("satellites").
+		Select("satellites.id").
+		Joins("INNER JOIN tles ON satellites.norad_id = tles.norad_id")
+	if err := countQuery.Count(&totalRecords).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Retrieve satellites with an indication of whether a TLE is present
+	query := r.db.DbHandler.Table("satellites").
+		Select("satellites.*, true AS has_tle").
+		Joins("INNER JOIN tles ON satellites.norad_id = tles.norad_id").
+		Limit(pageSize).Offset(offset)
+
+	if err := query.Scan(&satellites).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return satellites, totalRecords, nil
+}

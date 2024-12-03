@@ -1,108 +1,151 @@
 package routers
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
+
 	"github.com/Elbujito/2112/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/internal/api/handlers/healthz"
-	satellitesHandlers "github.com/Elbujito/2112/internal/api/handlers/satellites"
+	"github.com/Elbujito/2112/internal/api/handlers/satellites"
 	tilesHandlers "github.com/Elbujito/2112/internal/api/handlers/tiles"
 	"github.com/Elbujito/2112/internal/api/middlewares"
+	serviceapi "github.com/Elbujito/2112/internal/api/services"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
 	"github.com/Elbujito/2112/pkg/fx/constants"
+
+	"github.com/labstack/echo/v4"
 )
 
-var publicApiRouter *Router
-
-func InitPublicAPIRouter() {
-	logger.Debug("Initializing public api router ...")
-	publicApiRouter = &Router{}
-	publicApiRouter.Name = "public API"
-	publicApiRouter.Init()
-
-	// order is important here
-	// first register development middlewares
-	if config.DevModeFlag {
-		logger.Debug("Registering public api development middlewares ...")
-		registerPublicApiDevModeMiddleware()
-	}
-
-	// next register middlwares
-	logger.Debug("Registering public api middlewares ...")
-	registerPublicAPIMiddlewares()
-
-	// next register all health check routes
-	logger.Debug("Registering public api health routes ...")
-	registerPublicApiHealthCheckHandlers()
-
-	// next register security related middleware
-	logger.Debug("Registering public api security middlewares ...")
-	registerPublicApiSecurityMiddlewares()
-
-	// next register all routes
-	logger.Debug("Registering public api public routes ...")
-	registerPublicAPIRoutes()
-
-	logger.Debug("Registering public celestrack api handlers ...")
-	registerPublicCelestrackAPIRoutes()
-
-	// finally register default fallback error handlers
-	// 404 is handled here as the last route
-	logger.Debug("Registering public api error handlers ...")
-	registerPublicApiErrorHandlers()
-
-	logger.Debug("Public api registration complete.")
-
+// PublicRouter manages the public API router and its dependencies.
+type PublicRouter struct {
+	Echo             *echo.Echo
+	Name             string
+	ServiceComponent *serviceapi.ServiceComponent // Add ServiceComponent to Router
 }
 
-func PublicAPIRouter() *Router {
+// Init initializes the Echo instance for the router.
+func (r *PublicRouter) Init() {
+	r.Echo = echo.New()
+	r.Echo.HideBanner = true
+	r.Echo.Logger = logger.GetLogger()
+}
+
+// InitPublicAPIRouter initializes and returns the public API router.
+func InitPublicAPIRouter() *PublicRouter {
+	logger.Debug("Initializing public API router ...")
+
+	// Initialize ServiceComponent
+	serviceComponent := serviceapi.NewServiceComponent()
+
+	// Create and initialize PublicRouter
+	publicApiRouter := &PublicRouter{
+		Name:             "public API",
+		ServiceComponent: serviceComponent,
+	}
+	publicApiRouter.Init()
+
+	// Register middlewares, routes, and error handlers
+	if config.DevModeFlag {
+		publicApiRouter.registerPublicApiDevModeMiddleware()
+	}
+	publicApiRouter.registerPublicAPIMiddlewares()
+	publicApiRouter.registerPublicApiHealthCheckHandlers()
+	publicApiRouter.registerPublicApiSecurityMiddlewares()
+	publicApiRouter.registerPublicAPIRoutes()
+	publicApiRouter.registerPublicApiErrorHandlers()
+
+	logger.Debug("Public API registration complete.")
 	return publicApiRouter
 }
 
-func registerPublicAPIMiddlewares() {
-	publicApiRouter.RegisterPreMiddleware(middlewares.SlashesMiddleware())
+// RegisterPreMiddleware registers a pre-middleware.
+func (r *PublicRouter) RegisterPreMiddleware(middleware echo.MiddlewareFunc) {
+	r.Echo.Pre(middleware)
+}
 
-	publicApiRouter.RegisterMiddleware(middlewares.LoggerMiddleware())
-	publicApiRouter.RegisterMiddleware(middlewares.TimeoutMiddleware())
-	publicApiRouter.RegisterMiddleware(middlewares.RequestHeadersMiddleware())
-	publicApiRouter.RegisterMiddleware(middlewares.ResponseHeadersMiddleware())
+// RegisterMiddleware registers a middleware.
+func (r *PublicRouter) RegisterMiddleware(middleware echo.MiddlewareFunc) {
+	r.Echo.Use(middleware)
+}
+
+// Start starts the Echo server with graceful shutdown.
+func (r *PublicRouter) Start(host string, port string) {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	// Start server
+	go func() {
+		r.Echo.Logger.Info(fmt.Sprintf("Starting %s server on port: %s", r.Name, port))
+		if err := r.Echo.Start(host + ":" + port); err != nil && err != http.ErrServerClosed {
+			r.Echo.Logger.Fatal(err)
+			r.Echo.Logger.Fatal(constants.MSG_SERVER_SHUTTING_DOWN)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shut down the server with a timeout of 20 seconds.
+	<-ctx.Done()
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+	if err := r.Echo.Shutdown(ctx); err != nil {
+		r.Echo.Logger.Fatal(err)
+	}
+}
+
+// Register middlewares
+func (r *PublicRouter) registerPublicAPIMiddlewares() {
+	r.RegisterPreMiddleware(middlewares.SlashesMiddleware())
+	r.RegisterMiddleware(middlewares.LoggerMiddleware())
+	r.RegisterMiddleware(middlewares.TimeoutMiddleware())
+	r.RegisterMiddleware(middlewares.RequestHeadersMiddleware())
+	r.RegisterMiddleware(middlewares.ResponseHeadersMiddleware())
 
 	if config.Feature(constants.FEATURE_GZIP).IsEnabled() {
-		publicApiRouter.RegisterMiddleware(middlewares.GzipMiddleware())
+		r.RegisterMiddleware(middlewares.GzipMiddleware())
 	}
 }
 
-func registerPublicApiDevModeMiddleware() {
-	publicApiRouter.RegisterMiddleware(middlewares.BodyDumpMiddleware())
+// Register development mode middlewares
+func (r *PublicRouter) registerPublicApiDevModeMiddleware() {
+	r.RegisterMiddleware(middlewares.BodyDumpMiddleware())
 }
 
-func registerPublicApiSecurityMiddlewares() {
-	publicApiRouter.RegisterMiddleware(middlewares.XSSCheckMiddleware())
+// Register security-related middlewares
+func (r *PublicRouter) registerPublicApiSecurityMiddlewares() {
+	r.RegisterMiddleware(middlewares.XSSCheckMiddleware())
 
 	if config.Feature(constants.FEATURE_CORS).IsEnabled() {
-		publicApiRouter.RegisterMiddleware(middlewares.CORSMiddleware())
+		r.RegisterMiddleware(middlewares.CORSMiddleware())
 	}
-
 }
 
-func registerPublicApiErrorHandlers() {
-	publicApiRouter.Echo.HTTPErrorHandler = errors.AutomatedHttpErrorHandler()
-	publicApiRouter.Echo.RouteNotFound("/*", errors.NotFound)
-}
-
-func registerPublicApiHealthCheckHandlers() {
-	health := publicApiRouter.Echo.Group("/health")
+// Register health check handlers
+func (r *PublicRouter) registerPublicApiHealthCheckHandlers() {
+	health := r.Echo.Group("/health")
 	health.GET("/alive", healthHandlers.Index)
 	health.GET("/ready", healthHandlers.Ready)
 }
 
-func registerPublicAPIRoutes() {
-	tile := publicApiRouter.Echo.Group("/tiles")
-	tile.GET("/mapping", tilesHandlers.GetTilesByNoradID)
-	tile.GET("/all", tilesHandlers.GetTiles)
-	satellite := publicApiRouter.Echo.Group("/satellites")
-	satellite.GET("/orbit", satellitesHandlers.GetSatellitePositionsByNoradID)
+// Register error handlers
+func (r *PublicRouter) registerPublicApiErrorHandlers() {
+	r.Echo.HTTPErrorHandler = errors.AutomatedHttpErrorHandler()
+	r.Echo.RouteNotFound("/*", errors.NotFound)
 }
 
-func registerPublicCelestrackAPIRoutes() {
+// Register public API routes
+func (r *PublicRouter) registerPublicAPIRoutes() {
+	tile := r.Echo.Group("/tiles")
+	tile.GET("/mapping", tilesHandlers.GetTilesByNoradID)
+	tile.GET("/all", tilesHandlers.GetTiles)
 
+	// Initialize the SatelliteHandler with the SatelliteService from ServiceComponent
+	satelliteHandler := satellites.NewSatelliteHandler(r.ServiceComponent.SatelliteService)
+
+	satellite := r.Echo.Group("/satellites")
+	satellite.GET("/orbit", satelliteHandler.GetSatellitePositionsByNoradID)
+	satellite.GET("/paginated", satelliteHandler.GetPaginatedSatellites)
 }

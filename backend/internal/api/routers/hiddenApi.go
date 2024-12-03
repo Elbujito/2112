@@ -9,11 +9,11 @@ import (
 	"github.com/Elbujito/2112/pkg/fx/constants"
 )
 
-var hiddenApiRouter *Router
+var hiddenApiRouter *PublicRouter
 
 func InitHiddenAPIRouter() {
 	logger.Debug("Initializing hidden api router ...")
-	hiddenApiRouter = &Router{}
+	hiddenApiRouter = &PublicRouter{}
 	hiddenApiRouter.Name = "hidden API"
 	hiddenApiRouter.Init()
 
@@ -48,7 +48,7 @@ func InitHiddenAPIRouter() {
 	logger.Debug("Hidden api registration complete.")
 }
 
-func HiddenAPIRouter() *Router {
+func HiddenAPIRouter() *PublicRouter {
 	return hiddenApiRouter
 }
 

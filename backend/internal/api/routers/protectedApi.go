@@ -10,11 +10,11 @@ import (
 	"github.com/Elbujito/2112/pkg/fx/constants"
 )
 
-var protectedApiRouter *Router
+var protectedApiRouter *PublicRouter
 
 func InitProtectedAPIRouter() {
 	logger.Debug("Initializing protected api router ...")
-	protectedApiRouter = &Router{}
+	protectedApiRouter = &PublicRouter{}
 	protectedApiRouter.Name = "protected API"
 	protectedApiRouter.Init()
 
@@ -49,7 +49,7 @@ func InitProtectedAPIRouter() {
 	logger.Debug("Protected api registration complete.")
 }
 
-func ProtectedAPIRouter() *Router {
+func ProtectedAPIRouter() *PublicRouter {
 	return protectedApiRouter
 }
 

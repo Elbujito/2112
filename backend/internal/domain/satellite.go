@@ -109,6 +109,7 @@ type SatelliteRepository interface {
 	Update(ctx context.Context, satellite Satellite) error
 	DeleteByNoradID(ctx context.Context, noradID string) error
 	SaveBatch(ctx context.Context, satellites []Satellite) error
+	FindAllWithPagination(ctx context.Context, page int, pageSize int) ([]Satellite, int64, error)
 }
 
 type SatellitePosition struct {

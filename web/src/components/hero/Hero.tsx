@@ -15,7 +15,7 @@ const Hero = (props: IHeroProps) => {
 
   return (
   <Background color="bg-black-100" >
-     <Section styles={` py-6 px-3 `}> 
+     <Section styles={` py-2 px-3 `}> 
       <NavbarTwoColumns color="text-gray-800" childrenRight={
         <NavbarTwoColumns color="text-white-100" logo={<span></span>}>
         <li>
@@ -33,7 +33,7 @@ const Hero = (props: IHeroProps) => {
       </NavbarTwoColumns>
     </Section> 
 
-    <Section styles={`pt-20 pb-32 max-w-screen-lg mx-auto px-3 `}>
+    <Section styles={`pt-2 pb-2 max-w-screen-lg mx-auto px-3 `}>
       <HeroOneButton
         title={props.title}
         description={props.description}

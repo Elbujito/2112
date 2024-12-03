@@ -123,3 +123,22 @@ func (s *SatelliteService) FetchAndStoreAllSatellites(ctx context.Context) ([]do
 
 	return storedSatellites, nil
 }
+
+// ListSatellitesWithPaginationAndTLE retrieves satellites with pagination and includes a flag indicating if a TLE is present.
+func (s *SatelliteService) ListSatellitesWithPaginationAndTLE(ctx context.Context, page int, pageSize int) ([]domain.Satellite, int64, error) {
+	// Validate inputs
+	if page <= 0 {
+		return nil, 0, fmt.Errorf("page must be greater than 0")
+	}
+	if pageSize <= 0 {
+		return nil, 0, fmt.Errorf("pageSize must be greater than 0")
+	}
+
+	// Fetch satellites with pagination and TLE flag
+	satellites, totalRecords, err := s.repo.FindAllWithPagination(ctx, page, pageSize)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to retrieve satellites with pagination and TLE status: %w", err)
+	}
+
+	return satellites, totalRecords, nil
+}

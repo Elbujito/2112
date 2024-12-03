@@ -8,6 +8,6 @@ import (
 func StartPublicApi() {
 	serviceCli := service.GetClient()
 	config := serviceCli.GetConfig()
-	routers.InitPublicAPIRouter()
-	routers.PublicAPIRouter().Start(config.Host, config.PublicApiPort)
+	publicApiRouter := routers.InitPublicAPIRouter()
+	publicApiRouter.Start(config.Host, config.PublicApiPort)
 }

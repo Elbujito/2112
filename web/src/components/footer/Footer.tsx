@@ -7,7 +7,7 @@ import { Logo } from '../../shared/logo/Logo';
 
 const Footer = () => (
   <Background color="bg-black-100">
-    <Section styles={`py-6 max-w-screen-lg mx-auto px-3 `}>
+    <Section styles={`py-2 max-w-screen-lg mx-auto px-3 `}>
       <CenteredFooter
         logo={<Logo />}
         iconList={

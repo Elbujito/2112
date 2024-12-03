@@ -116,8 +116,8 @@ func PrintProtectedRoutesTable() {
 }
 
 func PrintPublicRoutesTable() {
-	routers.InitPublicAPIRouter()
-	routes := routers.PublicAPIRouter().Echo.Routes()
+	publicApiRouter := routers.InitPublicAPIRouter()
+	routes := publicApiRouter.Echo.Routes()
 
 	t := fx.PrepareRoutesTable(routes, "Public API Routes")
 	fx.SetTableBorderStyle(t, config.NoBorderFlag)
