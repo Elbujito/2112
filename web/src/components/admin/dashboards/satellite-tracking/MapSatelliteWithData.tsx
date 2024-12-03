@@ -13,23 +13,26 @@ type OrbitDataItem = {
 
 interface MapSatelliteWithDataProps {
   noradID: string; // NORAD ID passed as a prop
+  userLocation?: { latitude: number; longitude: number }; // Optional user location
 }
 
 const MapSatelliteWithData: React.FC<MapSatelliteWithDataProps> = ({
   noradID,
+  userLocation,
 }) => {
   const [orbitData, setOrbitData] = useState<OrbitDataItem[]>([]);
   const [fetchingOrbit, setFetchingOrbit] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch orbit data for the provided NORAD ID
   useEffect(() => {
     const fetchOrbitData = async () => {
       if (!noradID) {
-        console.warn("NORAD ID is required to fetch orbit data.");
         return;
       }
 
       setFetchingOrbit(true);
+      setError(null); // Reset error before fetching
       try {
         const response = await axios.get("http://localhost:8081/satellites/orbit", {
           params: { noradID },
@@ -45,6 +48,7 @@ const MapSatelliteWithData: React.FC<MapSatelliteWithDataProps> = ({
         setOrbitData(orbitDataMapped);
       } catch (error) {
         console.error("Error fetching orbit data:", error);
+        setError("Failed to fetch orbit data. Please try again later.");
       } finally {
         setFetchingOrbit(false);
       }
@@ -64,8 +68,7 @@ const MapSatelliteWithData: React.FC<MapSatelliteWithDataProps> = ({
         borderRadius="md"
       >
         {/* Use MapSatellite to Display Orbit Data */}
-        <MapSatellite orbitData={orbitData} noradID={noradID} />
-
+          <MapSatellite orbitData={orbitData} noradID={noradID} userLocation={userLocation} />
         {/* Loading Indicator */}
         {fetchingOrbit && (
           <Center
@@ -80,6 +83,21 @@ const MapSatelliteWithData: React.FC<MapSatelliteWithDataProps> = ({
             <Text mt={4} color="white">
               Fetching Orbit Data...
             </Text>
+          </Center>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <Center
+            position="absolute"
+            top="0"
+            left="0"
+            right="0"
+            bottom="0"
+            bg="red.700"
+            color="white"
+          >
+            <Text>{error}</Text>
           </Center>
         )}
       </Box>

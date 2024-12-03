@@ -13,18 +13,20 @@ interface OrbitData {
 interface MapSatelliteProps {
   orbitData?: OrbitData[]; // Optional orbit data
   noradID?: string; // Optional NORAD ID
+  userLocation?: { latitude: number; longitude: number }; // User location
 }
 
 const MapSatellite: React.FC<MapSatelliteProps> = ({
   orbitData = [],
   noradID = "Unknown",
+  userLocation,
 }) => {
   useEffect(() => {
     let viewer: Cesium.Viewer | null = new Cesium.Viewer("cesiumContainer", {
       terrainProvider: new Cesium.EllipsoidTerrainProvider(),
       timeline: true,
       animation: true,
-      sceneMode: Cesium.SceneMode.SCENE2D,
+      sceneMode: Cesium.SceneMode.SCENE3D, // Set default view to 3D
     });
 
     const plotOrbit = () => {
@@ -57,11 +59,8 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
           name: `Orbit Path for Satellite ${noradID}`,
           polyline: {
             positions: orbitPositions,
-            width: 3,
-            material: new Cesium.PolylineGlowMaterialProperty({
-              glowPower: 0.2,
-              color: Cesium.Color.CYAN,
-            }),
+            width: 1,
+            material:Cesium.Color.PURPLE,
           },
         });
 
@@ -70,15 +69,13 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
           position: positionProperty,
           point: {
             pixelSize: 12,
-            color: Cesium.Color.DEEPSKYBLUE,
-            outlineColor: Cesium.Color.WHITE,
-            outlineWidth: 2,
+            color: Cesium.Color.PURPLE, // Purple color for the satellite
           },
           label: {
             text: `Satellite: ${noradID}`,
             font: "16pt Arial",
             fillColor: Cesium.Color.WHITE,
-            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            style: Cesium.LabelStyle.FILL,
             outlineWidth: 2,
             outlineColor: Cesium.Color.BLACK,
             showBackground: true,
@@ -87,7 +84,7 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
             pixelOffset: new Cesium.Cartesian2(0, -20),
           },
           path: {
-            material: Cesium.Color.LIGHTBLUE,
+            material: Cesium.Color.PURPLE, 
             width: 2,
           },
         });
@@ -114,8 +111,39 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
         }
       }
 
+      // Add user location to the map, if available
+      if (userLocation) {
+        viewer.entities.add({
+          name: "User Location",
+          position: Cesium.Cartesian3.fromDegrees(
+            userLocation.longitude,
+            userLocation.latitude,
+            0 // Altitude 0 for ground level
+          ),
+          point: {
+            pixelSize: 10,
+            color: Cesium.Color.BLUE, // Blue color for user
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 2,
+          },
+          label: {
+            text: "Your Location",
+            font: "14pt Arial",
+            fillColor: Cesium.Color.WHITE,
+            style: Cesium.LabelStyle.FILL,
+            outlineWidth: 2,
+            outlineColor: Cesium.Color.BLACK,
+            showBackground: true,
+            backgroundColor: Cesium.Color.DARKSLATEGRAY.withAlpha(0.7),
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -20),
+          },
+        });
+      }
+
+      // Set the camera view to focus on the entire Earth in 3D
       viewer.scene.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(0, 0, 6378137 * 5), // View the entire Earth
+        destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000), // Height is in meters
       });
     };
 
@@ -127,7 +155,7 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
         viewer = null;
       }
     };
-  }, [orbitData, noradID]);
+  }, [orbitData, noradID, userLocation]);
 
   return (
     <Card extra={"relative w-full h-full bg-white px-3 py-[18px]"} style={{ borderRadius: "20px" }}>

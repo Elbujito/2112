@@ -87,7 +87,7 @@ export default function SatelliteTableWithData({
   }
 
   return (
-    <Box bg="gray.50" borderRadius="lg" boxShadow="md" maxWidth="100%" overflowX="auto">
+    <Box bg="gray.50" borderRadius="lg" boxShadow="md" maxWidth="100%">
       <SatelliteTableComponent
         tableData={satellites}
         pageIndex={pageIndex}

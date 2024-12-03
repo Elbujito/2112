@@ -3,7 +3,6 @@ import Card from "components/card";
 import { MdChevronRight, MdChevronLeft } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";
 import { BiTargetLock } from "react-icons/bi";
-import { Tooltip } from "@chakra-ui/react"; // Assuming you're using Chakra UI for tooltips
 
 import {
   createColumnHelper,
@@ -21,7 +20,7 @@ type Satellite = {
   Apogee: number | null;
   Perigee: number | null;
   TleUpdatedAt: string | null; // New field for TLE update time
-  Action: string| null;
+  Action: string | null;
 };
 
 const columnHelper = createColumnHelper<Satellite>();
@@ -52,93 +51,24 @@ export default function SatelliteTableComponent(props: {
   } = props;
 
   const [currentData, setCurrentData] = useState<Satellite[]>(tableData);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
-  // Effect to update current page data based on page index and size
   useEffect(() => {
     setCurrentData(tableData);
   }, [tableData, onPageChange, pageIndex]);
 
   const columns = [
-    columnHelper.accessor("Name", {
-      header: () => (
-        <p className="text-sm font-bold text-gray-600 dark:text-white">NAME</p>
-      ),
-      cell: (info) => (
-        <p className="text-navy-700 text-sm font-bold dark:text-white">
-          {info.getValue()}
-        </p>
-      ),
-    }),
-    columnHelper.accessor("NoradID", {
-      header: () => (
-        <p className="text-sm font-bold text-gray-600 dark:text-white">
-          NORAD ID
-        </p>
-      ),
-      cell: (info) => (
-        <p className="text-navy-700 text-sm font-bold dark:text-white">
-          {info.getValue()}
-        </p>
-      ),
-    }),
-    columnHelper.accessor("Owner", {
-      header: () => (
-        <p className="text-sm font-bold text-gray-600 dark:text-white">OWNER</p>
-      ),
-      cell: (info) => (
-        <p className="text-navy-700 text-sm font-bold dark:text-white">
-          {info.getValue()}
-        </p>
-      ),
-    }),
-    columnHelper.accessor("LaunchDate", {
-      header: () => (
-        <p className="text-sm font-bold text-gray-600 dark:text-white">
-          LAUNCH DATE
-        </p>
-      ),
-      cell: (info) => (
-        <p className="text-navy-700 text-sm font-bold dark:text-white">
-          {info.getValue()
-            ? new Date(info.getValue() as string).toLocaleDateString()
-            : "N/A"}
-        </p>
-      ),
-    }),
-    columnHelper.accessor("TleUpdatedAt", {
-      header: () => (
-        <p className="text-sm font-bold text-gray-600 dark:text-white">
-          TLE UPDATED AT
-        </p>
-      ),
-      cell: (info) => (
-        <p className="text-navy-700 text-sm font-bold dark:text-white">
-          {info.getValue()
-            ? new Date(info.getValue() as string).toLocaleString()
-            : "N/A"}
-        </p>
-      ),
-    }),
     columnHelper.accessor("Action", {
-      header: () => (
-        <p className="text-sm font-bold text-gray-600 dark:text-white">
-          ACTION
-        </p>
-      ),
+      header: () => null,
       cell: (info) => {
         const row = info.row.original;
         return row.TleUpdatedAt ? (
-          <Tooltip
-            label={`Last Updated: ${new Date(row.TleUpdatedAt).toLocaleString()}`}
-            aria-label="TLE Update Tooltip"
+          <button
+            className="text-blue-500 hover:text-blue-700"
+            onClick={() => onRowClick(row.NoradID)}
           >
-            <button
-              className="text-blue-500 hover:text-blue-700"
-              onClick={() => onRowClick(row.NoradID)}
-            >
-              <BiTargetLock size={20} />
-            </button>
-          </Tooltip>
+            <BiTargetLock size={20} />
+          </button>
         ) : (
           <button
             className="text-gray-400 cursor-not-allowed"
@@ -149,6 +79,30 @@ export default function SatelliteTableComponent(props: {
           </button>
         );
       },
+    }),
+    columnHelper.accessor("Name", {
+      header: () => <p className="text-sm font-bold text-gray-600">NAME</p>,
+      cell: (info) => <p className="text-sm">{info.getValue()}</p>,
+    }),
+    columnHelper.accessor("NoradID", {
+      header: () => <p className="text-sm font-bold text-gray-600">NORAD ID</p>,
+      cell: (info) => <p className="text-sm">{info.getValue()}</p>,
+    }),
+    columnHelper.accessor("Owner", {
+      header: () => <p className="text-sm font-bold text-gray-600">OWNER</p>,
+      cell: (info) => <p className="text-sm">{info.getValue()}</p>,
+    }),
+    columnHelper.accessor("LaunchDate", {
+      header: () => (
+        <p className="text-sm font-bold text-gray-600">LAUNCH DATE</p>
+      ),
+      cell: (info) => (
+        <p className="text-sm">
+          {info.getValue()
+            ? new Date(info.getValue() as string).toLocaleDateString()
+            : "N/A"}
+        </p>
+      ),
     }),
   ];
 
@@ -172,51 +126,46 @@ export default function SatelliteTableComponent(props: {
   };
 
   return (
-    <Card extra={"h-full w-full pb-8 px-8"}>
-      <div className="flex items-center justify-between">
-        {/* Search Bar */}
-        <div className="relative flex h-[61px] w-[355px] items-center rounded-full bg-white px-2 py-2 shadow-xl shadow-shadow-500 dark:bg-navy-800 dark:shadow-none">
-          <button
-            onClick={onSearchSubmit}
-            className="flex h-full items-center justify-center rounded-l-full bg-lightPrimary text-navy-700 dark:bg-navy-900 dark:text-white px-4 text-xl"
-          >
-            <FiSearch className="h-4 w-4 text-gray-400 dark:text-white" />
-          </button>
-          <input
-            type="text"
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                onSearchSubmit();
-              }
-            }}
-            placeholder="Search..."
-            className="block h-full w-full rounded-r-full bg-lightPrimary text-sm font-medium text-navy-700 outline-none placeholder:!text-gray-400 dark:bg-navy-900 dark:text-white dark:placeholder:!text-white"
-          />
+    <Card extra="h-full w-full pb-8 px-8">
+      <div className="sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div className="relative flex h-[61px] w-[355px] items-center rounded-full bg-white px-2 py-2 shadow-xl shadow-shadow-500 dark:bg-navy-800 dark:shadow-none">
+            <button
+              onClick={onSearchSubmit}
+              className="flex h-full items-center justify-center rounded-l-full bg-lightPrimary text-navy-700 dark:bg-navy-900 dark:text-white px-4 text-xl"
+            >
+              <FiSearch className="h-4 w-4 text-gray-400 dark:text-white" />
+            </button>
+            <input
+              type="text"
+              value={searchValue}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") onSearchSubmit();
+              }}
+              placeholder="Search..."
+              className="block h-full w-ful rounded-r-full bg-lightPrimary text-sm font-medium text-navy-700 outline-none placeholder:!text-gray-400 dark:bg-navy-900 dark:text-white dark:placeholder:!text-white"
+            />
+          </div>
+          <p className="text-sm">Total Satellites: {totalItems}</p>
         </div>
-        <p className="text-sm text-gray-600 dark:text-white">
-          Total Items: {totalItems}
-        </p>
       </div>
 
-      <div className="mt-8 overflow-x-scroll xl:overflow-x-hidden">
+      <div className="mt-4 overflow-x-auto">
         <table className="w-full">
           <thead>
             {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id} className="!border-px !border-gray-400">
+              <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
                     colSpan={header.colSpan}
-                    className="cursor-pointer border-b border-gray-200 pb-2 pr-4 text-start dark:border-white/30"
+                    className="py-2 text-left text-xs font-bold text-gray-600"
                   >
-                    <div className="text-xs text-gray-600 dark:text-gray-200">
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                    </div>
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
                   </th>
                 ))}
               </tr>
@@ -224,23 +173,26 @@ export default function SatelliteTableComponent(props: {
           </thead>
           <tbody>
             {table.getRowModel().rows.map((row) => (
-                <tr key={row.id}>
-                {row.getVisibleCells().map((cell, index) => (
-                    <td
-                    key={`cell-${row.id}-${cell.column.id}-${index}`} // Unique key for each cell
-                    className="min-w-[150px] border-white/0 py-3 pr-4"
-                    >
+              <tr
+                key={row.id}
+                onClick={() => setSelectedRowId(row.id)}
+                onDoubleClick={() => onRowClick(row.original.NoradID)}
+                className={`cursor-pointer ${
+                  selectedRowId === row.id ? "bg-brand-900 text-white dark:bg-brand-400 dark:text-white" : ""
+                }`}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="py-2 px-4 text-sm">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
+                  </td>
                 ))}
-                </tr>
+              </tr>
             ))}
-            </tbody>
+          </tbody>
         </table>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="mt-4 flex justify-between items-center">
+      <div className="sticky flex justify-between">
         <button
           onClick={handlePreviousPage}
           disabled={pageIndex === 0}
@@ -248,15 +200,13 @@ export default function SatelliteTableComponent(props: {
         >
           <MdChevronLeft />
         </button>
-
-        <p className="text-sm text-gray-600 dark:text-white">
+        <p className="text-sm">
           Page {pageIndex + 1} of {Math.ceil(totalItems / pageSize)}
         </p>
-
         <button
           onClick={handleNextPage}
           disabled={pageIndex + 1 >= Math.ceil(totalItems / pageSize)}
-          className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg"
+ className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg"
         >
           <MdChevronRight />
         </button>

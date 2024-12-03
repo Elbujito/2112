@@ -1,19 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { Map } from "react-map-gl";
+import React, { useEffect, useRef, useState } from "react";
+import Map, { GeolocateControl, NavigationControl } from "react-map-gl";
+import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder"; // Mapbox Geocoder control
 import "mapbox-gl/dist/mapbox-gl.css";
-import * as Cesium from "cesium";
-import "cesium/Build/Cesium/Widgets/widgets.css";
+import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css"; // Geocoder control CSS
 import Card from "components/card";
 
 const MAPBOX_TOKEN =
-  "pk.eyJ1Ijoic2ltbW1wbGxlIiwiYWQiOiJx9ssz4sR--YourTokenHere--"; // Set your Mapbox token
+  "pk.eyJ1Ijoic2ltbW1wbGUiLCJhIjoiY2wxeG1hd24xMDEzYzNrbWs5emFkdm16ZiJ9.q9s0sSKQFFaT9fyrC-7--g"; // Replace with your Mapbox token
 
-const MapCard = ({ orbitData, noradID }) => {
+interface MapCardProps {
+  onLocationChange: (location: { latitude: number; longitude: number }) => void; // Callback to pass user location
+}
+
+const MapCard: React.FC<MapCardProps> = ({ onLocationChange }) => {
   const [darkmode, setDarkmode] = useState(
     document.body.classList.contains("dark")
       ? "mapbox://styles/simmmple/cl0qqjr3z000814pq7428ptk5"
       : "mapbox://styles/simmmple/ckwxecg1wapzp14s9qlus38p0"
   );
+
+  const mapRef = useRef(null);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
   useEffect(() => {
     const observer = new MutationObserver((mutationsList) => {
@@ -39,69 +46,58 @@ const MapCard = ({ orbitData, noradID }) => {
   }, []);
 
   useEffect(() => {
-    let viewer = null;
+    if (mapRef.current) {
+      const map = mapRef.current.getMap();
 
-    if (orbitData && orbitData.length > 0) {
-      viewer = new Cesium.Viewer("cesiumContainer", {
-        terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-        timeline: true,
-        animation: true,
+      // Initialize the Geocoder control
+      const geocoder = new MapboxGeocoder({
+        accessToken: MAPBOX_TOKEN,
+        mapboxgl: map, // Bind to Mapbox GL instance
+        marker: true, // Add a marker at the searched location
+        placeholder: "Search for places",
       });
 
-      const positionProperty = new Cesium.SampledPositionProperty();
-
-      orbitData.forEach(({ latitude, longitude, altitude, time }) => {
-        const position = Cesium.Cartesian3.fromDegrees(
-          longitude,
-          latitude,
-          altitude * 1000
-        );
-        const julianTime = Cesium.JulianDate.fromIso8601(time);
-        positionProperty.addSample(julianTime, position);
-      });
-
-      viewer.entities.add({
-        position: positionProperty,
-        point: { pixelSize: 10, color: Cesium.Color.RED },
-        label: {
-          text: `Satellite ${noradID || "Unknown"}`,
-          font: "14pt sans-serif",
-          fillColor: Cesium.Color.WHITE,
-        },
-        path: {
-          material: Cesium.Color.RED.withAlpha(0.5),
-          width: 2,
-        },
-      });
+      // Add Geocoder control to the map
+      map.addControl(geocoder, "top-left");
 
       return () => {
-        if (viewer) {
-          viewer.destroy();
-        }
+        // Remove the geocoder when the component unmounts
+        map.removeControl(geocoder);
       };
     }
-  }, [orbitData, noradID]);
+  }, []);
+
+  const handleGeolocate = (position: GeolocationPosition) => {
+    const { latitude, longitude } = position.coords;
+    setUserLocation({ latitude, longitude });
+    onLocationChange({ latitude, longitude }); // Pass location to parent component
+  };
 
   return (
     <Card extra={"relative w-full h-full bg-white px-3 py-[18px]"}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-        <div style={{ borderRadius: "20px", overflow: "hidden" }}>
-          <Map
-            initialViewState={{
-              latitude: 37.692,
-              longitude: -122.435,
-              zoom: 13,
-            }}
-            style={{ width: "100%", minHeight: "300px" }}
-            mapStyle={darkmode}
-            mapboxAccessToken={MAPBOX_TOKEN}
-          />
-        </div>
-        <div
-          id="cesiumContainer"
-          style={{ width: "100%", minHeight: "300px", borderRadius: "20px" }}
+      <Map
+        ref={mapRef}
+        initialViewState={{
+          latitude: 49.6117, // Latitude for 85 Avenue Guillaume
+          longitude: 6.1319, // Longitude for 85 Avenue Guillaume
+          zoom: 15, // Adjust zoom level as needed
+        }}
+        style={{
+          borderRadius: "20px",
+          width: "100%",
+          height: "100%",
+        }}
+        mapStyle={darkmode}
+        mapboxAccessToken={MAPBOX_TOKEN}
+      >
+        {/* Optional Controls */}
+        <GeolocateControl
+          position="top-right"
+          onGeolocate={handleGeolocate} // Triggered when user's location is determined
+          trackUserLocation={true}
         />
-      </div>
+        <NavigationControl position="top-right" />
+      </Map>
     </Card>
   );
 };

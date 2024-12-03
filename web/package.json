@@ -1,6 +1,6 @@
 {
-  "name": "horizon-tailwind-react-nextjs-pro",
-  "version": "2.2.1",
+  "name": "2112-project",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -31,6 +31,7 @@
     "@fullcalendar/daygrid": "^5.11.3",
     "@fullcalendar/interaction": "^5.11.3",
     "@fullcalendar/react": "^5.11.3",
+    "@mapbox/mapbox-gl-geocoder": "^5.0.3",
     "@tanstack/react-query": "^5.62.2",
     "@tanstack/react-table": "^8.7.9",
     "@testing-library/jest-dom": "^5.16.5",
@@ -55,6 +56,7 @@
     "react-calendar": "4.0.0",
     "react-circular-progressbar": "^2.1.0",
     "react-circular-slider-svg": "^0.2.0",
+    "react-custom-scrollbars": "^4.2.1",
     "react-custom-scrollbars-2": "^4.5.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "^14.2.3",
