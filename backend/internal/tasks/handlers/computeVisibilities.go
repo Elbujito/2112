@@ -92,10 +92,6 @@ func (h *ComputeVisibilitiesHandler) computeSatelliteVisibility(
 
 	for t := startTime; t.Before(endTime); t = t.Add(timeStep) {
 		for _, tile := range tiles {
-			// if len(tile.Vertices) == 0 {
-			// 	log.Printf("Skipping tile %s due to invalid polygon data\n", tile.ID)
-			// 	continue
-			// }
 
 			aos, maxElevation := space.ComputeVisibilityWindow(
 				tle.NoradID, tle.Line1, tle.Line2,

@@ -79,7 +79,20 @@ services:
     env_file: ../config/2112/2112-postgres.dev-env
     command: ["service","task", "exec", "fetchAndStoreTiles", "radiusInMeter=1000000", "faces=4"] # Run seeding
     depends_on:
-       2112-db-migrator:
+        2112-task-tle-seeder:
+          condition: service_completed_successfully
+    restart: "no" # Run once and exit
+
+  # Database Visibilities tiles
+  2112-task-visibilities-seeder:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile
+    container_name: 2112-task-visibilities-seeder
+    env_file: ../config/2112/2112-postgres.dev-env
+    command: ["service","task", "exec", "execComputeVisibilitiesTask"] # Run seeding
+    depends_on:
+       2112-task-tile-seeder:
         condition: service_completed_successfully
     restart: "no" # Run once and exit
 

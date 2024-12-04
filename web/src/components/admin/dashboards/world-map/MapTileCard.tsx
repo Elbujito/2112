@@ -28,8 +28,7 @@ interface MapTileCardProps {
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
     const earthRadius = 6378137; // Earth's radius in meters for Mercator projection
 
-    const clampedSize = size;
-    const halfSize = clampedSize / 2; // Corrected calculation
+    const halfSize = size;
 
     // Convert latitude and longitude to Mercator x and y
     const mercatorX = (lon * Math.PI * earthRadius) / 180;
@@ -115,7 +114,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
               type="fill"
               paint={{
                 "fill-color": "#888888", // Fill color for the tile
-                "fill-opacity": 0.8,
+                "fill-opacity": 0.2,
               }}    
             />
             <Layer

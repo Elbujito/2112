@@ -78,7 +78,7 @@ func calculateZoomLevelForTileRadius(tileRadius float64) int {
 // calculateTileRadiusForZoom calculates the exact radius of a tile given a specific zoom level.
 func calculateTileRadiusForZoom(zoom int) float64 {
 	tileSize := earthCircumference / math.Pow(2, float64(zoom))
-	tileRadius := tileSize
+	tileRadius := tileSize / 2
 	return tileRadius
 }
 
