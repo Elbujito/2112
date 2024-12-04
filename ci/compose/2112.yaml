@@ -70,6 +70,19 @@ services:
         condition: service_completed_successfully
     restart: "no" # Run once and exit
 
+  # Database Seeding tiles
+  2112-task-tile-seeder:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile
+    container_name: 2112-task-tile-seeder
+    env_file: ../config/2112/2112-postgres.dev-env
+    command: ["service","task", "exec", "fetchAndStoreTiles", "radiusInMeter=1000000", "faces=4"] # Run seeding
+    depends_on:
+       2112-db-migrator:
+        condition: service_completed_successfully
+    restart: "no" # Run once and exit
+
   # PostgreSQL Database
   2112-postgres:
     extends:
@@ -88,7 +101,7 @@ services:
       service: 2112-propagator
   
   # Web
-  2112-web:
-    extends:
-      file: ./2112-web.yaml
-      service: 2112-web
+  # 2112-web:
+  #   extends:
+  #     file: ./2112-web.yaml
+  #     service: 2112-web

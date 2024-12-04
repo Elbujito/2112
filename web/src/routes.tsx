@@ -72,6 +72,11 @@ const routes = [
         layout: '/admin',
         path: '/dashboards/satellite-tracking',
       },
+      {
+        name: 'World Map',
+        layout: '/admin',
+        path: '/dashboards/world-map',
+      },
       // {
       //   name: 'RTL',
       //   layout: '/rtl',

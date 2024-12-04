@@ -2,51 +2,28 @@ package tiles
 
 import (
 	"net/http"
+	"strconv"
 
-	"github.com/Elbujito/2112/internal/api/handlers"
-	"github.com/Elbujito/2112/internal/data"
-	repository "github.com/Elbujito/2112/internal/repositories"
+	"github.com/Elbujito/2112/internal/services"
 	"github.com/Elbujito/2112/pkg/fx/constants"
 	"github.com/labstack/echo/v4"
 )
 
-// GetTileTest fetches tiles
-func GetTiles(c echo.Context) error {
-	// Assuming you have a service or repository to fetch tiles by NORAD ID
-	database := data.NewDatabase()
-	tileRepo := repository.NewTileRepository(&database)
-	tiles, err := tileRepo.FindAll(c.Request().Context())
-	if err != nil {
-		c.Echo().Logger.Error("Failed to fetch tiles: ", err)
-		return err
-	}
-
-	// If no tiles are found
-	if len(tiles) == 0 {
-		c.Echo().Logger.Error(constants.ERROR_ID_NOT_FOUND)
-		return constants.ERROR_ID_NOT_FOUND
-	}
-
-	// Return tiles in the response
-	return c.JSON(http.StatusOK, handlers.Success(tiles))
+type TileHandler struct {
+	Service services.TileService
 }
 
-// GetTilesByNoradID fetches tiles for a given NORAD ID
-func GetTilesByNoradID(c echo.Context) error {
-	// Extract NORAD ID parameter
-	noradID := c.QueryParam("noradID")
-	if noradID == "" {
-		c.Echo().Logger.Error(constants.ERROR_ID_NOT_FOUND)
-		return constants.ERROR_ID_NOT_FOUND
-	}
+// NewTileHandler creates a new handler with the provided TileService.
+func NewTileHandler(service services.TileService) *TileHandler {
+	return &TileHandler{Service: service}
+}
 
-	// Assuming you have a service or repository to fetch tiles by NORAD ID
-	database := data.NewDatabase()
-	tileSatelliteMappingRepo := repository.NewTileSatelliteMappingRepository(&database)
-	tiles, err := tileSatelliteMappingRepo.FindAllVisibleTilesByNoradIDSortedByAOSTime(c.Request().Context(), noradID)
+// GetAllTiles fetches all available tiles.
+func (h *TileHandler) GetAllTiles(c echo.Context) error {
+	tiles, err := h.Service.FindAllTiles(c.Request().Context())
 	if err != nil {
 		c.Echo().Logger.Error("Failed to fetch tiles: ", err)
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to fetch tiles")
 	}
 
 	// If no tiles are found
@@ -56,5 +33,42 @@ func GetTilesByNoradID(c echo.Context) error {
 	}
 
 	// Return tiles in the response
-	return c.JSON(http.StatusOK, handlers.Success(tiles))
+	return c.JSON(http.StatusOK, tiles)
+}
+
+// GetTilesInRegionHandler handles requests to fetch tiles in a region.
+func (h *TileHandler) GetTilesInRegionHandler(c echo.Context) error {
+	// Parse query parameters for bounding box
+	minLatStr := c.QueryParam("minLat")
+	minLonStr := c.QueryParam("minLon")
+	maxLatStr := c.QueryParam("maxLat")
+	maxLonStr := c.QueryParam("maxLon")
+
+	// Convert query parameters to float64
+	minLat, err := strconv.ParseFloat(minLatStr, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid minLat parameter")
+	}
+	minLon, err := strconv.ParseFloat(minLonStr, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid minLon parameter")
+	}
+	maxLat, err := strconv.ParseFloat(maxLatStr, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid maxLat parameter")
+	}
+	maxLon, err := strconv.ParseFloat(maxLonStr, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid maxLon parameter")
+	}
+
+	// Call the service to fetch tiles
+	tiles, err := h.Service.GetTilesInRegion(c.Request().Context(), minLat, minLon, maxLat, maxLon)
+	if err != nil {
+		c.Logger().Error("Failed to fetch tiles in region:", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "unable to fetch tiles in region")
+	}
+
+	// Return tiles in JSON response
+	return c.JSON(http.StatusOK, tiles)
 }

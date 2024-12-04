@@ -11,7 +11,7 @@ import (
 	"github.com/Elbujito/2112/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/internal/api/handlers/healthz"
 	"github.com/Elbujito/2112/internal/api/handlers/satellites"
-	tilesHandlers "github.com/Elbujito/2112/internal/api/handlers/tiles"
+	"github.com/Elbujito/2112/internal/api/handlers/tiles"
 	"github.com/Elbujito/2112/internal/api/middlewares"
 	serviceapi "github.com/Elbujito/2112/internal/api/services"
 	"github.com/Elbujito/2112/internal/clients/logger"
@@ -138,14 +138,18 @@ func (r *PublicRouter) registerPublicApiErrorHandlers() {
 
 // Register public API routes
 func (r *PublicRouter) registerPublicAPIRoutes() {
-	tile := r.Echo.Group("/tiles")
-	tile.GET("/mapping", tilesHandlers.GetTilesByNoradID)
-	tile.GET("/all", tilesHandlers.GetTiles)
 
 	// Initialize the SatelliteHandler with the SatelliteService from ServiceComponent
 	satelliteHandler := satellites.NewSatelliteHandler(r.ServiceComponent.SatelliteService)
+	tileHandler := tiles.NewTileHandler(r.ServiceComponent.TileService)
 
 	satellite := r.Echo.Group("/satellites")
 	satellite.GET("/orbit", satelliteHandler.GetSatellitePositionsByNoradID)
 	satellite.GET("/paginated", satelliteHandler.GetPaginatedSatellites)
+
+	// Initialize the SatelliteHandler with the SatelliteService from ServiceComponent
+	tile := r.Echo.Group("/tiles")
+	tile.GET("/all", tileHandler.GetAllTiles)
+	tile.GET("/region", tileHandler.GetTilesInRegionHandler)
+	// tile.GET("/mapping", tilesHandlers.GetTilesByNoradID)
 }

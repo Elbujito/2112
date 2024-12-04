@@ -11,7 +11,7 @@ import (
 // ServiceComponent holds all service instances for dependency injection.
 type ServiceComponent struct {
 	SatelliteService services.SatelliteService
-	// Add other services here if needed
+	TileService      services.TileService
 }
 
 // NewServiceComponent initializes and returns a new ServiceComponent.
@@ -22,6 +22,7 @@ func NewServiceComponent() *ServiceComponent {
 	// Initialize repositories
 	tleRepo := repository.NewTLERepository(&database)
 	satelliteRepo := repository.NewSatelliteRepository(&database)
+	tileRepo := repository.NewTileRepository(&database)
 
 	// Initialize external clients
 	propagteClient := propagator.NewPropagatorClient(propagator.DefaultPropagationAPIURL)
@@ -29,8 +30,10 @@ func NewServiceComponent() *ServiceComponent {
 
 	// Create services
 	satelliteService := services.NewSatelliteService(tleRepo, propagteClient, &celestrackClient, satelliteRepo)
+	tileService := services.NewTileService(tileRepo)
 
 	return &ServiceComponent{
 		SatelliteService: satelliteService,
+		TileService:      tileService,
 	}
 }

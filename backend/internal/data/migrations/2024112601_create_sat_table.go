@@ -39,14 +39,14 @@ func init() {
 
 			type Tile struct {
 				models.ModelBase
-				Quadkey        string  `gorm:"size:256;unique;not null"` // Unique identifier for the tile (Quadkey)
-				ZoomLevel      int     `gorm:"not null"`                 // Zoom level for the tile
-				CenterLat      float64 `gorm:"not null"`                 // Center latitude of the tile
-				CenterLon      float64 `gorm:"not null"`                 // Center longitude of the tile
-				NbFaces        int     `gorm:"not null"`                 // Number of faces in the tile's shape
-				Radius         float64 `gorm:"not null"`                 // Radius of the tile in meters
-				BoundariesJSON string  `gorm:"type:json"`                // Serialized JSON of the boundary vertices of the tile
-				SpatialIndex   string  `gorm:"type:geometry;spatialIndex"`
+				Quadkey        string  `gorm:"size:256;unique;not null"`                  // Unique identifier for the tile (Quadkey)
+				ZoomLevel      int     `gorm:"not null"`                                  // Zoom level for the tile
+				CenterLat      float64 `gorm:"not null"`                                  // Center latitude of the tile
+				CenterLon      float64 `gorm:"not null"`                                  // Center longitude of the tile
+				NbFaces        int     `gorm:"not null"`                                  // Number of faces in the tile's shape
+				Radius         float64 `gorm:"not null"`                                  // Radius of the tile in meters
+				BoundariesJSON string  `gorm:"type:json"`                                 // Serialized JSON of the boundary vertices of the tile
+				SpatialIndex   string  `gorm:"type:geometry(Polygon, 4326);spatialIndex"` // PostGIS geometry type with SRID 4326
 			}
 
 			type TileSatelliteMapping struct {
@@ -59,10 +59,19 @@ func init() {
 			}
 
 			// AutoMigrate all tables
-			return db.AutoMigrate(&Satellite{}, &TLE{}, &Tile{}, &TileSatelliteMapping{})
+			if err := db.AutoMigrate(&Satellite{}, &TLE{}, &Tile{}, &TileSatelliteMapping{}); err != nil {
+				return err
+			}
+
+			// Ensure existing geometries have SRID 4326
+			return db.Exec(`
+				UPDATE tiles
+				SET spatial_index = ST_SetSRID(spatial_index, 4326)
+				WHERE ST_SRID(spatial_index) != 4326
+			`).Error
 		},
 		Rollback: func(db *gorm.DB) error {
-			return db.Migrator().DropTable("visibilities", "tiles", "tles", "satellites")
+			return db.Migrator().DropTable("tile_satellite_mappings", "tiles", "tles", "satellites")
 		},
 	}
 

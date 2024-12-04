@@ -45,7 +45,7 @@ type Satellite struct {
 	Apogee         *float64   // Added field for apogee altitude in kilometers
 	Perigee        *float64   // Added field for perigee altitude in kilometers
 	RCS            *float64   // Added field for radar cross-section in square meters
-	TleUpdatedAt   *time.Time
+	TleUpdatedAt   *time.Time `gorm:"-"`
 }
 
 // NewSatelliteFromStatCat creates a new Satellite instance with optional SATCAT data.
