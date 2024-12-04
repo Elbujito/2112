@@ -67,7 +67,7 @@ func (h *ComputeVisibilitiesHandler) Run(ctx context.Context, args map[string]st
 	for _, sat := range satellites {
 		err := h.computeSatelliteVisibility(ctx, sat, tleMap, tiles, startTime, endTime)
 		if err != nil {
-			return err
+			continue
 		}
 	}
 
