@@ -8,6 +8,11 @@ import (
 )
 
 // Polygon represents a geographic polygon.
+
+const (
+	earthCircumference = 40075016.686 // Earth's circumference in meters for Mercator projection
+)
+
 type Polygon struct {
 	Center     Quadkey // The center Quadkey of the polygon
 	NbFaces    int     // Number of faces in the polygon
@@ -70,11 +75,19 @@ func calculateZoomLevelForTileRadius(tileRadius float64) int {
 	return constants.MAX_ZOOM_LEVEL
 }
 
+// calculateTileRadiusForZoom calculates the exact radius of a tile given a specific zoom level.
+func calculateTileRadiusForZoom(zoom int) float64 {
+	tileSize := earthCircumference / math.Pow(2, float64(zoom))
+	tileRadius := tileSize
+	return tileRadius
+}
+
 // GenerateAllTilesForRadius generates all tiles and their polygons for a given radius.
 func GenerateAllTilesForRadius(tileRadius float64, nbFaces int) map[Quadkey]Polygon {
 	// Calculate the zoom level based on the tile radius
 	zoom := calculateZoomLevelForTileRadius(tileRadius)
 	numTiles := int(math.Pow(2, float64(zoom))) // Total number of tiles at that zoom level
+	radius := calculateTileRadiusForZoom(zoom)
 
 	// Determine the range for X and Y coordinates of tiles
 	startX := 0
@@ -96,7 +109,7 @@ func GenerateAllTilesForRadius(tileRadius float64, nbFaces int) map[Quadkey]Poly
 			centerQuadkey := NewQuadkey(center.LatDegrees(), center.LonDegrees(), zoom)
 
 			// Create the polygon for the tile using the given radius and number of faces
-			polygon := NewPolygon(nbFaces, center, zoom, tileRadius)
+			polygon := NewPolygon(nbFaces, center, zoom, radius)
 
 			// Store the polygon with its corresponding quadkey
 			tilePolygons[centerQuadkey] = polygon

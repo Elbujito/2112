@@ -25,47 +25,44 @@ interface MapTileCardProps {
   onLocationChange: (location: { latitude: number; longitude: number }) => void; // Callback for location change
 }
 
-// Helper function to generate a circle's GeoJSON geometry
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
-    const MAX_RADIUS = 500000; // Clamp radius to 500 km
-    const earthRadius = 6371000; // Earth's radius in meters
-    const meterPerDegreeLat = 111320; // Approximation: 1 degree latitude ≈ 111.32 km
-  
-    // Clamp latitude to prevent invalid values
-    const clampedLat = Math.max(-90, Math.min(90, lat));
-    const latRadians = (clampedLat * Math.PI) / 180;
-  
-    // Calculate meters per degree for longitude and avoid division by zero
-    const meterPerDegreeLon =
-      Math.abs(Math.cos(latRadians)) > 0.0001
-        ? Math.cos(latRadians) * (2 * Math.PI * earthRadius / 360)
-        : 0.0001;
-  
-    // Clamp size to MAX_RADIUS
-    const clampedSize = Math.min(size, MAX_RADIUS);
-  
-    // Convert size in meters to degrees
-    const deltaLat = clampedSize / 2 / meterPerDegreeLat;
-    const deltaLon = clampedSize / 2 / meterPerDegreeLon;
-  
-    // Create square coordinates
-    const coordinates: Position[][] = [
-      [
-        [lon - deltaLon, lat - deltaLat], // Bottom-left
-        [lon + deltaLon, lat - deltaLat], // Bottom-right
-        [lon + deltaLon, lat + deltaLat], // Top-right
-        [lon - deltaLon, lat + deltaLat], // Top-left
-        [lon - deltaLon, lat - deltaLat], // Close the polygon (back to bottom-left)
-      ],
+    const earthRadius = 6378137; // Earth's radius in meters for Mercator projection
+
+    const clampedSize = size;
+    const halfSize = clampedSize / 2; // Corrected calculation
+
+    // Convert latitude and longitude to Mercator x and y
+    const mercatorX = (lon * Math.PI * earthRadius) / 180;
+    const mercatorY =
+      earthRadius *
+      Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+
+    // Create square in Mercator coordinates
+    const cornersMercator = [
+      [mercatorX - halfSize, mercatorY - halfSize], // Bottom-left
+      [mercatorX + halfSize, mercatorY - halfSize], // Bottom-right
+      [mercatorX + halfSize, mercatorY + halfSize], // Top-right
+      [mercatorX - halfSize, mercatorY + halfSize], // Top-left
+      [mercatorX - halfSize, mercatorY - halfSize], // Close the polygon
     ];
-  
+
+    // Convert Mercator coordinates back to latitude and longitude
+    const cornersLatLon = cornersMercator.map(([x, y]) => {
+      const lonDeg = (x * 180) / (Math.PI * earthRadius);
+      const latRad = (2 * Math.atan(Math.exp(y / earthRadius))) - Math.PI / 2;
+      const latDeg = (latRad * 180) / Math.PI;
+      return [lonDeg, latDeg] as [number, number];
+    });
+
+    // Create GeoJSON Polygon
+    const coordinates: Position[][] = [cornersLatLon];
+
     return {
       type: "Polygon",
       coordinates,
     };
   };
-  
-  
+
 const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationChange }) => {
   const mapRef = useRef(null);
 
@@ -118,8 +115,8 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
               type="fill"
               paint={{
                 "fill-color": "#888888", // Fill color for the tile
-                "fill-opacity": 0.5,
-              }}
+                "fill-opacity": 0.8,
+              }}    
             />
             <Layer
               id="tile-borders"
