@@ -4,14 +4,14 @@ import { Spinner, Center, Text } from "@chakra-ui/react";
 import MapTileCard from "./MapTileCard";
 
 interface Tile {
-  quadkey: string;
-  zoomLevel: number;
-  centerLat: number;
-  centerLon: number;
-  spatialIndex?: string;
-  nbFaces: number;
-  radius: number;
-  boundariesJSON?: string;
+  Quadkey: string;
+  ZoomLevel: number;
+  CenterLat: number;
+  CenterLon: number;
+  SpatialIndex?: string;
+  NbFaces: number;
+  Radius: number;
+  BoundariesJSON?: string;
 }
 
 const MapTileCardWithData: React.FC = () => {
@@ -40,7 +40,7 @@ const MapTileCardWithData: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await axios.get("http://localhost:8081/tiles/region", {
+      const response = await axios.get("http://localhost:8081/tiles/all", { //!user region for use specific location
         headers: { Accept: "application/json" },
         params: {
           minLat: latitude - 1,
@@ -57,7 +57,7 @@ const MapTileCardWithData: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   if (loading) {
     return (
       <Center

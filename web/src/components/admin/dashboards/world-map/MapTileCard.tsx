@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { Box } from "@chakra-ui/react";
 import Map, { Source, Layer, NavigationControl, GeolocateControl } from "react-map-gl";
-import { FeatureCollection, Polygon } from "geojson";
+import { FeatureCollection, Polygon, Position } from "geojson";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Card from "components/card";
 
@@ -9,14 +9,14 @@ const MAPBOX_TOKEN =
   "pk.eyJ1Ijoic2ltbW1wbGUiLCJhIjoiY2wxeG1hd24xMDEzYzNrbWs5emFkdm16ZiJ9.q9s0sSKQFFaT9fyrC-7--g"; // Replace with your Mapbox token
 
 interface Tile {
-  quadkey: string;
-  zoomLevel: number;
-  centerLat: number;
-  centerLon: number;
-  spatialIndex?: string;
-  nbFaces: number;
-  radius: number;
-  boundariesJSON?: string;
+  Quadkey: string;
+  ZoomLevel: number;
+  CenterLat: number;
+  CenterLon: number;
+  SpatialIndex?: string;
+  NbFaces: number;
+  Radius: number;
+  BoundariesJSON?: string;
 }
 
 interface MapTileCardProps {
@@ -27,37 +27,45 @@ interface MapTileCardProps {
 
 // Helper function to generate a circle's GeoJSON geometry
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
+    const MAX_RADIUS = 500000; // Clamp radius to 500 km
     const earthRadius = 6371000; // Earth's radius in meters
     const meterPerDegreeLat = 111320; // Approximation: 1 degree latitude ≈ 111.32 km
-    const meterPerDegreeLon = Math.cos((lat * Math.PI) / 180) * (2 * Math.PI * earthRadius / 360);
   
-    // Convert the size in meters to degrees
-    const deltaLat = size / 2 / meterPerDegreeLat;
-    const deltaLon = size / 2 / meterPerDegreeLon;
-
-    console.log("deltaLat", deltaLat)
-    console.log("deltaLon", deltaLon)
-    console.log("meterPerDegreeLat", meterPerDegreeLat)
-    console.log("meterPerDegreeLon", meterPerDegreeLon)
-
+    // Clamp latitude to prevent invalid values
+    const clampedLat = Math.max(-90, Math.min(90, lat));
+    const latRadians = (clampedLat * Math.PI) / 180;
+  
+    // Calculate meters per degree for longitude and avoid division by zero
+    const meterPerDegreeLon =
+      Math.abs(Math.cos(latRadians)) > 0.0001
+        ? Math.cos(latRadians) * (2 * Math.PI * earthRadius / 360)
+        : 0.0001;
+  
+    // Clamp size to MAX_RADIUS
+    const clampedSize = Math.min(size, MAX_RADIUS);
+  
+    // Convert size in meters to degrees
+    const deltaLat = clampedSize / 2 / meterPerDegreeLat;
+    const deltaLon = clampedSize / 2 / meterPerDegreeLon;
   
     // Create square coordinates
-    const coordinates: [number, number][] = [
-      [lon - deltaLon, lat - deltaLat], // Bottom-left
-      [lon + deltaLon, lat - deltaLat], // Bottom-right
-      [lon + deltaLon, lat + deltaLat], // Top-right
-      [lon - deltaLon, lat + deltaLat], // Top-left
-      [lon - deltaLon, lat - deltaLat], // Close the polygon (back to bottom-left)
+    const coordinates: Position[][] = [
+      [
+        [lon - deltaLon, lat - deltaLat], // Bottom-left
+        [lon + deltaLon, lat - deltaLat], // Bottom-right
+        [lon + deltaLon, lat + deltaLat], // Top-right
+        [lon - deltaLon, lat + deltaLat], // Top-left
+        [lon - deltaLon, lat - deltaLat], // Close the polygon (back to bottom-left)
+      ],
     ];
-
-    console.log("coordinates", coordinates)
   
     return {
       type: "Polygon",
-      coordinates: [coordinates],
+      coordinates,
     };
   };
-
+  
+  
 const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationChange }) => {
   const mapRef = useRef(null);
 
@@ -69,18 +77,15 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
     type: "FeatureCollection",
     features: tiles.map((tile) => ({
       type: "Feature",
-      geometry: generateSquare(tile.centerLat, tile.centerLon, tile.radius), // Generate circle geometry
+      geometry: generateSquare(tile.CenterLat, tile.CenterLon, tile.Radius), // Generate circle geometry
       properties: {
-        quadkey: tile.quadkey,
-        zoomLevel: tile.zoomLevel,
-        nbFaces: tile.nbFaces,
-        radius: tile.radius,
+        quadkey: tile.Quadkey,
+        zoomLevel: tile.ZoomLevel,
+        nbFaces: tile.NbFaces,
+        radius: tile.Radius,
       },
     })),
   };
-
-  console.log(geoJsonSource)
-  console.log(tiles)
 
   return (
     <Card extra={"relative w-full h-full bg-white px-3 py-[18px]"}>
