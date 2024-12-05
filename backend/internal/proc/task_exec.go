@@ -12,6 +12,7 @@ import (
 	repository "github.com/Elbujito/2112/internal/repositories"
 	"github.com/Elbujito/2112/internal/services"
 	"github.com/Elbujito/2112/internal/tasks"
+	"github.com/Elbujito/2112/internal/tasks/handlers"
 	"github.com/Elbujito/2112/pkg/fx"
 )
 
@@ -43,7 +44,7 @@ func TaskExec(ctx context.Context, args []string) {
 		return
 	}
 
-	err = monitor.Process(ctx, tasks.TaskName(taskName), taskArgs)
+	err = monitor.Process(ctx, handlers.TaskName(taskName), taskArgs)
 	if err != nil {
 		log.Println(err.Error())
 		return

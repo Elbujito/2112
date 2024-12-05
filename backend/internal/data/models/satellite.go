@@ -20,6 +20,7 @@ type Satellite struct {
 	Apogee         *float64   `gorm:"type:float"`               // Apogee altitude in kilometers (optional)
 	Perigee        *float64   `gorm:"type:float"`               // Perigee altitude in kilometers (optional)
 	RCS            *float64   `gorm:"type:float"`               // Radar cross-section in square meters (optional)
+	Altitude       *float64   `gorm:"type:float"`               // Radar cross-section in square meters (optional)
 }
 
 // MapToForm maps the Satellite model to a SatelliteForm.
@@ -43,5 +44,6 @@ func (model *Satellite) MapToForm() *SatelliteForm {
 		Apogee:         model.Apogee,
 		Perigee:        model.Perigee,
 		RCS:            model.RCS,
+		Altitude:       model.Altitude,
 	}
 }

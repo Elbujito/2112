@@ -2,6 +2,7 @@ package space
 
 import (
 	"math"
+	"time"
 
 	"github.com/Elbujito/2112/pkg/fx/constants"
 	"github.com/Elbujito/2112/pkg/fx/polygon"
@@ -85,4 +86,31 @@ func DegreesToRadians(degrees float64) float64 {
 // Helper function to convert radians to degrees
 func RadiansToDegrees(radians float64) float64 {
 	return radians * 180.0 / math.Pi
+}
+
+func ComputeAverageAltitude(apogee, perigee float64) float64 {
+	apogeeActual := apogee + constants.EARTH_RADIUS_KM
+	perigeeActual := perigee + constants.EARTH_RADIUS_KM
+	return (apogeeActual + perigeeActual) / 2
+}
+
+func calculateFraction(altitude float64) float64 {
+	switch {
+	case altitude < 200: // LEO
+		return 0.01
+	case altitude < 3578: // MEO
+		return 0.05
+	default: // GEO
+		return 0.1
+	}
+}
+
+func CalculateOptimalTimestep(altitude, tileRadius float64) time.Duration {
+
+	orbitalVelocity := math.Sqrt(constants.GM / (constants.EARTH_RADIUS + altitude)) // Orbital velocity (m/s)
+	timeOverTile := tileRadius / orbitalVelocity                                     // Time to cross a tile (seconds)
+	fraction := calculateFraction(altitude)
+	optimalTimestep := timeOverTile * fraction
+
+	return time.Duration(optimalTimestep) * time.Second
 }

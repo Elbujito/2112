@@ -108,6 +108,7 @@ func (s *SatelliteService) FetchAndStoreAllSatellites(ctx context.Context) ([]do
 			rawSatellite.Apogee,
 			rawSatellite.Apogee,
 			rawSatellite.RCS,
+			rawSatellite.Altitude,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create satellite for NORAD ID %s: %w", rawSatellite.NoradID, err)

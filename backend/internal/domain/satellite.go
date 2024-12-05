@@ -46,6 +46,7 @@ type Satellite struct {
 	Perigee        *float64   // Added field for perigee altitude in kilometers
 	RCS            *float64   // Added field for radar cross-section in square meters
 	TleUpdatedAt   *time.Time `gorm:"-"`
+	Altitude       *float64
 }
 
 // NewSatelliteFromStatCat creates a new Satellite instance with optional SATCAT data.
@@ -63,6 +64,7 @@ func NewSatelliteFromStatCat(
 	apogee *float64,
 	perigee *float64,
 	rcs *float64,
+	altitude *float64,
 ) (Satellite, error) {
 	if err := satType.IsValid(); err != nil {
 		return Satellite{}, err

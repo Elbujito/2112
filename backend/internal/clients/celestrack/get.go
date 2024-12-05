@@ -13,6 +13,7 @@ import (
 
 	"github.com/Elbujito/2112/internal/api/mappers"
 	"github.com/Elbujito/2112/internal/config"
+	"github.com/Elbujito/2112/pkg/fx/space"
 )
 
 type CelestrackClient struct {
@@ -130,6 +131,16 @@ func (client *CelestrackClient) FetchSatelliteMetadata(ctx context.Context) ([]*
 			}
 		}
 
+		var apogee, perigee float64
+		if apogeeStr := record[indices["APOGEE"]]; apogeeStr != "" {
+			apogee, _ = parseFloat(apogeeStr)
+		}
+		if perigeeStr := record[indices["PERIGEE"]]; perigeeStr != "" {
+			perigee, _ = parseFloat(perigeeStr)
+		}
+
+		altitude := space.ComputeAverageAltitude(apogee, perigee)
+
 		satellite := &mappers.SatelliteMetadata{
 			NoradID:        record[indices["NORAD_CAT_ID"]],
 			Name:           record[indices["OBJECT_NAME"]],
@@ -138,6 +149,7 @@ func (client *CelestrackClient) FetchSatelliteMetadata(ctx context.Context) ([]*
 			DecayDate:      decayDate,
 			ObjectType:     record[indices["OBJECT_TYPE"]],
 			Owner:          record[indices["OWNER"]],
+			Altitude:       &altitude,
 		}
 
 		// Optional fields
@@ -149,16 +161,6 @@ func (client *CelestrackClient) FetchSatelliteMetadata(ctx context.Context) ([]*
 		if inclinationStr := record[indices["INCLINATION"]]; inclinationStr != "" {
 			if inclination, err := parseFloat(inclinationStr); err == nil {
 				satellite.Inclination = &inclination
-			}
-		}
-		if apogeeStr := record[indices["APOGEE"]]; apogeeStr != "" {
-			if apogee, err := parseFloat(apogeeStr); err == nil {
-				satellite.Apogee = &apogee
-			}
-		}
-		if perigeeStr := record[indices["PERIGEE"]]; perigeeStr != "" {
-			if perigee, err := parseFloat(perigeeStr); err == nil {
-				satellite.Perigee = &perigee
 			}
 		}
 		if rcsStr := record[indices["RCS"]]; rcsStr != "" {

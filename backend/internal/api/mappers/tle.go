@@ -22,4 +22,5 @@ type SatelliteMetadata struct {
 	Apogee         *float64
 	Perigee        *float64
 	RCS            *float64
+	Altitude       *float64 // New field for altitude
 }

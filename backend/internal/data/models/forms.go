@@ -25,6 +25,7 @@ type SatelliteForm struct {
 	Apogee         *float64   `json:"apogee" validate:"omitempty"`                  // Apogee altitude in kilometers
 	Perigee        *float64   `json:"perigee" validate:"omitempty"`                 // Perigee altitude in kilometers
 	RCS            *float64   `json:"rcs" validate:"omitempty"`                     // Radar cross-section in square meters
+	Altitude       *float64   `json:"rcs" validate:"omitempty"`                     // Radar cross-section in square meters
 }
 
 func (form *SatelliteForm) MapToModel() *Satellite {
@@ -42,6 +43,7 @@ func (form *SatelliteForm) MapToModel() *Satellite {
 		Apogee:         form.Apogee,
 		Perigee:        form.Perigee,
 		RCS:            form.RCS,
+		Altitude:       form.Altitude,
 	}
 }
 

@@ -9,15 +9,13 @@ import (
 	"github.com/Elbujito/2112/internal/tasks/handlers"
 )
 
-type TaskName string
-
 type TaskHandler interface {
 	GetTask() handlers.Task
 	Run(ctx context.Context, args map[string]string) error
 }
 
 type TaskMonitor struct {
-	Tasks map[TaskName]TaskHandler
+	Tasks map[handlers.TaskName]TaskHandler
 }
 
 func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo domain.TLERepository, tileRepo domain.TileRepository, visibilityRepo domain.MappingRepository, tleService services.TleService, satelliteService services.SatelliteService) (TaskMonitor, error) {
@@ -51,19 +49,19 @@ func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo domain.TLE
 		&satelliteService,
 	)
 
-	tasks := map[TaskName]TaskHandler{
-		TaskName(celestrackTleUpload.GetTask().Name):       &celestrackTleUpload,
-		TaskName(generateTilesHandler.GetTask().Name):      &generateTilesHandler,
-		TaskName(mappingsHandler.GetTask().Name):           &mappingsHandler,
-		TaskName(mappingByHorizonHandler.GetTask().Name):   &mappingByHorizonHandler,
-		TaskName(celestrackSatelliteUpload.GetTask().Name): &celestrackSatelliteUpload,
+	tasks := map[handlers.TaskName]TaskHandler{
+		celestrackTleUpload.GetTask().Name:       &celestrackTleUpload,
+		generateTilesHandler.GetTask().Name:      &generateTilesHandler,
+		mappingsHandler.GetTask().Name:           &mappingsHandler,
+		mappingByHorizonHandler.GetTask().Name:   &mappingByHorizonHandler,
+		celestrackSatelliteUpload.GetTask().Name: &celestrackSatelliteUpload,
 	}
 	return TaskMonitor{
 		Tasks: tasks,
 	}, nil
 }
 
-func (t *TaskMonitor) Process(ctx context.Context, taskName TaskName, args map[string]string) error {
+func (t *TaskMonitor) Process(ctx context.Context, taskName handlers.TaskName, args map[string]string) error {
 	handler, err := t.GetMatchingTask(taskName)
 	if err != nil {
 		return err
@@ -71,7 +69,7 @@ func (t *TaskMonitor) Process(ctx context.Context, taskName TaskName, args map[s
 	return handler.Run(ctx, args)
 }
 
-func (t *TaskMonitor) GetMatchingTask(taskName TaskName) (task TaskHandler, err error) {
+func (t *TaskMonitor) GetMatchingTask(taskName handlers.TaskName) (task TaskHandler, err error) {
 	hh, ok := t.Tasks[taskName]
 	if !ok {
 		return task, fmt.Errorf("task no found for [%s]", taskName)
