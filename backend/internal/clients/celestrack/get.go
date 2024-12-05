@@ -12,12 +12,17 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/internal/api/mappers"
+	"github.com/Elbujito/2112/internal/config"
 )
 
-const CELESTRACK_URL = "https://celestrak.com/NORAD/elements/gp.php"
-const CELESTRACK_SATCAT_URL = "https://celestrak.org/pub/satcat.csv"
-
 type CelestrackClient struct {
+	env *config.SEnv
+}
+
+func NewCelestrackClient(env *config.SEnv) *CelestrackClient {
+	return &CelestrackClient{
+		env: env,
+	}
 }
 
 func (client *CelestrackClient) FetchTLEFromSatCatByCategory(ctx context.Context, category string) ([]*mappers.RawTLE, error) {
@@ -25,8 +30,9 @@ func (client *CelestrackClient) FetchTLEFromSatCatByCategory(ctx context.Context
 		return nil, fmt.Errorf("category is required")
 	}
 
+	baseUrl := client.env.EnvVars.Celestrack.BaseUrl
 	// Construct the URL for the category
-	url := fmt.Sprintf("%s?GROUP=%s", CELESTRACK_URL, category)
+	url := fmt.Sprintf("%s?GROUP=%s", baseUrl, category)
 
 	// Fetch the TLE data
 	resp, err := http.Get(url)
@@ -74,7 +80,8 @@ func (client *CelestrackClient) FetchTLEFromSatCatByCategory(ctx context.Context
 // FetchSatelliteMetadata fetches metadata for satellites from CelesTrak's SATCAT.
 func (client *CelestrackClient) FetchSatelliteMetadata(ctx context.Context) ([]*mappers.SatelliteMetadata, error) {
 	// Create an HTTP request with the provided context
-	req, err := http.NewRequestWithContext(ctx, "GET", CELESTRACK_SATCAT_URL, nil)
+	satcatUrl := client.env.EnvVars.Celestrack.Satcat
+	req, err := http.NewRequestWithContext(ctx, "GET", satcatUrl, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}

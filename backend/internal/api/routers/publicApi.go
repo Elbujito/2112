@@ -36,11 +36,11 @@ func (r *PublicRouter) Init() {
 }
 
 // InitPublicAPIRouter initializes and returns the public API router.
-func InitPublicAPIRouter() *PublicRouter {
+func InitPublicAPIRouter(env *config.SEnv) *PublicRouter {
 	logger.Debug("Initializing public API router ...")
 
 	// Initialize ServiceComponent
-	serviceComponent := serviceapi.NewServiceComponent()
+	serviceComponent := serviceapi.NewServiceComponent(env)
 
 	// Create and initialize PublicRouter
 	publicApiRouter := &PublicRouter{

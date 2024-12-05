@@ -10,15 +10,6 @@ type Task struct {
 	RequiredArgs []string
 }
 
-// func validateArgs(args map[string]string, requiredArgs []string) error {
-// 	for _, arg := range requiredArgs {
-// 		if val, ok := args[arg]; !ok || val == "" {
-// 			return fmt.Errorf("missing required argument: %s", arg)
-// 		}
-// 	}
-// 	return nil
-// }
-
 type TaskEnv struct {
 	Env *config.SEnv
 }

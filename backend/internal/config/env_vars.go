@@ -16,16 +16,16 @@ import (
 )
 
 type EnvVars struct {
-	DisableFeatures []string                `mapstructure:"DISABLE_FEATURES"`
-	Service         features.ServiceConfig  `mapstructure:",squash"`
-	Database        features.DatabaseConfig `mapstructure:",squash"`
-	Kratos          features.KratosConfig   `mapstructure:",squash"`
-	Keto            features.KetoConfig     `mapstructure:",squash"`
-	Redis           features.RedisConfig    `mapstructure:",squash"`
-	Cors            features.CorsConfig     `mapstructure:",squash"`
-	Gzip            features.GzipConfig     `mapstructure:",squash"`
-
-	// add additional features here
+	DisableFeatures []string                  `mapstructure:"DISABLE_FEATURES"`
+	Service         features.ServiceConfig    `mapstructure:",squash"`
+	Database        features.DatabaseConfig   `mapstructure:",squash"`
+	Kratos          features.KratosConfig     `mapstructure:",squash"`
+	Keto            features.KetoConfig       `mapstructure:",squash"`
+	Redis           features.RedisConfig      `mapstructure:",squash"`
+	Cors            features.CorsConfig       `mapstructure:",squash"`
+	Gzip            features.GzipConfig       `mapstructure:",squash"`
+	Celestrack      features.CelestrackConfig `mapstructure:",squash"` // add additional features here
+	Propagator      features.PropagatorConfig `mapstructure:",squash"` // add additional features here
 	// to enable env vars reading and setting
 	// ...
 }
@@ -91,8 +91,9 @@ func (c *EnvVars) setDefaults() {
 
 	viper.SetDefault("GZIP_LEVEL", constants.DEFAULT_GZIP_LEVEL)
 
-	viper.SetDefault("PUBLIC_CESLESTRACK_URL", constants.DEFAULT_PUBLIC_CESLESTRACK_URL)
+	viper.SetDefault("CELESTRACK_URL", constants.DEFAULT_PUBLIC_CESLESTRACK_URL)
 	viper.SetDefault("PRIVATE_PROPAGATOR_URL", constants.DEFAULT_PRIVATE_PROPAGATOR_URL)
+	viper.SetDefault("CELESTRACK_SATCAT_URL", constants.DEFAULT_PUBLIC_CESLESTRACK_SATCAT_URL)
 }
 
 func (c *EnvVars) OverrideUsingFlags() {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/Elbujito/2112/internal/domain"
@@ -11,20 +12,20 @@ import (
 	"github.com/Elbujito/2112/pkg/fx/space"
 )
 
-type ComputeVisibilitiesHandler struct {
+type SatellitesTilesMappingsHandler struct {
 	tileRepo       domain.TileRepository
 	tleRepo        domain.TLERepository
 	satelliteRepo  domain.SatelliteRepository
-	visibilityRepo domain.TileSatelliteMappingRepository
+	visibilityRepo domain.MappingRepository
 }
 
-func NewComputeVisibilitiesHandler(
+func NewSatellitesTilesMappingsHandler(
 	tileRepo domain.TileRepository,
 	tleRepo domain.TLERepository,
 	satelliteRepo domain.SatelliteRepository,
-	visibilityRepo domain.TileSatelliteMappingRepository,
-) ComputeVisibilitiesHandler {
-	return ComputeVisibilitiesHandler{
+	visibilityRepo domain.MappingRepository,
+) SatellitesTilesMappingsHandler {
+	return SatellitesTilesMappingsHandler{
 		tileRepo:       tileRepo,
 		tleRepo:        tleRepo,
 		satelliteRepo:  satelliteRepo,
@@ -32,15 +33,38 @@ func NewComputeVisibilitiesHandler(
 	}
 }
 
-func (h *ComputeVisibilitiesHandler) GetTask() Task {
+func (h *SatellitesTilesMappingsHandler) GetTask() Task {
 	return Task{
-		Name:         "execComputeVisibilitiesTask",
+		Name:         "satellites_tiles_mappings",
 		Description:  "Computes satellite visibilities for all tiles",
-		RequiredArgs: []string{},
+		RequiredArgs: []string{"timeStepInSeconds", "periodInMinutes"},
 	}
 }
 
-func (h *ComputeVisibilitiesHandler) Run(ctx context.Context, args map[string]string) error {
+func (h *SatellitesTilesMappingsHandler) Run(ctx context.Context, args map[string]string) error {
+
+	argTimeStep, ok := args["timeStepInSeconds"]
+	if !ok || argTimeStep == "" {
+		return fmt.Errorf("missing required argument: timeStepInSeconds")
+	}
+
+	timeStepInSeconds, err := strconv.Atoi(argTimeStep)
+	if err != nil {
+		return err
+	}
+	timeStepDuration := time.Duration(timeStepInSeconds) * time.Second
+
+	argPeriod, ok := args["periodInMinutes"]
+	if !ok || argTimeStep == "" {
+		return fmt.Errorf("missing required argument: periodInMinutes")
+	}
+
+	periodInMinutes, err := strconv.Atoi(argPeriod)
+	if err != nil {
+		return err
+	}
+	periodDuration := time.Duration(periodInMinutes) * time.Minute
+
 	// Fetch all satellites, TLEs, and tiles
 	satellites, err := h.satelliteRepo.FindAll(ctx)
 	if err != nil {
@@ -62,10 +86,10 @@ func (h *ComputeVisibilitiesHandler) Run(ctx context.Context, args map[string]st
 	}
 
 	startTime := time.Now()
-	endTime := startTime.Add(24 * time.Hour)
+	endTime := startTime.Add(periodDuration)
 
 	for _, sat := range satellites {
-		err := h.computeSatelliteVisibility(ctx, sat, tleMap, tiles, startTime, endTime)
+		err := h.computeSatellitesTilesMappings(ctx, sat, tleMap, tiles, startTime, endTime, timeStepDuration)
 		if err != nil {
 			continue
 		}
@@ -75,31 +99,32 @@ func (h *ComputeVisibilitiesHandler) Run(ctx context.Context, args map[string]st
 }
 
 // Compute visibility for a single satellite
-func (h *ComputeVisibilitiesHandler) computeSatelliteVisibility(
+func (h *SatellitesTilesMappingsHandler) computeSatellitesTilesMappings(
 	ctx context.Context,
 	sat domain.Satellite,
 	tleMap map[string]domain.TLE,
 	tiles []domain.Tile,
 	startTime, endTime time.Time,
+	timeStepDuration time.Duration,
 ) error {
+
 	tle, ok := tleMap[sat.NoradID]
 	if !ok {
 		return fmt.Errorf("no TLE data found for satellite %s", sat.NoradID)
 	}
 
-	const timeStep = 1 * time.Hour
 	visibilityBatch := make([]domain.TileSatelliteMapping, 0, len(tiles))
 
-	for t := startTime; t.Before(endTime); t = t.Add(timeStep) {
+	for t := startTime; t.Before(endTime); t = t.Add(timeStepDuration) {
 		for _, tile := range tiles {
 
 			aos, maxElevation := space.ComputeVisibilityWindow(
 				tle.NoradID, tle.Line1, tle.Line2,
-				polygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon}, tile.Radius, t, endTime, timeStep,
+				polygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon}, tile.Radius, t, endTime, timeStepDuration,
 			)
 
 			if !aos.IsZero() {
-				visibility := domain.NewVisibility(
+				visibility := domain.NewMapping(
 					sat.NoradID,
 					tile.ID,
 					aos,

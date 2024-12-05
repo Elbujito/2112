@@ -4,6 +4,8 @@ import (
 	"math"
 	"testing"
 	"time"
+
+	"github.com/Elbujito/2112/pkg/fx/constants"
 )
 
 // Mock data for testing
@@ -52,16 +54,16 @@ func TestPropagateRange(t *testing.T) {
 
 	// Helper function to calculate distance in kilometers for latitude/longitude
 	latLonToKm := func(lat1, lon1, lat2, lon2 float64) float64 {
-		earthRadiusKm := 6371.0
-		dLat := (lat2 - lat1) * math.Pi / 180.0
-		dLon := (lon2 - lon1) * math.Pi / 180.0
-		lat1 = lat1 * math.Pi / 180.0
-		lat2 = lat2 * math.Pi / 180.0
+
+		dLat := (lat2 - lat1) * constants.PI_DIVIDE_BY_180
+		dLon := (lon2 - lon1) * constants.PI_DIVIDE_BY_180
+		lat1 = lat1 * constants.PI_DIVIDE_BY_180
+		lat2 = lat2 * constants.PI_DIVIDE_BY_180
 
 		a := math.Sin(dLat/2)*math.Sin(dLat/2) +
 			math.Cos(lat1)*math.Cos(lat2)*math.Sin(dLon/2)*math.Sin(dLon/2)
 		c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-		return earthRadiusKm * c
+		return constants.EARTH_RADIUS_KM * c
 	}
 
 	// Validate the first position
@@ -119,16 +121,15 @@ func TestPropagateValidateEachPosition(t *testing.T) {
 
 	// Helper function to calculate distance in kilometers for latitude/longitude
 	latLonToKm := func(lat1, lon1, lat2, lon2 float64) float64 {
-		earthRadiusKm := 6371.0
-		dLat := (lat2 - lat1) * math.Pi / 180.0
-		dLon := (lon2 - lon1) * math.Pi / 180.0
-		lat1 = lat1 * math.Pi / 180.0
-		lat2 = lat2 * math.Pi / 180.0
+		dLat := (lat2 - lat1) * constants.PI_DIVIDE_BY_180
+		dLon := (lon2 - lon1) * constants.PI_DIVIDE_BY_180
+		lat1 = lat1 * constants.PI_DIVIDE_BY_180
+		lat2 = lat2 * constants.PI_DIVIDE_BY_180
 
 		a := math.Sin(dLat/2)*math.Sin(dLat/2) +
 			math.Cos(lat1)*math.Cos(lat2)*math.Sin(dLon/2)*math.Sin(dLon/2)
 		c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
-		return earthRadiusKm * c
+		return constants.EARTH_RADIUS_KM * c
 	}
 
 	// Validate each position

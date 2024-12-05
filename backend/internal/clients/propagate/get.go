@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/Elbujito/2112/internal/config"
 )
 
-const DefaultPropagationAPIURL = "http://2112-propagator:5000/satellite/propagate"
-
 type PropagatorClient struct {
-	BaseURL string
+	env *config.SEnv
 }
 
 // SatellitePropagationRequest represents the payload for the propagation request.
@@ -33,12 +33,9 @@ type SatellitePosition struct {
 }
 
 // NewPropagatorClient creates a new PropagatorClient with the given base URL.
-func NewPropagatorClient(baseURL string) *PropagatorClient {
-	if baseURL == "" {
-		baseURL = DefaultPropagationAPIURL
-	}
+func NewPropagatorClient(env *config.SEnv) *PropagatorClient {
 	return &PropagatorClient{
-		BaseURL: baseURL,
+		env: env,
 	}
 }
 
@@ -65,8 +62,10 @@ func (client *PropagatorClient) FetchPropagation(ctx context.Context, tle1, tle2
 		return nil, fmt.Errorf("failed to marshal request payload: %v", err)
 	}
 
+	config := client.env.EnvVars.Propagator
+
 	// Send the HTTP request
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, client.BaseURL, bytes.NewBuffer(payloadBytes))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, config.BaseUrl, bytes.NewBuffer(payloadBytes))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create HTTP request: %v", err)
 	}

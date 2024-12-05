@@ -3,6 +3,7 @@ package serviceapi
 import (
 	"github.com/Elbujito/2112/internal/clients/celestrack"
 	propagator "github.com/Elbujito/2112/internal/clients/propagate"
+	"github.com/Elbujito/2112/internal/config"
 	"github.com/Elbujito/2112/internal/data"
 	repository "github.com/Elbujito/2112/internal/repositories"
 	"github.com/Elbujito/2112/internal/services"
@@ -15,7 +16,7 @@ type ServiceComponent struct {
 }
 
 // NewServiceComponent initializes and returns a new ServiceComponent.
-func NewServiceComponent() *ServiceComponent {
+func NewServiceComponent(env *config.SEnv) *ServiceComponent {
 	// Initialize database connection
 	database := data.NewDatabase()
 
@@ -25,11 +26,11 @@ func NewServiceComponent() *ServiceComponent {
 	tileRepo := repository.NewTileRepository(&database)
 
 	// Initialize external clients
-	propagteClient := propagator.NewPropagatorClient(propagator.DefaultPropagationAPIURL)
-	celestrackClient := celestrack.CelestrackClient{}
+	propagteClient := propagator.NewPropagatorClient(env)
+	celestrackClient := celestrack.NewCelestrackClient(env)
 
 	// Create services
-	satelliteService := services.NewSatelliteService(tleRepo, propagteClient, &celestrackClient, satelliteRepo)
+	satelliteService := services.NewSatelliteService(tleRepo, propagteClient, celestrackClient, satelliteRepo)
 	tileService := services.NewTileService(tileRepo)
 
 	return &ServiceComponent{

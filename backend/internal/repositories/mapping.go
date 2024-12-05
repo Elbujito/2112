@@ -14,7 +14,7 @@ type TileSatelliteMappingRepository struct {
 }
 
 // NewTileSatelliteMappingRepository creates a new instance of VisibilityRepository.
-func NewTileSatelliteMappingRepository(db *data.Database) domain.TileSatelliteMappingRepository {
+func NewTileSatelliteMappingRepository(db *data.Database) domain.MappingRepository {
 	return &TileSatelliteMappingRepository{db: db}
 }
 

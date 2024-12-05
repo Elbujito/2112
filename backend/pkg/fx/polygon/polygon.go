@@ -9,10 +9,6 @@ import (
 
 // Polygon represents a geographic polygon.
 
-const (
-	earthCircumference = 40075016.686 // Earth's circumference in meters for Mercator projection
-)
-
 type Polygon struct {
 	Center     Quadkey // The center Quadkey of the polygon
 	NbFaces    int     // Number of faces in the polygon
@@ -49,8 +45,8 @@ func generateBoundaries(nbFaces int, center LatLong, radius float64) []Point {
 		newLat := centerLatRad + deltaLat
 		newLon := centerLonRad + deltaLon
 
-		newLatDeg := newLat * 180 / math.Pi
-		newLonDeg := newLon * 180 / math.Pi
+		newLatDeg := newLat * constants.I180_DIVIDE_BY_PI
+		newLonDeg := newLon * constants.I180_DIVIDE_BY_PI
 
 		boundaries = append(boundaries, Point{
 			Latitude:  newLatDeg,
@@ -63,9 +59,8 @@ func generateBoundaries(nbFaces int, center LatLong, radius float64) []Point {
 
 // calculateZoomLevelForTileRadius determines the optimal zoom level for a given tile radius.
 func calculateZoomLevelForTileRadius(tileRadius float64) int {
-	const earthCircumference = constants.EARTH_CIRCUMFERENCE_METER
 	for zoom := 0; zoom <= constants.MAX_ZOOM_LEVEL; zoom++ {
-		tileSize := earthCircumference / math.Pow(2, float64(zoom))
+		tileSize := constants.EARTH_CIRCUMFERENCE_METER / math.Pow(2, float64(zoom))
 
 		log.Printf("Zoom: %d, Tile Size: %.2f, Half Tile Size: %.2f", zoom, tileSize, tileSize/2)
 		if tileSize/2 <= tileRadius {
@@ -77,7 +72,7 @@ func calculateZoomLevelForTileRadius(tileRadius float64) int {
 
 // calculateTileRadiusForZoom calculates the exact radius of a tile given a specific zoom level.
 func calculateTileRadiusForZoom(zoom int) float64 {
-	tileSize := earthCircumference / math.Pow(2, float64(zoom))
+	tileSize := constants.EARTH_CIRCUMFERENCE_METER / math.Pow(2, float64(zoom))
 	tileRadius := tileSize / 2
 	return tileRadius
 }
@@ -126,7 +121,7 @@ func TileXYToLatLon(x, y, zoom int) (float64, float64) {
 	lon := float64(x)/n*360.0 - 180.0
 
 	latRad := math.Atan(math.Sinh(math.Pi * (1 - 2*float64(y)/n)))
-	lat := latRad * 180.0 / math.Pi
+	lat := latRad * constants.I180_DIVIDE_BY_PI
 
 	return lat, lon
 }

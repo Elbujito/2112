@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type TileSatelliteMappingRepository interface {
+type MappingRepository interface {
 	FindByNoradIDAndTile(ctx context.Context, noradID string, tileID string) ([]TileSatelliteMapping, error)
 	FindAll(ctx context.Context) ([]TileSatelliteMapping, error)
 	Save(ctx context.Context, visibility TileSatelliteMapping) error
@@ -31,8 +31,8 @@ type TileSatelliteMapping struct {
 	MaxElevation float64
 }
 
-// NewVisibility constructor
-func NewVisibility(noradID string,
+// NewMapping constructor
+func NewMapping(noradID string,
 	tileID string,
 	startTime time.Time,
 	maxElevation float64) TileSatelliteMapping {

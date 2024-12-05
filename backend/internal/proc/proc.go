@@ -116,7 +116,7 @@ func PrintProtectedRoutesTable() {
 }
 
 func PrintPublicRoutesTable() {
-	publicApiRouter := routers.InitPublicAPIRouter()
+	publicApiRouter := routers.InitPublicAPIRouter(config.Env)
 	routes := publicApiRouter.Echo.Routes()
 
 	t := fx.PrepareRoutesTable(routes, "Public API Routes")

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/Elbujito/2112/internal/domain"
@@ -11,38 +12,61 @@ import (
 	"github.com/Elbujito/2112/pkg/fx/space"
 )
 
-type VisbilityBySatelliteHorizonHandler struct {
-	tileRepo       domain.TileRepository
-	tleRepo        domain.TLERepository
-	satelliteRepo  domain.SatelliteRepository
-	visibilityRepo domain.TileSatelliteMappingRepository
+type SatellitesTilesMappingsByHorizonHandler struct {
+	tileRepo      domain.TileRepository
+	tleRepo       domain.TLERepository
+	satelliteRepo domain.SatelliteRepository
+	mappingRepo   domain.MappingRepository
 }
 
-func NewVisbilityBySatelliteHorizonHandler(
+func NewSatellitesTilesMappingsByHorizonHandler(
 	tileRepo domain.TileRepository,
 	tleRepo domain.TLERepository,
 	satelliteRepo domain.SatelliteRepository,
-	visibilityRepo domain.TileSatelliteMappingRepository,
-) VisbilityBySatelliteHorizonHandler {
-	return VisbilityBySatelliteHorizonHandler{
-		tileRepo:       tileRepo,
-		tleRepo:        tleRepo,
-		satelliteRepo:  satelliteRepo,
-		visibilityRepo: visibilityRepo,
+	visibilityRepo domain.MappingRepository,
+) SatellitesTilesMappingsByHorizonHandler {
+	return SatellitesTilesMappingsByHorizonHandler{
+		tileRepo:      tileRepo,
+		tleRepo:       tleRepo,
+		satelliteRepo: satelliteRepo,
+		mappingRepo:   visibilityRepo,
 	}
 }
 
 // GetTask returns the task metadata
-func (h *VisbilityBySatelliteHorizonHandler) GetTask() Task {
+func (h *SatellitesTilesMappingsByHorizonHandler) GetTask() Task {
 	return Task{
-		Name:         "execVisbilityBySatelliteHorizonTask",
+		Name:         "satellites_tiles_mapping_horizon",
 		Description:  "Computes satellite visibilities for all tiles",
-		RequiredArgs: []string{},
+		RequiredArgs: []string{"timeStepInSeconds", "periodInMinutes"},
 	}
 }
 
 // Run executes the visibility computation process
-func (h *VisbilityBySatelliteHorizonHandler) Run(ctx context.Context, args map[string]string) error {
+func (h *SatellitesTilesMappingsByHorizonHandler) Run(ctx context.Context, args map[string]string) error {
+
+	argTimeStep, ok := args["timeStepInSeconds"]
+	if !ok || argTimeStep == "" {
+		return fmt.Errorf("missing required argument: timeStepInSeconds")
+	}
+
+	timeStepInSeconds, err := strconv.Atoi(argTimeStep)
+	if err != nil {
+		return err
+	}
+	timeStepDuration := time.Duration(timeStepInSeconds) * time.Second
+
+	argPeriod, ok := args["periodInMinutes"]
+	if !ok || argTimeStep == "" {
+		return fmt.Errorf("missing required argument: periodInMinutes")
+	}
+
+	periodInMinutes, err := strconv.Atoi(argPeriod)
+	if err != nil {
+		return err
+	}
+	periodDuration := time.Duration(periodInMinutes) * time.Minute
+
 	// Fetch all satellites, TLEs, and tiles
 	satellites, err := h.satelliteRepo.FindAll(ctx)
 	if err != nil {
@@ -64,14 +88,14 @@ func (h *VisbilityBySatelliteHorizonHandler) Run(ctx context.Context, args map[s
 	}
 
 	startTime := time.Now()
-	endTime := startTime.Add(24 * time.Hour)
+	endTime := startTime.Add(periodDuration)
 
 	// Group tiles by region (e.g., by latitude/longitude or zoom level)
 	tileGroups := groupTilesByRegion(tiles)
 
 	// For each satellite, compute visibility for the grouped tiles
 	for _, sat := range satellites {
-		err := h.computeSatelliteVisibility(ctx, sat, tleMap, tileGroups, startTime, endTime)
+		err := h.computeMappings(ctx, sat, tleMap, tileGroups, startTime, endTime, timeStepDuration)
 		if err != nil {
 			return err
 		}
@@ -81,19 +105,19 @@ func (h *VisbilityBySatelliteHorizonHandler) Run(ctx context.Context, args map[s
 }
 
 // Compute visibility for a single satellite, optimized with tile grouping and satellite horizon.
-func (h *VisbilityBySatelliteHorizonHandler) computeSatelliteVisibility(
+func (h *SatellitesTilesMappingsByHorizonHandler) computeMappings(
 	ctx context.Context,
 	sat domain.Satellite,
 	tleMap map[string]domain.TLE,
 	tileGroups map[string][]domain.Tile,
 	startTime, endTime time.Time,
+	timeStep time.Duration,
 ) error {
 	tle, ok := tleMap[sat.NoradID]
 	if !ok {
 		return fmt.Errorf("no TLE data found for satellite %s", sat.NoradID)
 	}
 
-	const timeStep = 1 * time.Hour
 	visibilityBatch := make([]domain.TileSatelliteMapping, 0, 100)
 
 	// Iterate over time steps
@@ -123,7 +147,7 @@ func (h *VisbilityBySatelliteHorizonHandler) computeSatelliteVisibility(
 					)
 
 					if !aos.IsZero() {
-						visibility := domain.NewVisibility(
+						visibility := domain.NewMapping(
 							sat.NoradID,
 							tile.ID,
 							aos,
@@ -137,7 +161,7 @@ func (h *VisbilityBySatelliteHorizonHandler) computeSatelliteVisibility(
 
 		// Save in batches
 		if len(visibilityBatch) >= 100 {
-			if err := h.visibilityRepo.SaveBatch(ctx, visibilityBatch); err != nil {
+			if err := h.mappingRepo.SaveBatch(ctx, visibilityBatch); err != nil {
 				log.Printf("Failed to save batch for satellite %s: %v\n", sat.NoradID, err)
 			}
 			visibilityBatch = visibilityBatch[:0] // Reset batch
@@ -146,7 +170,7 @@ func (h *VisbilityBySatelliteHorizonHandler) computeSatelliteVisibility(
 
 	// Save any remaining visibilities in batch
 	if len(visibilityBatch) > 0 {
-		if err := h.visibilityRepo.SaveBatch(ctx, visibilityBatch); err != nil {
+		if err := h.mappingRepo.SaveBatch(ctx, visibilityBatch); err != nil {
 			log.Printf("Failed to save remaining batch for satellite %s: %v\n", sat.NoradID, err)
 		}
 	}

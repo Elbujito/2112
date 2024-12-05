@@ -3,27 +3,22 @@ package space
 import (
 	"math"
 
+	"github.com/Elbujito/2112/pkg/fx/constants"
 	"github.com/Elbujito/2112/pkg/fx/polygon"
 )
 
 // LatLonToCartesian converts latitude, longitude, and altitude to Cartesian coordinates
 func LatLonToCartesian(latitude, longitude, altitude float64) (float64, float64, float64) {
-	// Earth's radius in kilometers (mean radius)
-	const earthRadiusKm = 6371.0
 
 	// Convert latitude and longitude from degrees to radians
 	latRad := DegreesToRadians(latitude)
 	lonRad := DegreesToRadians(longitude)
 
 	// Calculate the Cartesian coordinates using the spherical to Cartesian transformation
-	x := (earthRadiusKm + altitude) * math.Cos(latRad) * math.Cos(lonRad)
-	y := (earthRadiusKm + altitude) * math.Cos(latRad) * math.Sin(lonRad)
-	z := (earthRadiusKm + altitude) * math.Sin(latRad)
+	x := (constants.EARTH_RADIUS_KM + altitude) * math.Cos(latRad) * math.Cos(lonRad)
+	y := (constants.EARTH_RADIUS_KM + altitude) * math.Cos(latRad) * math.Sin(lonRad)
+	z := (constants.EARTH_RADIUS_KM + altitude) * math.Sin(latRad)
 
-	// Log the calculated Cartesian coordinates for debugging purposes
-	// log.Printf("Converted to Cartesian Coordinates: X=%.2f, Y=%.2f, Z=%.2f", x, y, z)
-
-	// Return the Cartesian coordinates (x, y, z)
 	return x, y, z
 }
 
@@ -54,8 +49,7 @@ func CalculateIntegratedElevationFromPoint(satellitePos polygon.Point, satellite
 	vecX, vecY, vecZ = Normalize(vecX, vecY, vecZ)
 
 	// Special case handling for direct overhead (tolerance for floating point precision)
-	const epsilon = 1e-6
-	if math.Abs(vecX-earthVecX) < epsilon && math.Abs(vecY-earthVecY) < epsilon && math.Abs(vecZ-earthVecZ) < epsilon {
+	if math.Abs(vecX-earthVecX) < constants.EPSILON && math.Abs(vecY-earthVecY) < constants.EPSILON && math.Abs(vecZ-earthVecZ) < constants.EPSILON {
 		return 90.0
 	}
 
@@ -85,7 +79,7 @@ func CalculateIntegratedElevationFromPoint(satellitePos polygon.Point, satellite
 
 // Helper function to convert degrees to radians
 func DegreesToRadians(degrees float64) float64 {
-	return degrees * math.Pi / 180.0
+	return degrees * constants.PI_DIVIDE_BY_180
 }
 
 // Helper function to convert radians to degrees

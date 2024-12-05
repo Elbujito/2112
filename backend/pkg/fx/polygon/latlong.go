@@ -1,6 +1,8 @@
 package polygon
 
-import "math"
+import (
+	"github.com/Elbujito/2112/pkg/fx/constants"
+)
 
 // Coordinate represents a geographic coordinate value
 type Coordinate struct {
@@ -9,12 +11,12 @@ type Coordinate struct {
 
 // ToRadians converts the Coordinate object from degrees to radians
 func (c Coordinate) ToRadians() float64 {
-	return c.C * math.Pi / 180
+	return c.C * constants.PI_DIVIDE_BY_180
 }
 
 // ToDegrees converts the Coordinate object from radians to degrees
 func (c Coordinate) ToDegrees() float64 {
-	return c.C * 180 / math.Pi
+	return c.C * constants.I180_DIVIDE_BY_PI
 }
 
 // LatLong represents a geographic coordinate pair in WGS84 format

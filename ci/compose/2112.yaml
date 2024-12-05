@@ -48,10 +48,10 @@ services:
   2112-task-tle-seeder:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile
+      dockerfile: ci/docker/Dockerfile  
     container_name: 2112-task-tle-seeder
     env_file: ../config/2112/2112-postgres.dev-env
-    command: ["service","task", "exec", "fetchAndUpsertTLE", "category=active"] # Run seeding
+    command: ["service","task", "exec", "celestrack_tle_upload", "category=active"] # Run seeding
     depends_on:
       2112-task-satellite-seeder:
         condition: service_completed_successfully
@@ -64,7 +64,7 @@ services:
       dockerfile: ci/docker/Dockerfile
     container_name: 2112-task-satellite-seeder
     env_file: ../config/2112/2112-postgres.dev-env
-    command: ["service","task", "exec", "fetchAndUpsertSatellite"] # Run seeding
+    command: ["service","task", "exec", "celestrack_satellite_upload"] # Run seeding
     depends_on:
        2112-db-migrator:
         condition: service_completed_successfully
@@ -77,7 +77,7 @@ services:
       dockerfile: ci/docker/Dockerfile
     container_name: 2112-task-tile-seeder
     env_file: ../config/2112/2112-postgres.dev-env
-    command: ["service","task", "exec", "fetchAndStoreTiles", "radiusInMeter=1000000", "faces=4"] # Run seeding
+    command: ["service","task", "exec", "generate_tiles", "radiusInMeter=1000000", "faces=4"] # Run seeding 
     depends_on:
         2112-task-tle-seeder:
           condition: service_completed_successfully
@@ -90,7 +90,7 @@ services:
       dockerfile: ci/docker/Dockerfile
     container_name: 2112-task-visibilities-seeder
     env_file: ../config/2112/2112-postgres.dev-env
-    command: ["service","task", "exec", "execComputeVisibilitiesTask"] # Run seeding
+    command: ["service","task", "exec", "satellites_tiles_mappings", "timeStepInSeconds=1", "periodInMinutes=3600"] # Run seeding
     depends_on:
        2112-task-tile-seeder:
         condition: service_completed_successfully

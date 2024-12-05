@@ -9,21 +9,21 @@ import (
 	"github.com/Elbujito/2112/pkg/fx/polygon"
 )
 
-type TileProvisionHandler struct {
+type GenerateTilesHandler struct {
 	tileRepo domain.TileRepository
 }
 
-// NewTileProvisionHandler creates a new instance of TileProvisionHandler.
-func NewTileProvisionHandler(tileRepo domain.TileRepository) TileProvisionHandler {
-	return TileProvisionHandler{
+// NewGenerateTilesHandler creates a new instance of TileProvisionHandler.
+func NewGenerateTilesHandler(tileRepo domain.TileRepository) GenerateTilesHandler {
+	return GenerateTilesHandler{
 		tileRepo: tileRepo,
 	}
 }
 
 // GetTask provides metadata about this handler's task.
-func (h *TileProvisionHandler) GetTask() Task {
+func (h *GenerateTilesHandler) GetTask() Task {
 	return Task{
-		Name:        "fetchAndStoreTiles",
+		Name:        "generate_tiles",
 		Description: "Fetches tiles and stores them in the database",
 		RequiredArgs: []string{
 			"radiusInMeter",
@@ -33,7 +33,7 @@ func (h *TileProvisionHandler) GetTask() Task {
 }
 
 // Run executes the handler's task with the provided arguments.
-func (h *TileProvisionHandler) Run(ctx context.Context, args map[string]string) error {
+func (h *GenerateTilesHandler) Run(ctx context.Context, args map[string]string) error {
 	// Parse arguments
 	radiusInMeter, ok := args["radiusInMeter"]
 	if !ok || radiusInMeter == "" {

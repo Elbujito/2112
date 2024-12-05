@@ -5,8 +5,10 @@ import (
 )
 
 const (
-	DEFAULT_PUBLIC_CESLESTRACK_URL string = "https://celestrak.com/NORAD/elements/gp.php"
-	DEFAULT_PRIVATE_PROPAGATOR_URL string = "http://2112-propagator:5000/satellite/propagate"
+	DEFAULT_PUBLIC_CESLESTRACK_URL        string = "https://celestrak.com/NORAD/elements/gp.php"
+	DEFAULT_PRIVATE_PROPAGATOR_URL        string = "http://2112-propagator:5000/satellite/propagate"
+	DEFAULT_PUBLIC_CESLESTRACK_SATCAT_URL string = "https://celestrak.org/pub/satcat.csv"
+
 	// defaults
 	DEFAULT_PROTECTED_API_PORT       string = "8080"
 	DEFAULT_PUBLIC_API_PORT          string = "8081"
@@ -32,6 +34,8 @@ const (
 	FEATURE_DATABASE   string = "database"
 	FEATURE_CORS       string = "cors"
 	FEATURE_GZIP       string = "gzip"
+	FEATURE_CELESTRACK string = "celestrack"
+	FEATURE_PROPAGATOR string = "propagator"
 	FEATURE_REDIS      string = "redis"
 
 	// generic words

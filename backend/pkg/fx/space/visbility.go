@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/internal/domain"
+	"github.com/Elbujito/2112/pkg/fx/constants"
 	"github.com/Elbujito/2112/pkg/fx/polygon"
 	"github.com/joshuaferrara/go-satellite"
 )
@@ -125,7 +126,6 @@ func CalculateIntegratedElevation(satelliteQuadKey polygon.Quadkey, satelliteAlt
 }
 
 func HaversineDistance(lat1, lon1, lat2, lon2, altitude1, altitude2 float64) float64 {
-	const earthRadiusKm = 6371.0
 	dLat := DegreesToRadians(lat2 - lat1)
 	dLon := DegreesToRadians(lon2 - lon1)
 	lat1Rad := DegreesToRadians(lat1)
@@ -135,7 +135,7 @@ func HaversineDistance(lat1, lon1, lat2, lon2, altitude1, altitude2 float64) flo
 		math.Cos(lat1Rad)*math.Cos(lat2Rad)*math.Sin(dLon/2)*math.Sin(dLon/2)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 
-	surfaceDistance := earthRadiusKm * c
+	surfaceDistance := constants.EARTH_RADIUS_KM * c
 
 	// Adjust for altitude (adding z-axis distance)
 	altitudeDiff := altitude2 - altitude1
@@ -154,11 +154,8 @@ func ComputeSatelliteHorizon(t time.Time, tle domain.TLE) ([]polygon.Point, erro
 	// Sub-satellite point (directly beneath the satellite)
 	subSatellitePoint := polygon.Point{Latitude: geo.Latitude, Longitude: geo.Longitude}
 
-	// Earth's radius in kilometers
-	const earthRadiusKm = 6371.0
-
 	// Calculate the horizon distance (approximated by the satellite's altitude and Earth's radius)
-	horizonDistance := math.Sqrt(2 * earthRadiusKm * altitude)
+	horizonDistance := math.Sqrt(2 * constants.EARTH_RADIUS_KM * altitude)
 
 	// Now, we will define the visible region as a circle with the calculated horizon distance
 	// The circular region is represented by multiple points (approximated here as a set of points around the horizon)
@@ -168,8 +165,8 @@ func ComputeSatelliteHorizon(t time.Time, tle domain.TLE) ([]polygon.Point, erro
 	numPoints := 36
 	for i := 0; i < numPoints; i++ {
 		angle := float64(i) * (2 * math.Pi / float64(numPoints))
-		latOffset := horizonDistance / earthRadiusKm * math.Sin(angle)
-		lonOffset := horizonDistance / earthRadiusKm * math.Cos(angle)
+		latOffset := horizonDistance / constants.EARTH_RADIUS_KM * math.Sin(angle)
+		lonOffset := horizonDistance / constants.EARTH_RADIUS_KM * math.Cos(angle)
 
 		// Calculate the new latitude and longitude by applying the offsets
 		lat := subSatellitePoint.Latitude + latOffset

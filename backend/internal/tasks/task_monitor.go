@@ -20,43 +20,43 @@ type TaskMonitor struct {
 	Tasks map[TaskName]TaskHandler
 }
 
-func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo domain.TLERepository, tileRepo domain.TileRepository, visibilityRepo domain.TileSatelliteMappingRepository, tleService services.TleService, satelliteService services.SatelliteService) (TaskMonitor, error) {
+func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo domain.TLERepository, tileRepo domain.TileRepository, visibilityRepo domain.MappingRepository, tleService services.TleService, satelliteService services.SatelliteService) (TaskMonitor, error) {
 
-	tleProvisionHandler := handlers.NewTLEProvisionHandler(
+	celestrackTleUpload := handlers.NewCelestrackTleUploadHandler(
 		satelliteRepo,
 		tleRepo,
 		&tleService,
 	)
 
-	tileProvisionHandler := handlers.NewTileProvisionHandler(
+	generateTilesHandler := handlers.NewGenerateTilesHandler(
 		tileRepo,
 	)
 
-	computeVisibilitiesHandler := handlers.NewComputeVisibilitiesHandler(
-		tileRepo,
-		tleRepo,
-		satelliteRepo,
-		visibilityRepo,
-	)
-
-	visbilityBySatelliteHorizonHandle := handlers.NewVisbilityBySatelliteHorizonHandler(
+	mappingsHandler := handlers.NewSatellitesTilesMappingsHandler(
 		tileRepo,
 		tleRepo,
 		satelliteRepo,
 		visibilityRepo,
 	)
 
-	satelliteProvisionHandler := handlers.NewSatelliteProvisionHandler(
+	mappingByHorizonHandler := handlers.NewSatellitesTilesMappingsByHorizonHandler(
+		tileRepo,
+		tleRepo,
+		satelliteRepo,
+		visibilityRepo,
+	)
+
+	celestrackSatelliteUpload := handlers.NewCelesTrackSatelliteUploadHandler(
 		satelliteRepo,
 		&satelliteService,
 	)
 
 	tasks := map[TaskName]TaskHandler{
-		TaskName("fetchAndUpsertTLE"):                   &tleProvisionHandler,
-		TaskName("fetchAndStoreTiles"):                  &tileProvisionHandler,
-		TaskName("execComputeVisibilitiesTask"):         &computeVisibilitiesHandler,
-		TaskName("execVisbilityBySatelliteHorizonTask"): &visbilityBySatelliteHorizonHandle,
-		TaskName("fetchAndUpsertSatellite"):             &satelliteProvisionHandler,
+		TaskName(celestrackTleUpload.GetTask().Name):       &celestrackTleUpload,
+		TaskName(generateTilesHandler.GetTask().Name):      &generateTilesHandler,
+		TaskName(mappingsHandler.GetTask().Name):           &mappingsHandler,
+		TaskName(mappingByHorizonHandler.GetTask().Name):   &mappingByHorizonHandler,
+		TaskName(celestrackSatelliteUpload.GetTask().Name): &celestrackSatelliteUpload,
 	}
 	return TaskMonitor{
 		Tasks: tasks,
