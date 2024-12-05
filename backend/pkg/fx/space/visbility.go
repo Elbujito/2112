@@ -27,10 +27,9 @@ func ComputeVisibilityWindow(
 
 	aos := ComputeAOS(satrec, point, tileRadiusKm, startTime, endTime, timeStep, &maxElevation)
 	if aos.IsZero() {
-		log.Printf("AOS not detected for NORAD ID %s. Aborting computation.", noradID)
 		return aos, maxElevation
 	} else {
-		log.Printf("AOS detected at %v for NORAD ID %s. Aborting computation.", aos, noradID)
+		log.Printf("AOS detected at %v for NORAD ID %s", aos, noradID)
 	}
 
 	return aos, maxElevation

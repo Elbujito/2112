@@ -91,44 +91,25 @@ const SatellitePage: React.FC = () => {
   ];
 
   return (
-    <div className="mt-3 grid h-full w-full grid-cols-1 lg:grid-cols-12 gap-5">
-      {/* Left side: MapCard (60% width) */}
-      <div
-        className="col-span-1 lg:col-span-7 flex flex-col space-y-5"
-        style={{
-          maxHeight: "70vh",
-        }}
-      >
-        <MapCard onLocationChange={handleLocationChange} />
+    <div className="mt-3 grid h-full w-full grid-rows-[70vh_auto] grid-cols-12 gap-5">
+      {/* Left side: MapCard (spans 7 columns) */}
+      <div className="row-span-1 col-span-12 lg:col-span-7">
+        <div className="h-full">
+          <MapCard onLocationChange={handleLocationChange} />
+        </div>
       </div>
 
-      {/* Right side: Satellite Table and Map (40% width) */}
-      <div
-        className="col-span-1 lg:col-span-5 flex flex-col space-y-5"
-        style={{
-          // maxHeight: "70vh",
-        }}
-      >
+      {/* Right side: Satellite Table and Map (spans 5 columns) */}
+      <div className="row-span-1 col-span-12 lg:col-span-5 grid grid-rows-2 gap-5">
         {/* Satellite Table */}
-        <div
-          style={{
-            minHeight: "50%",
-            maxHeight: "50%",
-            overflow: "auto",
-          }}
-        >
+        <div className="row-span-1 overflow-auto">
           <CustomScrollbar style={{ height: "100%" }}>
             <SatelliteTableWithData onSelectNoradID={handleNoradIDChange} />
           </CustomScrollbar>
         </div>
 
         {/* Satellite View */}
-        <div
-          style={{
-            minHeight: "50%",
-            maxHeight: "50%",
-          }}
-        >
+        <div className="row-span-1">
           <MapSatelliteWithData
             noradID={selectedNoradID}
             userLocation={userLocation} // Pass user location as a prop
@@ -136,8 +117,8 @@ const SatellitePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom row: Visibility Timeline (100% width) */}
-      <div className="col-span-1 lg:col-span-12 pt-6">
+      {/* Bottom row: Visibility Timeline (spans all 12 columns) */}
+      <div className="row-span-1 col-span-12">
         <VisibilityTimeline data={mockVisibilityData} />
       </div>
     </div>

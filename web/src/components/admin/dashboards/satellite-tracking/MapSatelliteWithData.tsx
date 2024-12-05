@@ -60,25 +60,14 @@ const MapSatelliteWithData: React.FC<MapSatelliteWithDataProps> = ({
   return (
     <Card extra={"relative w-full h-full bg-white px-3 py-[18px]"}>
       <Box
-        position="relative"
-        w="100%"
-        h="60vh"
-        overflow="hidden"
-        bg="gray.50"
-        borderRadius="md"
+        className="grid h-[60vh] grid-cols-1 grid-rows-1 relative rounded-md"
       >
-        {/* Use MapSatellite to Display Orbit Data */}
-          <MapSatellite orbitData={orbitData} noradID={noradID} userLocation={userLocation} />
+        {/* MapSatellite Component */}
+        <MapSatellite orbitData={orbitData} noradID={noradID} userLocation={userLocation} />
+
         {/* Loading Indicator */}
         {fetchingOrbit && (
-          <Center
-            position="absolute"
-            top="0"
-            left="0"
-            right="0"
-            bottom="0"
-            bg="blackAlpha.700"
-          >
+          <Center className="absolute inset-0 bg-black/70 z-10 flex flex-col">
             <Spinner thickness="4px" speed="0.65s" color="blue.500" size="xl" />
             <Text mt={4} color="white">
               Fetching Orbit Data...
@@ -88,15 +77,7 @@ const MapSatelliteWithData: React.FC<MapSatelliteWithDataProps> = ({
 
         {/* Error Message */}
         {error && (
-          <Center
-            position="absolute"
-            top="0"
-            left="0"
-            right="0"
-            bottom="0"
-            bg="red.700"
-            color="white"
-          >
+          <Center className="absolute inset-0 bg-red-700 text-white z-10">
             <Text>{error}</Text>
           </Center>
         )}

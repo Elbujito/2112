@@ -15,16 +15,14 @@ export default function SatelliteTableWithData({
   const [error, setError] = useState<string | null>(null); // Error state
   const [search, setSearch] = useState<string>(""); // Search term for filtering satellites
   const [pageIndex, setPageIndex] = useState<number>(0); // Current page index
-  const [pageSize, setPageSize] = useState<number>(10); // Rows per page
+  const [pageSize, setPageSize] = useState<number>(5); // Rows per page
   const [totalPages, setTotalPages] = useState<number>(0); // Total pages from the API
   const [totalItems, setTotalItems] = useState<number>(0); // Total items from the API
   const [submit, setSubmit] = useState<boolean>(true); // Trigger fetch for data
 
   useEffect(() => {
     const fetchSatellites = async () => {
-      if (!submit) {
-        return;
-      }
+      if (!submit) return;
 
       setLoading(true);
       setError(null);
@@ -33,6 +31,7 @@ export default function SatelliteTableWithData({
           params: { page: pageIndex + 1, pageSize, search },
           headers: { Accept: "application/json" },
         });
+
         setSatellites(response.data.satellites || []);
         setTotalItems(response.data.totalRecords || 0);
         setTotalPages(Math.ceil((response.data.totalRecords || 0) / pageSize));
@@ -68,7 +67,7 @@ export default function SatelliteTableWithData({
 
   if (loading) {
     return (
-      <Center height="100vh">
+      <Center className="grid h-full w-full place-items-center">
         <Spinner size="xl" color="blue.500" />
       </Center>
     );
@@ -76,18 +75,16 @@ export default function SatelliteTableWithData({
 
   if (error) {
     return (
-      <Center height="100vh">
-        <Box textAlign="center">
-          <Text fontSize="lg" fontWeight="bold" color="red.500">
-            {error}
-          </Text>
+      <Center className="grid h-full w-full place-items-center">
+        <Box className="text-center">
+          <Text className="text-lg font-bold text-red-500">{error}</Text>
         </Box>
       </Center>
     );
   }
 
   return (
-    <Box bg="gray.50" borderRadius="lg" boxShadow="md" maxWidth="100%">
+    <Box className="grid w-full gap-4 rounded-lg shadow-md">
       <SatelliteTableComponent
         tableData={satellites}
         pageIndex={pageIndex}
