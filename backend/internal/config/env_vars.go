@@ -92,7 +92,7 @@ func (c *EnvVars) setDefaults() {
 	viper.SetDefault("GZIP_LEVEL", constants.DEFAULT_GZIP_LEVEL)
 
 	viper.SetDefault("CELESTRACK_URL", constants.DEFAULT_PUBLIC_CESLESTRACK_URL)
-	viper.SetDefault("PRIVATE_PROPAGATOR_URL", constants.DEFAULT_PRIVATE_PROPAGATOR_URL)
+	viper.SetDefault("PROPAGATOR_URL", constants.DEFAULT_PRIVATE_PROPAGATOR_URL)
 	viper.SetDefault("CELESTRACK_SATCAT_URL", constants.DEFAULT_PUBLIC_CESLESTRACK_SATCAT_URL)
 }
 
