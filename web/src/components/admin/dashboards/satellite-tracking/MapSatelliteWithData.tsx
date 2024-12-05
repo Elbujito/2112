@@ -58,9 +58,9 @@ const MapSatelliteWithData: React.FC<MapSatelliteWithDataProps> = ({
   }, [noradID]);
 
   return (
-    <Card extra={"relative w-full h-full bg-white px-3 py-[18px]"}>
+    <Card extra={"w-full h-full bg-white px-3 py-[18px]"}>
       <Box
-        className="grid h-[60vh] grid-cols-1 grid-rows-1 relative rounded-md"
+        className="grid h-[60vh] grid-cols-1 grid-rows-1 rounded-md"
       >
         {/* MapSatellite Component */}
         <MapSatellite orbitData={orbitData} noradID={noradID} userLocation={userLocation} />

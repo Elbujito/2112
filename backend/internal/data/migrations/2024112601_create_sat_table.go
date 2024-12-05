@@ -27,7 +27,7 @@ func init() {
 				Apogee         *float64   `gorm:"type:float"`               // Apogee altitude in kilometers (optional)
 				Perigee        *float64   `gorm:"type:float"`               // Perigee altitude in kilometers (optional)
 				RCS            *float64   `gorm:"type:float"`               // Radar cross-section in square meters (optional)
-				Altitude       *float64   `gorm:"type:float"`               // Radar cross-section in square meters (optional)
+				Altitude       *float64   `gorm:"type:float"`               // Altitude in kilometers (optional)
 			}
 
 			type TLE struct {
@@ -64,15 +64,51 @@ func init() {
 				return err
 			}
 
+			// Convert TileSatelliteMapping to a hypertable
+			if err := db.Exec(`SELECT create_hypertable('tile_satellite_mappings', 'aos', if_not_exists => TRUE);`).Error; err != nil {
+				return err
+			}
+
+			// Create a continuous aggregate for 1-hour buckets
+			if err := db.Exec(`
+				CREATE MATERIALIZED VIEW hourly_visibility
+				WITH (timescaledb.continuous) AS
+				SELECT
+					time_bucket('1 hour', aos) AS bucket,
+					norad_id,
+					tile_id,
+					MAX(max_elevation) AS max_elevation
+				FROM
+					tile_satellite_mappings
+				GROUP BY
+					bucket, norad_id, tile_id;
+			`).Error; err != nil {
+				return err
+			}
+
+			// Add retention policy for TileSatelliteMapping
+			if err := db.Exec(`
+				SELECT add_retention_policy('tile_satellite_mappings', INTERVAL '7 days');
+			`).Error; err != nil {
+				return err
+			}
+
+			// Add retention policy for hourly_visibility (optional)
+			if err := db.Exec(`
+				SELECT add_retention_policy('hourly_visibility', INTERVAL '7 days');
+			`).Error; err != nil {
+				return err
+			}
+
 			// Ensure existing geometries have SRID 4326
 			return db.Exec(`
 				UPDATE tiles
 				SET spatial_index = ST_SetSRID(spatial_index, 4326)
-				WHERE ST_SRID(spatial_index) != 4326
+				WHERE ST_SRID(spatial_index) != 4326;
 			`).Error
 		},
 		Rollback: func(db *gorm.DB) error {
-			return db.Migrator().DropTable("tile_satellite_mappings", "tiles", "tles", "satellites")
+			return db.Migrator().DropTable("hourly_visibility", "tile_satellite_mappings", "tiles", "tles", "satellites")
 		},
 	}
 

@@ -1,0 +1,19 @@
+version: "3.7"
+
+services:
+  2112-timescale:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile.db # Path to the Dockerfile relative to the context
+    container_name: 2112-timescale
+    ports:
+      - "5440:5432" # Expose database service on port 5440
+    env_file: ../config/timescale/timescale.env
+    volumes:
+      - ../data/database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 5

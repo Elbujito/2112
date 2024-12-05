@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import * as Cesium from "cesium";
 import "cesium/Build/Cesium/Widgets/widgets.css";
 import Card from "components/card";
@@ -11,9 +11,9 @@ interface OrbitData {
 }
 
 interface MapSatelliteProps {
-  orbitData?: OrbitData[]; // Optional orbit data
-  noradID?: string; // Optional NORAD ID
-  userLocation?: { latitude: number; longitude: number }; // User location
+  orbitData?: OrbitData[];
+  noradID?: string;
+  userLocation?: { latitude: number; longitude: number };
 }
 
 const MapSatellite: React.FC<MapSatelliteProps> = ({
@@ -21,16 +21,30 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
   noradID = "Unknown",
   userLocation,
 }) => {
+  const cesiumContainerRef = useRef<HTMLDivElement | null>(null);
+  const viewerRef = useRef<Cesium.Viewer | null>(null);
+
   useEffect(() => {
-    let viewer: Cesium.Viewer | null = new Cesium.Viewer("cesiumContainer", {
-      terrainProvider: new Cesium.EllipsoidTerrainProvider(),
-      timeline: true,
-      animation: true,
-      sceneMode: Cesium.SceneMode.SCENE3D, // Set default view to 3D
-    });
+    const container = cesiumContainerRef.current;
+    if (!container) return;
+
+    // Initialize Cesium viewer if not already created
+    if (!viewerRef.current) {
+      viewerRef.current = new Cesium.Viewer(container, {
+        terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+        timeline: true,
+        animation: true,
+        sceneMode: Cesium.SceneMode.SCENE3D,
+      });
+    }
+
+    const viewer = viewerRef.current;
 
     const plotOrbit = () => {
       if (!viewer) return;
+
+      // Clear existing entities
+      viewer.entities.removeAll();
 
       if (orbitData.length === 0) {
         console.warn("Orbit data not provided. Viewer will display Earth only.");
@@ -60,7 +74,7 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
           polyline: {
             positions: orbitPositions,
             width: 1,
-            material:Cesium.Color.PURPLE,
+            material: Cesium.Color.PURPLE,
           },
         });
 
@@ -69,7 +83,7 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
           position: positionProperty,
           point: {
             pixelSize: 12,
-            color: Cesium.Color.PURPLE, // Purple color for the satellite
+            color: Cesium.Color.PURPLE,
           },
           label: {
             text: `Satellite: ${noradID}`,
@@ -84,7 +98,7 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
             pixelOffset: new Cesium.Cartesian2(0, -20),
           },
           path: {
-            material: Cesium.Color.PURPLE, 
+            material: Cesium.Color.PURPLE,
             width: 2,
           },
         });
@@ -100,8 +114,8 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
             viewer.clock.stopTime = stopTime.clone();
             viewer.clock.currentTime = startTime.clone();
             viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
-            viewer.clock.multiplier = 1; // x1 playback speed
-            viewer.clock.shouldAnimate = true; // Start animation by default
+            viewer.clock.multiplier = 1;
+            viewer.clock.shouldAnimate = true;
             viewer.timeline.zoomTo(startTime, stopTime);
           } else {
             console.warn("Invalid orbit data times. Ensure time format is ISO8601.");
@@ -111,18 +125,17 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
         }
       }
 
-      // Add user location to the map, if available
       if (userLocation) {
         viewer.entities.add({
           name: "User Location",
           position: Cesium.Cartesian3.fromDegrees(
             userLocation.longitude,
             userLocation.latitude,
-            0 // Altitude 0 for ground level
+            0
           ),
           point: {
             pixelSize: 10,
-            color: Cesium.Color.BLUE, // Blue color for user
+            color: Cesium.Color.BLUE,
             outlineColor: Cesium.Color.WHITE,
             outlineWidth: 2,
           },
@@ -141,24 +154,33 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
         });
       }
 
-      // Set the camera view to focus on the entire Earth in 3D
       viewer.scene.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000), // Height is in meters
+        destination: Cesium.Cartesian3.fromDegrees(0, 0, 20000000),
       });
     };
 
     plotOrbit();
 
+    const handleResize = () => {
+      if (viewer) {
+        viewer.resize();
+      }
+    };
+
+    // Add resize event listener
+    window.addEventListener("resize", handleResize);
+
     return () => {
+      window.removeEventListener("resize", handleResize);
       if (viewer) {
         viewer.destroy();
-        viewer = null;
+        viewerRef.current = null;
       }
     };
   }, [orbitData, noradID, userLocation]);
 
   return (
-    <Card extra={"relative w-full h-full bg-white px-3 py-[18px]"} style={{ borderRadius: "20px" }}>
+    <Card extra={"w-full h-full bg-white px-3 py-[18px]"} style={{ borderRadius: "20px" }}>
       <style>
         {`
           .cesium-viewer .cesium-widget-credits {
@@ -166,7 +188,11 @@ const MapSatellite: React.FC<MapSatelliteProps> = ({
           }
         `}
       </style>
-      <div id="cesiumContainer" style={{ width: "100%", height: "100%", borderRadius: "20px" }} />
+      <div
+        ref={cesiumContainerRef}
+        id="cesiumContainer"
+        style={{ display: "flex", width: "100%", height: "100%", borderRadius: "20px" }}
+      />
     </Card>
   );
 };
