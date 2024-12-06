@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Elbujito/2112/fx/space"
 	propagator "github.com/Elbujito/2112/internal/clients/propagate"
 	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/pkg/fx/space"
 )
 
 type SatelliteService struct {

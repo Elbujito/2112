@@ -1,6 +1,6 @@
 package features
 
-import "github.com/Elbujito/2112/pkg/fx/constants"
+import "github.com/Elbujito/2112/fx/constants"
 
 type CelestrackConfig struct {
 	BaseUrl string `mapstructure:"CELESTRACK_URL"`
@@ -22,4 +22,3 @@ var celestrack = &Feature{
 func init() {
 	Features.Add(celestrack)
 }
-

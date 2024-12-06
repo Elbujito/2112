@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/pkg/fx/polygon"
 )
 
 type GenerateTilesHandler struct {
@@ -55,7 +54,7 @@ func (h *GenerateTilesHandler) Run(ctx context.Context, args map[string]string) 
 		return fmt.Errorf("invalid faces value: %w", err)
 	}
 
-	polygons := polygon.GenerateAllTilesForRadius(radius, faces)
+	polygons := xpolygon.GenerateAllTilesForRadius(radius, faces)
 
 	for _, p := range polygons {
 		tile := domain.NewTile(p)

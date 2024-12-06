@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Elbujito/2112/fx/polygon"
 	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/pkg/fx/polygon"
 )
 
 // Tile Model

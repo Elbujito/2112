@@ -1,11 +1,11 @@
-package space
+package xspace
 
 import (
 	"math"
 	"time"
 
-	"github.com/Elbujito/2112/pkg/fx/constants"
-	"github.com/Elbujito/2112/pkg/fx/polygon"
+	xconstants "github.com/Elbujito/2112/fx/pkg/constants"
+	xpolygon "github.com/Elbujito/2112/fx/pkg/polygon"
 )
 
 // LatLonToCartesian converts latitude, longitude, and altitude to Cartesian coordinates
@@ -16,9 +16,9 @@ func LatLonToCartesian(latitude, longitude, altitude float64) (float64, float64,
 	lonRad := DegreesToRadians(longitude)
 
 	// Calculate the Cartesian coordinates using the spherical to Cartesian transformation
-	x := (constants.EARTH_RADIUS_KM + altitude) * math.Cos(latRad) * math.Cos(lonRad)
-	y := (constants.EARTH_RADIUS_KM + altitude) * math.Cos(latRad) * math.Sin(lonRad)
-	z := (constants.EARTH_RADIUS_KM + altitude) * math.Sin(latRad)
+	x := (xconstants.EARTH_RADIUS_KM + altitude) * math.Cos(latRad) * math.Cos(lonRad)
+	y := (xconstants.EARTH_RADIUS_KM + altitude) * math.Cos(latRad) * math.Sin(lonRad)
+	z := (xconstants.EARTH_RADIUS_KM + altitude) * math.Sin(latRad)
 
 	return x, y, z
 }
@@ -35,7 +35,7 @@ func DotProduct(x1, y1, z1, x2, y2, z2 float64) float64 {
 }
 
 // CalculateIntegratedElevationFromPoint computes the elevation of a satellite relative to a ground point
-func CalculateIntegratedElevationFromPoint(satellitePos polygon.Point, satelliteAltKm float64, groundPoint polygon.Point) float64 {
+func CalculateIntegratedElevationFromPoint(satellitePos xpolygon.Point, satelliteAltKm float64, groundPoint xpolygon.Point) float64 {
 	// Convert the latitude/longitude of the ground point and satellite to 3D Cartesian coordinates
 	groundX, groundY, groundZ := LatLonToCartesian(groundPoint.Latitude, groundPoint.Longitude, 0)
 	satX, satY, satZ := LatLonToCartesian(satellitePos.Latitude, satellitePos.Longitude, satelliteAltKm)
@@ -50,7 +50,7 @@ func CalculateIntegratedElevationFromPoint(satellitePos polygon.Point, satellite
 	vecX, vecY, vecZ = Normalize(vecX, vecY, vecZ)
 
 	// Special case handling for direct overhead (tolerance for floating point precision)
-	if math.Abs(vecX-earthVecX) < constants.EPSILON && math.Abs(vecY-earthVecY) < constants.EPSILON && math.Abs(vecZ-earthVecZ) < constants.EPSILON {
+	if math.Abs(vecX-earthVecX) < xconstants.EPSILON && math.Abs(vecY-earthVecY) < xconstants.EPSILON && math.Abs(vecZ-earthVecZ) < xconstants.EPSILON {
 		return 90.0
 	}
 
@@ -80,7 +80,7 @@ func CalculateIntegratedElevationFromPoint(satellitePos polygon.Point, satellite
 
 // Helper function to convert degrees to radians
 func DegreesToRadians(degrees float64) float64 {
-	return degrees * constants.PI_DIVIDE_BY_180
+	return degrees * xconstants.PI_DIVIDE_BY_180
 }
 
 // Helper function to convert radians to degrees
@@ -89,8 +89,8 @@ func RadiansToDegrees(radians float64) float64 {
 }
 
 func ComputeAverageAltitude(apogee, perigee float64) float64 {
-	apogeeActual := apogee + constants.EARTH_RADIUS_KM
-	perigeeActual := perigee + constants.EARTH_RADIUS_KM
+	apogeeActual := apogee + xconstants.EARTH_RADIUS_KM
+	perigeeActual := perigee + xconstants.EARTH_RADIUS_KM
 	return (apogeeActual + perigeeActual) / 2
 }
 
@@ -107,8 +107,8 @@ func calculateFraction(altitude float64) float64 {
 
 func CalculateOptimalTimestep(altitude, tileRadius float64) time.Duration {
 
-	orbitalVelocity := math.Sqrt(constants.GM / (constants.EARTH_RADIUS + altitude)) // Orbital velocity (m/s)
-	timeOverTile := tileRadius / orbitalVelocity                                     // Time to cross a tile (seconds)
+	orbitalVelocity := math.Sqrt(xconstants.GM / (xconstants.EARTH_RADIUS + altitude)) // Orbital velocity (m/s)
+	timeOverTile := tileRadius / orbitalVelocity                                       // Time to cross a tile (seconds)
 	fraction := calculateFraction(altitude)
 	optimalTimestep := timeOverTile * fraction
 

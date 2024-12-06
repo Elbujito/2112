@@ -1,4 +1,4 @@
-package polygon
+package xpolygon
 
 import (
 	"log"

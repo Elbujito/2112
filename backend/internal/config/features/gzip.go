@@ -1,6 +1,6 @@
 package features
 
-import "github.com/Elbujito/2112/pkg/fx/constants"
+import "github.com/Elbujito/2112/fx/constants"
 
 type GzipConfig struct {
 	Level string `mapstructure:"GZIP_LEVEL"`

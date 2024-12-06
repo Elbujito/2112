@@ -1,20 +1,19 @@
-package space
+package xspace
 
 import (
 	"log"
 	"math"
 	"time"
 
-	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/pkg/fx/constants"
-	"github.com/Elbujito/2112/pkg/fx/polygon"
+	xconstants "github.com/Elbujito/2112/fx/pkg/constants"
+	xpolygon "github.com/Elbujito/2112/fx/pkg/polygon"
 	"github.com/joshuaferrara/go-satellite"
 )
 
 // ComputeVisibilityWindow computes the visibility window for a satellite over a given tile.
 func ComputeVisibilityWindow(
 	noradID, tleLine1, tleLine2 string,
-	point polygon.Point,
+	point xpolygon.Point,
 	radius float64,
 	startTime, endTime time.Time, timeStep time.Duration,
 ) (time.Time, float64) {
@@ -37,7 +36,7 @@ func ComputeVisibilityWindow(
 
 // ComputeAOS computes the Acquisition of Signal (AOS) time for a satellite over a given tile.
 func ComputeAOS(
-	satrec satellite.Satellite, point polygon.Point,
+	satrec satellite.Satellite, point xpolygon.Point,
 	tileRadiusKm float64, startTime, endTime time.Time,
 	timeStep time.Duration, maxElevation *float64,
 ) time.Time {
@@ -49,7 +48,7 @@ func ComputeAOS(
 			continue
 		}
 
-		satellitePos := polygon.Point{Latitude: geo.Latitude, Longitude: geo.Longitude}
+		satellitePos := xpolygon.Point{Latitude: geo.Latitude, Longitude: geo.Longitude}
 
 		if Intersects(point, satellitePos, tileRadiusKm, altitude) {
 
@@ -68,7 +67,7 @@ func ComputeAOS(
 
 // ComputeLOS computes the Loss of Signal (LOS) time for a satellite over a given tile.
 func ComputeLOS(
-	satrec satellite.Satellite, point polygon.Point,
+	satrec satellite.Satellite, point xpolygon.Point,
 	tileRadiusKm float64, aos time.Time, endTime time.Time,
 	timeStep time.Duration, maxElevation *float64,
 ) time.Time {
@@ -84,7 +83,7 @@ func ComputeLOS(
 			return aos
 		}
 
-		satellitePos := polygon.Point{Latitude: geo.Latitude, Longitude: geo.Longitude}
+		satellitePos := xpolygon.Point{Latitude: geo.Latitude, Longitude: geo.Longitude}
 
 		if !Intersects(point, satellitePos, tileRadiusKm, altitude) {
 			return t
@@ -94,7 +93,7 @@ func ComputeLOS(
 	return time.Time{}
 }
 
-func Intersects(tileCenter polygon.Point, satellitePos polygon.Point, tileRadiusKm float64, altitude float64) bool {
+func Intersects(tileCenter xpolygon.Point, satellitePos xpolygon.Point, tileRadiusKm float64, altitude float64) bool {
 	// Compute the distance from the satellite to the tile center point (ignoring altitude)
 	centerDistance := HaversineDistance(satellitePos.Latitude, satellitePos.Longitude, tileCenter.Latitude, tileCenter.Longitude, 0, 0)
 
@@ -116,11 +115,11 @@ func PropagateSatellitePosition(satrec satellite.Satellite, t time.Time) (float6
 }
 
 // CalculateIntegratedElevation computes the elevation of a satellite relative to a ground point.
-func CalculateIntegratedElevation(satelliteQuadKey polygon.Quadkey, satelliteAltitude float64, pointQuadKey polygon.Point) float64 {
+func CalculateIntegratedElevation(satelliteQuadKey xpolygon.Quadkey, satelliteAltitude float64, pointQuadKey xpolygon.Point) float64 {
 	return CalculateIntegratedElevationFromPoint(
-		polygon.Point{Latitude: satelliteQuadKey.Latitude, Longitude: satelliteQuadKey.Longitude},
+		xpolygon.Point{Latitude: satelliteQuadKey.Latitude, Longitude: satelliteQuadKey.Longitude},
 		satelliteAltitude,
-		polygon.Point{Latitude: pointQuadKey.Latitude, Longitude: pointQuadKey.Longitude},
+		xpolygon.Point{Latitude: pointQuadKey.Latitude, Longitude: pointQuadKey.Longitude},
 	)
 }
 
@@ -134,7 +133,7 @@ func HaversineDistance(lat1, lon1, lat2, lon2, altitude1, altitude2 float64) flo
 		math.Cos(lat1Rad)*math.Cos(lat2Rad)*math.Sin(dLon/2)*math.Sin(dLon/2)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 
-	surfaceDistance := constants.EARTH_RADIUS_KM * c
+	surfaceDistance := xconstants.EARTH_RADIUS_KM * c
 
 	// Adjust for altitude (adding z-axis distance)
 	altitudeDiff := altitude2 - altitude1
@@ -142,39 +141,39 @@ func HaversineDistance(lat1, lon1, lat2, lon2, altitude1, altitude2 float64) flo
 }
 
 // Compute the satellite's visible region (horizon) at a given time.
-func ComputeSatelliteHorizon(t time.Time, tle domain.TLE) ([]polygon.Point, error) {
+func ComputeSatelliteHorizon(t time.Time, line1 string, line2 string) ([]xpolygon.Point, error) {
 	// Propagate satellite position to get the current location
-	satrec := satellite.TLEToSat(tle.Line1, tle.Line2, satellite.GravityWGS84)
+	satrec := satellite.TLEToSat(line1, line2, satellite.GravityWGS84)
 	altitude, geo, err := PropagateSatellitePosition(satrec, t)
 	if err != nil {
 		return nil, err
 	}
 
 	// Sub-satellite point (directly beneath the satellite)
-	subSatellitePoint := polygon.Point{Latitude: geo.Latitude, Longitude: geo.Longitude}
+	subSatellitePoint := xpolygon.Point{Latitude: geo.Latitude, Longitude: geo.Longitude}
 
 	// Calculate the horizon distance (approximated by the satellite's altitude and Earth's radius)
-	horizonDistance := math.Sqrt(2 * constants.EARTH_RADIUS_KM * altitude)
+	horizonDistance := math.Sqrt(2 * xconstants.EARTH_RADIUS_KM * altitude)
 
 	// Now, we will define the visible region as a circle with the calculated horizon distance
 	// The circular region is represented by multiple points (approximated here as a set of points around the horizon)
-	visibleRegion := make([]polygon.Point, 0)
+	visibleRegion := make([]xpolygon.Point, 0)
 
 	// Number of points to represent the circle (for simplicity, let's use 36 points for a full circle)
 	numPoints := 36
 	for i := 0; i < numPoints; i++ {
 		angle := float64(i) * (2 * math.Pi / float64(numPoints))
-		latOffset := horizonDistance / constants.EARTH_RADIUS_KM * math.Sin(angle)
-		lonOffset := horizonDistance / constants.EARTH_RADIUS_KM * math.Cos(angle)
+		latOffset := horizonDistance / xconstants.EARTH_RADIUS_KM * math.Sin(angle)
+		lonOffset := horizonDistance / xconstants.EARTH_RADIUS_KM * math.Cos(angle)
 
 		// Calculate the new latitude and longitude by applying the offsets
 		lat := subSatellitePoint.Latitude + latOffset
 		lon := subSatellitePoint.Longitude + lonOffset
 
 		// Add the point to the visible region
-		visibleRegion = append(visibleRegion, polygon.Point{Latitude: lat, Longitude: lon})
+		visibleRegion = append(visibleRegion, xpolygon.Point{Latitude: lat, Longitude: lon})
 	}
 
-	// Return the visible region as a polygon (simplified)
+	// Return the visible region as a xpolygon (simplified)
 	return visibleRegion, nil
 }

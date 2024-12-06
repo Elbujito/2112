@@ -1,6 +1,6 @@
 package kratos
 
-import "github.com/Elbujito/2112/template/go-server/pkg/fx/constants"
+import "github.com/Elbujito/2112/fx/constants"
 
 func init() {
 	kratosClient = &Kratos{

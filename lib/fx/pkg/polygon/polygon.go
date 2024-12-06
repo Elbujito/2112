@@ -1,10 +1,10 @@
-package polygon
+package xpolygon
 
 import (
 	"log"
 	"math"
 
-	"github.com/Elbujito/2112/pkg/fx/constants"
+	xconstants "github.com/Elbujito/2112/fx/pkg/constants"
 )
 
 // Polygon represents a geographic polygon.
@@ -39,14 +39,14 @@ func generateBoundaries(nbFaces int, center LatLong, radius float64) []Point {
 	for i := 0; i < nbFaces; i++ {
 		angle := angleStep * float64(i)
 
-		deltaLat := radius * math.Cos(angle) / constants.EARTH_RADIUS
-		deltaLon := radius * math.Sin(angle) / (constants.EARTH_RADIUS * math.Cos(centerLatRad))
+		deltaLat := radius * math.Cos(angle) / xconstants.EARTH_RADIUS
+		deltaLon := radius * math.Sin(angle) / (xconstants.EARTH_RADIUS * math.Cos(centerLatRad))
 
 		newLat := centerLatRad + deltaLat
 		newLon := centerLonRad + deltaLon
 
-		newLatDeg := newLat * constants.I180_DIVIDE_BY_PI
-		newLonDeg := newLon * constants.I180_DIVIDE_BY_PI
+		newLatDeg := newLat * xconstants.I180_DIVIDE_BY_PI
+		newLonDeg := newLon * xconstants.I180_DIVIDE_BY_PI
 
 		boundaries = append(boundaries, Point{
 			Latitude:  newLatDeg,
@@ -59,20 +59,20 @@ func generateBoundaries(nbFaces int, center LatLong, radius float64) []Point {
 
 // calculateZoomLevelForTileRadius determines the optimal zoom level for a given tile radius.
 func calculateZoomLevelForTileRadius(tileRadius float64) int {
-	for zoom := 0; zoom <= constants.MAX_ZOOM_LEVEL; zoom++ {
-		tileSize := constants.EARTH_CIRCUMFERENCE_METER / math.Pow(2, float64(zoom))
+	for zoom := 0; zoom <= xconstants.MAX_ZOOM_LEVEL; zoom++ {
+		tileSize := xconstants.EARTH_CIRCUMFERENCE_METER / math.Pow(2, float64(zoom))
 
 		log.Printf("Zoom: %d, Tile Size: %.2f, Half Tile Size: %.2f", zoom, tileSize, tileSize/2)
 		if tileSize/2 <= tileRadius {
 			return zoom
 		}
 	}
-	return constants.MAX_ZOOM_LEVEL
+	return xconstants.MAX_ZOOM_LEVEL
 }
 
 // calculateTileRadiusForZoom calculates the exact radius of a tile given a specific zoom level.
 func calculateTileRadiusForZoom(zoom int) float64 {
-	tileSize := constants.EARTH_CIRCUMFERENCE_METER / math.Pow(2, float64(zoom))
+	tileSize := xconstants.EARTH_CIRCUMFERENCE_METER / math.Pow(2, float64(zoom))
 	tileRadius := tileSize / 2
 	return tileRadius
 }
@@ -121,7 +121,7 @@ func TileXYToLatLon(x, y, zoom int) (float64, float64) {
 	lon := float64(x)/n*360.0 - 180.0
 
 	latRad := math.Atan(math.Sinh(math.Pi * (1 - 2*float64(y)/n)))
-	lat := latRad * constants.I180_DIVIDE_BY_PI
+	lat := latRad * xconstants.I180_DIVIDE_BY_PI
 
 	return lat, lon
 }

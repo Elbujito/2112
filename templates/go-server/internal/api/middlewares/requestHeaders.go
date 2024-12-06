@@ -3,8 +3,8 @@ package middlewares
 import (
 	"net/http"
 
+	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/api/handlers"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/constants"
 
 	"github.com/labstack/echo/v4"
 )

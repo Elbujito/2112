@@ -737,7 +737,7 @@ The package is split into 3 directories
 | `/internal/data` | Everything related to database entities and models, migrations, and seed data |
 | `/internal/proc` | Entry points for all processes |
 | `/pkg/tasks` | User-defined tasks available via the command line CLI |
-| `/pkg/fx` | General utilities used throughout the package that do not belong to any specific package |
+| `/fx` | General utilities used throughout the package that do not belong to any specific package |
 
 
 <details>

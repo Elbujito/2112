@@ -3,6 +3,7 @@ package proc
 import (
 	"fmt"
 
+	"github.com/Elbujito/2112/fx"
 	"github.com/Elbujito/2112/template/go-server/internal/api/routers"
 	clientsPkg "github.com/Elbujito/2112/template/go-server/internal/clients"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/cors"
@@ -13,7 +14,6 @@ import (
 	"github.com/Elbujito/2112/template/go-server/internal/clients/service"
 	"github.com/Elbujito/2112/template/go-server/internal/config"
 	"github.com/Elbujito/2112/template/go-server/internal/data/models"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx"
 )
 
 func InitServiceEnv(serviceName string, version string) {

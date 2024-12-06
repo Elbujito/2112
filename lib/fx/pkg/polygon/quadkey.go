@@ -1,10 +1,10 @@
-package polygon
+package xpolygon
 
 import (
 	"fmt"
 	"math"
 
-	"github.com/Elbujito/2112/pkg/fx/constants"
+	xconstants "github.com/Elbujito/2112/fx/pkg/constants"
 )
 
 type Quadkey struct {
@@ -30,10 +30,10 @@ func (q *Quadkey) Key() string {
 // DistanceTo computes the great-circle distance between two Quadkeys using the haversine formula
 func (q *Quadkey) DistanceTo(other Point) float64 {
 	// Convert latitudes and longitudes from degrees to radians
-	lat1 := q.Latitude * constants.PI_DIVIDE_BY_180
-	lon1 := q.Longitude * constants.PI_DIVIDE_BY_180
-	lat2 := other.Latitude * constants.PI_DIVIDE_BY_180
-	lon2 := other.Longitude * constants.PI_DIVIDE_BY_180
+	lat1 := q.Latitude * xconstants.PI_DIVIDE_BY_180
+	lon1 := q.Longitude * xconstants.PI_DIVIDE_BY_180
+	lat2 := other.Latitude * xconstants.PI_DIVIDE_BY_180
+	lon2 := other.Longitude * xconstants.PI_DIVIDE_BY_180
 
 	// Compute differences
 	dLat := lat2 - lat1
@@ -45,5 +45,5 @@ func (q *Quadkey) DistanceTo(other Point) float64 {
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 
 	// Distance in kilometers
-	return constants.EARTH_RADIUS_KM * c
+	return xconstants.EARTH_RADIUS_KM * c
 }

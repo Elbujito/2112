@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 	"github.com/Elbujito/2112/template/go-server/internal/config"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/constants"
 
 	"github.com/go-playground/validator/v10"
 )

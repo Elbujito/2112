@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Elbujito/2112/fx"
+	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config/features"
-	"github.com/Elbujito/2112/pkg/fx"
-	"github.com/Elbujito/2112/pkg/fx/constants"
 
 	"github.com/spf13/viper"
 )

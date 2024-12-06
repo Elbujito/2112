@@ -3,8 +3,8 @@ package test
 import (
 	"net/http"
 
+	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/services"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/constants"
 	"github.com/labstack/echo/v4"
 )
 

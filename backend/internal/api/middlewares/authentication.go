@@ -3,8 +3,8 @@ package middlewares
 import (
 	"fmt"
 
+	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/internal/clients/kratos"
-	"github.com/Elbujito/2112/pkg/fx/constants"
 
 	"github.com/labstack/echo/v4"
 )

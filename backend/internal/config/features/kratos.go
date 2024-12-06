@@ -1,6 +1,6 @@
 package features
 
-import "github.com/Elbujito/2112/pkg/fx/constants"
+import "github.com/Elbujito/2112/fx/constants"
 
 type KratosConfig struct {
 	PublicService string `mapstructure:"KRATOS_PUBLIC_SERVICE"`

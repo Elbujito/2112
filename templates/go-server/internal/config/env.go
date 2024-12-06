@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Elbujito/2112/fx"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 	"github.com/Elbujito/2112/template/go-server/internal/config/features"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )

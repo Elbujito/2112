@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/internal/services"
-	"github.com/Elbujito/2112/pkg/fx/constants"
 	"github.com/labstack/echo/v4"
 )
 

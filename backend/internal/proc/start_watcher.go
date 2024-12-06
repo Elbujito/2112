@@ -3,9 +3,9 @@ package proc
 import (
 	"time"
 
+	"github.com/Elbujito/2112/fx"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/clients/service"
-	"github.com/Elbujito/2112/pkg/fx"
 )
 
 func StartWatcher() {

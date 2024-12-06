@@ -1,8 +1,8 @@
 package middlewares
 
 import (
+	"github.com/Elbujito/2112/fx"
 	"github.com/Elbujito/2112/internal/clients/gzip"
-	"github.com/Elbujito/2112/pkg/fx"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

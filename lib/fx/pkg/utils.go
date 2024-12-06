@@ -1,4 +1,4 @@
-package fx
+package xutils
 
 import (
 	"bytes"

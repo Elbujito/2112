@@ -1,6 +1,6 @@
 package features
 
-import "github.com/Elbujito/2112/template/go-server/pkg/fx/constants"
+import "github.com/Elbujito/2112/fx/constants"
 
 type DatabaseConfig struct {
 	Host     string `mapstructure:"DB_HOST"`

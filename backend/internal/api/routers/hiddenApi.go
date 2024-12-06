@@ -1,12 +1,12 @@
 package routers
 
 import (
+	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/internal/api/handlers/healthz"
 	"github.com/Elbujito/2112/internal/api/middlewares"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/pkg/fx/constants"
 )
 
 var hiddenApiRouter *PublicRouter

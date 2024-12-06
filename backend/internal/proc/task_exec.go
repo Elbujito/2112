@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/Elbujito/2112/fx"
 	"github.com/Elbujito/2112/internal/clients/celestrack"
 	propagator "github.com/Elbujito/2112/internal/clients/propagate"
 	"github.com/Elbujito/2112/internal/config"
@@ -13,7 +14,6 @@ import (
 	"github.com/Elbujito/2112/internal/services"
 	"github.com/Elbujito/2112/internal/tasks"
 	"github.com/Elbujito/2112/internal/tasks/handlers"
-	"github.com/Elbujito/2112/pkg/fx"
 )
 
 func TaskExec(ctx context.Context, args []string) {

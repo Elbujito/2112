@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/config/features"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/constants"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/Elbujito/2112/fx"
 	"github.com/Elbujito/2112/internal/clients/dbc/adapters"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config/features"
-	"github.com/Elbujito/2112/pkg/fx"
 
 	"gorm.io/gorm"
 	gLogger "gorm.io/gorm/logger"

@@ -1,11 +1,11 @@
-package space
+package xspace
 
 import (
 	"math"
 	"testing"
 	"time"
 
-	"github.com/Elbujito/2112/pkg/fx/polygon"
+	xpolygon "github.com/Elbujito/2112/fx/pkg/polygon"
 	"github.com/joshuaferrara/go-satellite"
 )
 
@@ -73,48 +73,48 @@ func TestHaversineDistance(t *testing.T) {
 func TestIntersectsEdge(t *testing.T) {
 	tests := []struct {
 		name         string
-		tileCenter   polygon.Point // Replacing edge with center point
-		satellitePos polygon.Point
+		tileCenter   xpolygon.Point // Replacing edge with center point
+		satellitePos xpolygon.Point
 		tileRadiusKm float64
 		altitude     float64
 		expected     bool
 	}{
 		{
 			name:         "Satellite within radius of tile center (start point)",
-			tileCenter:   polygon.Point{Latitude: 0.0, Longitude: 0.0}, // Center of the tile is the start point
-			satellitePos: polygon.Point{Latitude: 0.0, Longitude: 0.0},
+			tileCenter:   xpolygon.Point{Latitude: 0.0, Longitude: 0.0}, // Center of the tile is the start point
+			satellitePos: xpolygon.Point{Latitude: 0.0, Longitude: 0.0},
 			tileRadiusKm: 1.0,
 			altitude:     0.0,
 			expected:     true,
 		},
 		{
 			name:         "Satellite within radius of tile center (end point)",
-			tileCenter:   polygon.Point{Latitude: 0.5, Longitude: 0.5}, // Center of the tile is the midpoint between start and end
-			satellitePos: polygon.Point{Latitude: 0.5, Longitude: 0.5},
+			tileCenter:   xpolygon.Point{Latitude: 0.5, Longitude: 0.5}, // Center of the tile is the midpoint between start and end
+			satellitePos: xpolygon.Point{Latitude: 0.5, Longitude: 0.5},
 			tileRadiusKm: 1.0,
 			altitude:     0.0,
 			expected:     true,
 		},
 		{
 			name:         "Satellite outside radius of tile center",
-			tileCenter:   polygon.Point{Latitude: 0.5, Longitude: 0.5},
-			satellitePos: polygon.Point{Latitude: 2.0, Longitude: 2.0},
+			tileCenter:   xpolygon.Point{Latitude: 0.5, Longitude: 0.5},
+			satellitePos: xpolygon.Point{Latitude: 2.0, Longitude: 2.0},
 			tileRadiusKm: 1.0,
 			altitude:     0.0,
 			expected:     false,
 		},
 		{
 			name:         "Satellite exactly 1 km away in latitude direction",
-			tileCenter:   polygon.Point{Latitude: 0.0, Longitude: 0.0},
-			satellitePos: polygon.Point{Latitude: 0.00899322, Longitude: 0.0}, // Exactly 1 km away along latitude
+			tileCenter:   xpolygon.Point{Latitude: 0.0, Longitude: 0.0},
+			satellitePos: xpolygon.Point{Latitude: 0.00899322, Longitude: 0.0}, // Exactly 1 km away along latitude
 			tileRadiusKm: 1.0,
 			altitude:     0.0,
 			expected:     true,
 		},
 		{
 			name:         "Satellite exactly 1 km away in longitude direction",
-			tileCenter:   polygon.Point{Latitude: 0.0, Longitude: 0.0},
-			satellitePos: polygon.Point{Latitude: 0.0, Longitude: 0.00899322}, // Exactly 1 km away along longitude
+			tileCenter:   xpolygon.Point{Latitude: 0.0, Longitude: 0.0},
+			satellitePos: xpolygon.Point{Latitude: 0.0, Longitude: 0.00899322}, // Exactly 1 km away along longitude
 			tileRadiusKm: 1.0,
 			altitude:     0.0,
 			expected:     true,
@@ -156,13 +156,13 @@ func TestComputeAOS(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		vertices      []polygon.Point
+		vertices      []xpolygon.Point
 		expectedAOS   bool
 		expectedMaxEl bool
 	}{
 		{
 			name: "Low Latitude Tile",
-			vertices: []polygon.Point{
+			vertices: []xpolygon.Point{
 				{Latitude: 0.0, Longitude: 0.0},
 				{Latitude: 0.0, Longitude: 10.0},
 				{Latitude: 10.0, Longitude: 0.0},
@@ -173,7 +173,7 @@ func TestComputeAOS(t *testing.T) {
 		},
 		{
 			name: "High Latitude Tile",
-			vertices: []polygon.Point{
+			vertices: []xpolygon.Point{
 				{Latitude: 45.0, Longitude: 45.0},
 				{Latitude: 45.0, Longitude: 55.0},
 				{Latitude: 55.0, Longitude: 45.0},
@@ -184,7 +184,7 @@ func TestComputeAOS(t *testing.T) {
 		},
 		{
 			name: "Out of Range Tile",
-			vertices: []polygon.Point{
+			vertices: []xpolygon.Point{
 				{Latitude: 80.0, Longitude: 80.0},
 				{Latitude: 80.0, Longitude: 90.0},
 				{Latitude: 90.0, Longitude: 80.0},
@@ -226,8 +226,8 @@ func TestComputeVisibilityWindow(t *testing.T) {
 	tleLine1 := "1 25544U 98067A   20344.54791435  .00001234  00000-0  29746-4 0  9998"
 	tleLine2 := "2 25544  51.6456 212.9669 0001235 341.2074 106.3520 15.48921140255678"
 
-	// Vertices of the polygon (defining a square area for testing)
-	vertices := []polygon.Point{
+	// Vertices of the xpolygon (defining a square area for testing)
+	vertices := []xpolygon.Point{
 		{Latitude: 0.0, Longitude: 0.0},
 		{Latitude: 0.0, Longitude: 10.0},
 		{Latitude: 10.0, Longitude: 0.0},
@@ -239,7 +239,7 @@ func TestComputeVisibilityWindow(t *testing.T) {
 		name         string
 		tleLine1     string
 		tleLine2     string
-		vertices     []polygon.Point
+		vertices     []xpolygon.Point
 		tileRadiusKm float64
 		startTime    time.Time
 		endTime      time.Time
@@ -308,27 +308,27 @@ func TestCalculateIntegratedElevation(t *testing.T) {
 	// Define test cases with satellite position, altitude, ground point, and expected elevation range
 	testCases := []struct {
 		name           string
-		satellitePos   polygon.Point
+		satellitePos   xpolygon.Point
 		satelliteAltKm float64
-		groundPoint    polygon.Point
+		groundPoint    xpolygon.Point
 	}{
 		{
 			name:           "Directly Overhead",
-			satellitePos:   polygon.Point{Latitude: 0.0, Longitude: 0.0},
+			satellitePos:   xpolygon.Point{Latitude: 0.0, Longitude: 0.0},
 			satelliteAltKm: 500.0,
-			groundPoint:    polygon.Point{Latitude: 0.0, Longitude: 0.0},
+			groundPoint:    xpolygon.Point{Latitude: 0.0, Longitude: 0.0},
 		},
 		{
 			name:           "Near Horizon",
-			satellitePos:   polygon.Point{Latitude: 10.0, Longitude: 10.0},
+			satellitePos:   xpolygon.Point{Latitude: 10.0, Longitude: 10.0},
 			satelliteAltKm: 500.0,
-			groundPoint:    polygon.Point{Latitude: 10.0, Longitude: 20.0},
+			groundPoint:    xpolygon.Point{Latitude: 10.0, Longitude: 20.0},
 		},
 		{
 			name:           "Far Distance",
-			satellitePos:   polygon.Point{Latitude: 45.0, Longitude: 45.0},
+			satellitePos:   xpolygon.Point{Latitude: 45.0, Longitude: 45.0},
 			satelliteAltKm: 1000.0,
-			groundPoint:    polygon.Point{Latitude: -45.0, Longitude: -45.0},
+			groundPoint:    xpolygon.Point{Latitude: -45.0, Longitude: -45.0},
 		},
 	}
 
