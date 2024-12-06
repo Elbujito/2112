@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/internal/clients/logger"
-	"github.com/Elbujito/2112/lib/fx/xutils/constants"
 
 	"github.com/labstack/echo/v4"
 )

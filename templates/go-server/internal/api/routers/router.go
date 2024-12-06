@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/Elbujito/2112/lib/fx/xutils/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 
 	"github.com/labstack/echo/v4"

@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/Elbujito/2112/lib/fx/xutils/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/template/go-server/internal/api/handlers/healthz"
 	"github.com/Elbujito/2112/template/go-server/internal/api/handlers/test"

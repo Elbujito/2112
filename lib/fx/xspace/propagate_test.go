@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	xconstants "github.com/Elbujito/2112/lib/fx/xutils/xconstants"
+	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
 )
 
 // Mock data for testing
