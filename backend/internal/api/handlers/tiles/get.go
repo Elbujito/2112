@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Elbujito/2112/internal/services"
+	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
 	"github.com/labstack/echo/v4"
 )
 
@@ -27,8 +28,8 @@ func (h *TileHandler) GetAllTiles(c echo.Context) error {
 
 	// If no tiles are found
 	if len(tiles) == 0 {
-		c.Echo().Logger.Error(constants.ERROR_ID_NOT_FOUND)
-		return constants.ERROR_ID_NOT_FOUND
+		c.Echo().Logger.Error(xconstants.ERROR_ID_NOT_FOUND)
+		return xconstants.ERROR_ID_NOT_FOUND
 	}
 
 	// Return tiles in the response

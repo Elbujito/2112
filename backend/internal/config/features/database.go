@@ -1,5 +1,7 @@
 package features
 
+import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+
 type DatabaseConfig struct {
 	Host     string `mapstructure:"DB_HOST"`
 	Port     string `mapstructure:"DB_PORT"`
@@ -12,7 +14,7 @@ type DatabaseConfig struct {
 }
 
 var database = &Feature{
-	Name:       constants.FEATURE_DATABASE,
+	Name:       xconstants.FEATURE_DATABASE,
 	Config:     &DatabaseConfig{},
 	enabled:    true,
 	configured: false,

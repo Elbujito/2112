@@ -7,6 +7,7 @@ import (
 	"github.com/Elbujito/2112/internal/data"
 	"github.com/Elbujito/2112/internal/data/models"
 	"github.com/Elbujito/2112/internal/domain"
+	"github.com/Elbujito/2112/lib/fx/xpolygon"
 	"gorm.io/gorm"
 )
 
@@ -20,7 +21,7 @@ func NewTileRepository(db *data.Database) domain.TileRepository {
 }
 
 // FindByQuadkey retrieves a Tile by its quadkey.
-func (r *TileRepository) FindByQuadkey(ctx context.Context, quadkey polygon.Quadkey) (*domain.Tile, error) {
+func (r *TileRepository) FindByQuadkey(ctx context.Context, quadkey xpolygon.Quadkey) (*domain.Tile, error) {
 	var tile models.Tile
 	result := r.db.DbHandler.Where("quadkey = ?", quadkey.Key()).First(&tile)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -81,14 +82,14 @@ func (r *TileRepository) Update(ctx context.Context, tile domain.Tile) error {
 }
 
 // DeleteByQuadkey removes a Tile record by its quadkey.
-func (r *TileRepository) DeleteByQuadkey(ctx context.Context, key polygon.Quadkey) error {
+func (r *TileRepository) DeleteByQuadkey(ctx context.Context, key xpolygon.Quadkey) error {
 	return r.db.DbHandler.Where("quadkey = ?", key.Key()).Delete(&models.Tile{}).Error
 }
 
 // Upsert inserts or updates a Tile record in the database.
 func (r *TileRepository) Upsert(ctx context.Context, tile domain.Tile) error {
 	// Check for an existing tile using the spatial location or quadkey
-	existingTile, err := r.FindByQuadkey(ctx, polygon.Quadkey{
+	existingTile, err := r.FindByQuadkey(ctx, xpolygon.Quadkey{
 		Latitude:  tile.CenterLat,
 		Longitude: tile.CenterLon,
 		Level:     tile.ZoomLevel,

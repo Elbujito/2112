@@ -9,9 +9,9 @@ import (
 func Post(c echo.Context) error {
 	// newUser := &models.UserObj{}
 	// if err := c.Bind(newUser); err != nil {
-	// 	c.Echo().Logger.Error(constants.ERROR_BINDING_BODY)
+	// 	c.Echo().Logger.Error(xconstants.ERROR_BINDING_BODY)
 	// 	c.Echo().Logger.Error(err)
-	// 	return constants.ERROR_BINDING_BODY
+	// 	return xconstants.ERROR_BINDING_BODY
 	// }
 	// if err := Validate.Struct(newUser); err != nil {
 	// 	r := handlers.BuildValidationErrorsResponse(err.(validator.ValidationErrors))

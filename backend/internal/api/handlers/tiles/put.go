@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/Elbujito/2112/internal/api/mappers"
+	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
 )
 
 const TILE_URL = "https://%s.basemaps.cartocdn.com/light_all/%d/%d/%d.png" // CartoDB Positron URL
@@ -63,7 +64,7 @@ func latLonToTileCoordinates(lat float64, lon float64, zoom int) (int, int) {
 
 	// Calculate tile X and Y coordinates from longitude and latitude
 	x := int((lon + 180.0) / 360.0 * n)
-	latRad := lat * constants.PI_DIVIDE_BY_180
+	latRad := lat * xconstants.PI_DIVIDE_BY_180
 	y := int((1.0 - math.Log(math.Tan(latRad)+1/math.Cos(latRad))/math.Pi) / 2.0 * n)
 
 	return x, y

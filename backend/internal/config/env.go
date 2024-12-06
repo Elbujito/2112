@@ -6,6 +6,7 @@ import (
 
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config/features"
+	"github.com/Elbujito/2112/lib/fx/xutils"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -85,7 +86,7 @@ func (e *SEnv) PrintEnvironment() {
 			})
 		}
 	}
-	fx.SetTableBorderStyle(t, NoBorderFlag)
+	xutils.SetTableBorderStyle(t, NoBorderFlag)
 	fmt.Println(t.Render())
 	fmt.Printf("\n")
 }
@@ -99,7 +100,7 @@ func (e *SEnv) PrintServiceFeatures() {
 		feature.AppendFeatureToTable(t)
 		t.AppendSeparator()
 	}
-	fx.SetTableBorderStyle(t, NoBorderFlag)
+	xutils.SetTableBorderStyle(t, NoBorderFlag)
 	fmt.Println(t.Render())
 	fmt.Printf("\n")
 }

@@ -1,11 +1,13 @@
 package features
 
+import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+
 type PropagatorConfig struct {
 	BaseUrl string `mapstructure:"PROPAGATOR_URL"`
 }
 
 var propagator = &Feature{
-	Name:       constants.FEATURE_PROPAGATOR,
+	Name:       xconstants.FEATURE_PROPAGATOR,
 	Config:     &PropagatorConfig{},
 	enabled:    true,
 	configured: false,

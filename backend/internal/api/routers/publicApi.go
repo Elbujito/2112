@@ -16,6 +16,7 @@ import (
 	serviceapi "github.com/Elbujito/2112/internal/api/services"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
+	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
 
 	"github.com/labstack/echo/v4"
 )
@@ -82,7 +83,7 @@ func (r *PublicRouter) Start(host string, port string) {
 		r.Echo.Logger.Info(fmt.Sprintf("Starting %s server on port: %s", r.Name, port))
 		if err := r.Echo.Start(host + ":" + port); err != nil && err != http.ErrServerClosed {
 			r.Echo.Logger.Fatal(err)
-			r.Echo.Logger.Fatal(constants.MSG_SERVER_SHUTTING_DOWN)
+			r.Echo.Logger.Fatal(xconstants.MSG_SERVER_SHUTTING_DOWN)
 		}
 	}()
 
@@ -103,7 +104,7 @@ func (r *PublicRouter) registerPublicAPIMiddlewares() {
 	r.RegisterMiddleware(middlewares.RequestHeadersMiddleware())
 	r.RegisterMiddleware(middlewares.ResponseHeadersMiddleware())
 
-	if config.Feature(constants.FEATURE_GZIP).IsEnabled() {
+	if config.Feature(xconstants.FEATURE_GZIP).IsEnabled() {
 		r.RegisterMiddleware(middlewares.GzipMiddleware())
 	}
 }
@@ -117,7 +118,7 @@ func (r *PublicRouter) registerPublicApiDevModeMiddleware() {
 func (r *PublicRouter) registerPublicApiSecurityMiddlewares() {
 	r.RegisterMiddleware(middlewares.XSSCheckMiddleware())
 
-	if config.Feature(constants.FEATURE_CORS).IsEnabled() {
+	if config.Feature(xconstants.FEATURE_CORS).IsEnabled() {
 		r.RegisterMiddleware(middlewares.CORSMiddleware())
 	}
 }

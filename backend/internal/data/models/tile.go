@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/Elbujito/2112/internal/domain"
+	"github.com/Elbujito/2112/lib/fx/xpolygon"
 )
 
 // Tile Model
@@ -45,7 +46,7 @@ func (t *Tile) Validate() error {
 
 	// Validate BoundariesJSON if present
 	if t.BoundariesJSON != "" {
-		var temp []polygon.Point
+		var temp []xpolygon.Point
 		if err := json.Unmarshal([]byte(t.BoundariesJSON), &temp); err != nil {
 			return fmt.Errorf("boundaries JSON must be valid: %w", err)
 		}
@@ -102,7 +103,7 @@ func MapToDomain(modelTile Tile) domain.Tile {
 }
 
 // createGeometryFromBoundaries generates WKT (Well-Known Text) representation of the boundaries for spatial indexing.
-func createGeometryFromBoundaries(vertices []polygon.Point) string {
+func createGeometryFromBoundaries(vertices []xpolygon.Point) string {
 	if len(vertices) == 0 {
 		return "POLYGON(EMPTY)" // Return an empty polygon if no vertices are provided
 	}

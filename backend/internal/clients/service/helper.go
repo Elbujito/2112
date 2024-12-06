@@ -1,10 +1,12 @@
 package service
 
+import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+
 var client *ServiceClient
 
 func init() {
 	client = &ServiceClient{
-		name: constants.FEATURE_SERVICE,
+		name: xconstants.FEATURE_SERVICE,
 	}
 }
 

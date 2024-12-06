@@ -9,6 +9,8 @@ import (
 
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config/features"
+	"github.com/Elbujito/2112/lib/fx/xconstants"
+	"github.com/Elbujito/2112/lib/fx/xutils"
 
 	"github.com/spf13/viper"
 )
@@ -72,26 +74,26 @@ func (c *EnvVars) registerFieldsMapstructure(vOfConfig reflect.Value) {
 
 func (c *EnvVars) setDefaults() {
 	logger.Info("Configuring default settings ...")
-	viper.SetDefault("HOST", constants.DEFAULT_HOST)
-	viper.SetDefault("PROTECTED_API_PORT", constants.DEFAULT_PROTECTED_API_PORT)
-	viper.SetDefault("PUBLIC_API_PORT", constants.DEFAULT_PUBLIC_API_PORT)
-	viper.SetDefault("HIDDEN_API_PORT", constants.DEFAULT_HIDDEN_API_PORT)
-	viper.SetDefault("LOG_LEVEL", constants.DEFAULT_LOG_LEVEL)
-	viper.SetDefault("REQUEST_TIMEOUT_DURATION", strconv.Itoa(constants.DEFAULT_REQUEST_TIMEOUT_DURATION))
-	viper.SetDefault("WATCHER_SLEEP_INTERVAL", strconv.Itoa(constants.DEFAULT_WATCHER_SLEEP_INTERVAL))
+	viper.SetDefault("HOST", xconstants.DEFAULT_HOST)
+	viper.SetDefault("PROTECTED_API_PORT", xconstants.DEFAULT_PROTECTED_API_PORT)
+	viper.SetDefault("PUBLIC_API_PORT", xconstants.DEFAULT_PUBLIC_API_PORT)
+	viper.SetDefault("HIDDEN_API_PORT", xconstants.DEFAULT_HIDDEN_API_PORT)
+	viper.SetDefault("LOG_LEVEL", xconstants.DEFAULT_LOG_LEVEL)
+	viper.SetDefault("REQUEST_TIMEOUT_DURATION", strconv.Itoa(xconstants.DEFAULT_REQUEST_TIMEOUT_DURATION))
+	viper.SetDefault("WATCHER_SLEEP_INTERVAL", strconv.Itoa(xconstants.DEFAULT_WATCHER_SLEEP_INTERVAL))
 
-	viper.SetDefault("DB_PLATFORM", constants.DEFAULT_DB_PLATFORM)
-	viper.SetDefault("DB_NAME", constants.DEFAULT_SQLITE_DB_NAME)
-	viper.SetDefault("DB_SSL_MODE", constants.DEFAULT_DB_SSL_MODE)
-	viper.SetDefault("DB_TIMEZONE", constants.DEFAULT_DB_TIMEZONE)
+	viper.SetDefault("DB_PLATFORM", xconstants.DEFAULT_DB_PLATFORM)
+	viper.SetDefault("DB_NAME", xconstants.DEFAULT_SQLITE_DB_NAME)
+	viper.SetDefault("DB_SSL_MODE", xconstants.DEFAULT_DB_SSL_MODE)
+	viper.SetDefault("DB_TIMEZONE", xconstants.DEFAULT_DB_TIMEZONE)
 
-	viper.SetDefault("CORS_ALLOW_ORIGINS", constants.DEFAULT_CORS_ALLOW_ORIGINS)
+	viper.SetDefault("CORS_ALLOW_ORIGINS", xconstants.DEFAULT_CORS_ALLOW_ORIGINS)
 
-	viper.SetDefault("GZIP_LEVEL", constants.DEFAULT_GZIP_LEVEL)
+	viper.SetDefault("GZIP_LEVEL", xconstants.DEFAULT_GZIP_LEVEL)
 
-	viper.SetDefault("CELESTRACK_URL", constants.DEFAULT_PUBLIC_CESLESTRACK_URL)
-	viper.SetDefault("PROPAGATOR_URL", constants.DEFAULT_PRIVATE_PROPAGATOR_URL)
-	viper.SetDefault("CELESTRACK_SATCAT_URL", constants.DEFAULT_PUBLIC_CESLESTRACK_SATCAT_URL)
+	viper.SetDefault("CELESTRACK_URL", xconstants.DEFAULT_PUBLIC_CESLESTRACK_URL)
+	viper.SetDefault("PROPAGATOR_URL", xconstants.DEFAULT_PRIVATE_PROPAGATOR_URL)
+	viper.SetDefault("CELESTRACK_SATCAT_URL", xconstants.DEFAULT_PUBLIC_CESLESTRACK_SATCAT_URL)
 }
 
 func (c *EnvVars) OverrideUsingFlags() {
@@ -113,17 +115,17 @@ func (c *EnvVars) OverrideLoggerUsingFlags() {
 	if LogLevelFlag == "" {
 		return
 	}
-	if !fx.StrInArr(LogLevelFlag, constants.LOG_LEVELS) {
+	if !xutils.StrInArr(LogLevelFlag, xconstants.LOG_LEVELS) {
 		logger.SetLogger("panic")
-		logger.Panic("Invalid log level: %s. Valid options: %s", LogLevelFlag, constants.LOG_LEVELS)
+		logger.Panic("Invalid log level: %s. Valid options: %s", LogLevelFlag, xconstants.LOG_LEVELS)
 	}
 	logger.SetLogger(LogLevelFlag)
 	c.Service.LogLevel = LogLevelFlag
 }
 
 func (c *EnvVars) SetDevMode() {
-	c.Service.Host = constants.DEFAULT_DEV_HOST
-	c.Service.LogLevel = constants.DEFAULT_DEV_LOG_LEVEL
+	c.Service.Host = xconstants.DEFAULT_DEV_HOST
+	c.Service.LogLevel = xconstants.DEFAULT_DEV_LOG_LEVEL
 }
 
 func (c *EnvVars) GetConfigByName(name string) (string, error) {

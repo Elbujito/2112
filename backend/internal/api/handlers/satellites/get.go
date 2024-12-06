@@ -7,6 +7,7 @@ import (
 
 	"github.com/Elbujito/2112/internal/domain"
 	"github.com/Elbujito/2112/internal/services"
+	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
 	"github.com/labstack/echo/v4"
 )
 
@@ -23,8 +24,8 @@ func NewSatelliteHandler(service services.SatelliteService) *SatelliteHandler {
 func (h *SatelliteHandler) GetSatellitePositionsByNoradID(c echo.Context) error {
 	noradID := c.QueryParam("noradID")
 	if noradID == "" {
-		c.Echo().Logger.Error(constants.ERROR_ID_NOT_FOUND)
-		return constants.ERROR_ID_NOT_FOUND
+		c.Echo().Logger.Error(xconstants.ERROR_ID_NOT_FOUND)
+		return xconstants.ERROR_ID_NOT_FOUND
 	}
 
 	positions, err := h.Service.Propagate(c.Request().Context(), noradID, 24*time.Hour, 10*time.Minute)
@@ -34,8 +35,8 @@ func (h *SatelliteHandler) GetSatellitePositionsByNoradID(c echo.Context) error 
 	}
 
 	if len(positions) == 0 {
-		c.Echo().Logger.Error(constants.ERROR_ID_NOT_FOUND)
-		return constants.ERROR_ID_NOT_FOUND
+		c.Echo().Logger.Error(xconstants.ERROR_ID_NOT_FOUND)
+		return xconstants.ERROR_ID_NOT_FOUND
 	}
 
 	return c.JSON(http.StatusOK, positions)

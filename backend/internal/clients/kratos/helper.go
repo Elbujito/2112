@@ -1,8 +1,10 @@
 package kratos
 
+import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+
 func init() {
 	kratosClient = &Kratos{
-		name:    constants.FEATURE_ORY_KRATOS,
+		name:    xconstants.FEATURE_ORY_KRATOS,
 		Session: &KratosSession{},
 	}
 }

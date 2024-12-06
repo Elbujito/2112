@@ -1,5 +1,7 @@
 package features
 
+import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+
 type RedisConfig struct {
 	Host     string `mapstructure:"REDIS_HOST"`
 	Port     string `mapstructure:"REDIS_PORT"`
@@ -7,7 +9,7 @@ type RedisConfig struct {
 }
 
 var redis = &Feature{
-	Name:       constants.FEATURE_REDIS,
+	Name:       xconstants.FEATURE_REDIS,
 	Config:     &RedisConfig{},
 	enabled:    true,
 	configured: false,

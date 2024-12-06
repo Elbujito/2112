@@ -34,12 +34,12 @@ export GOEXPERIMENT := boringcrypto
 .PHONY: build
 build: ## Build the Go application binary
 	cd $(REPO_PATH) && GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 \
-	go build -v -ldflags=$(LDFLAGS) $(BUILDFLAGS) -o ../$(PRODUCT) ./cmd/$(PRODUCT)
+	go build -v -ldflags=$(LDFLAGS) $(BUILDFLAGS) -o ../$(PRODUCT) ./internal
 
 .PHONY: build-debug
 build-debug: ## Build the application with debug flags
 	cd $(REPO_PATH) && GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=0 \
-	go build -race -v -ldflags=$(LDFLAGS) $(BUILDFLAGS) -o ../$(PRODUCT) ./cmd/$(PRODUCT)
+	go build -race -v -ldflags=$(LDFLAGS) $(BUILDFLAGS) -o ../$(PRODUCT) ./internal
 
 .PHONY: vendor
 vendor: ## Create vendor directory

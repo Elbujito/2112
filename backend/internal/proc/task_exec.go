@@ -13,6 +13,7 @@ import (
 	"github.com/Elbujito/2112/internal/services"
 	"github.com/Elbujito/2112/internal/tasks"
 	"github.com/Elbujito/2112/internal/tasks/handlers"
+	"github.com/Elbujito/2112/lib/fx/xutils"
 )
 
 func TaskExec(ctx context.Context, args []string) {
@@ -21,7 +22,7 @@ func TaskExec(ctx context.Context, args []string) {
 		return
 	}
 	taskName := args[0]
-	taskArgs := fx.ResolveArgs(args[1:])
+	taskArgs := xutils.ResolveArgs(args[1:])
 
 	database := data.NewDatabase()
 

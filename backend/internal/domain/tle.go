@@ -4,18 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
-	xtime "github.com/Elbujito/2112/lib/fx/xtime"
+	"github.com/Elbujito/2112/lib/fx/xtime"
 	"github.com/google/uuid"
 )
 
 // TLE represents the domain entity for Two-Line Element sets.
 type TLE struct {
-	ID      string    // Unique identifier
-	NoradID string    // NORAD ID associated with the satellite
-	Line1   string    // First line of the TLE
-	Line2   string    // Second line of the TLE
+	ID      string     // Unique identifier
+	NoradID string     // NORAD ID associated with the satellite
+	Line1   string     // First line of the TLE
+	Line2   string     // Second line of the TLE
 	Epoch   xtime.Time // Time associated with the TLE
 }
 
@@ -37,7 +36,7 @@ func (tle *TLE) Validate() error {
 // It validates the input and returns an error if any field is invalid.
 func NewTLE(noradID string, line1 string, line2 string) (TLE, error) {
 
-	tleEpoch, err := xxtime.ParseEpoch(line1)
+	tleEpoch, err := xtime.ParseEpoch(line1)
 	if err != nil {
 		return TLE{}, fmt.Errorf("failed to parse epoch from TLE line: %v", err)
 	}

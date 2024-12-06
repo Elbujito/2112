@@ -4,6 +4,7 @@ import (
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/cmd/db"
 	"github.com/Elbujito/2112/internal/proc"
+	"github.com/Elbujito/2112/lib/fx/xconstants"
 
 	"github.com/spf13/cobra"
 )
@@ -53,9 +54,9 @@ func execDbPersistentPreRun(cmd *cobra.Command) {
 	// commands may require different database connections
 	// so we only establish the connection when calling migrate, rollback or seed
 	switch ca {
-	case constants.NAME_CMD_DB_MIGRATE,
-		constants.NAME_CMD_DB_ROLLBACK,
-		constants.NAME_CMD_DB_SEED:
+	case xconstants.NAME_CMD_DB_MIGRATE,
+		xconstants.NAME_CMD_DB_ROLLBACK,
+		xconstants.NAME_CMD_DB_SEED:
 		proc.InitDbConnection()
 		proc.InitModels()
 	}

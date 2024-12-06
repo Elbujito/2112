@@ -1,10 +1,12 @@
 package cors
 
+import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+
 var client *CorsClient
 
 func init() {
 	client = &CorsClient{
-		name: constants.FEATURE_CORS,
+		name: xconstants.FEATURE_CORS,
 	}
 }
 

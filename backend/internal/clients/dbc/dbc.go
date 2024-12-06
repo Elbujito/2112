@@ -8,6 +8,7 @@ import (
 	"github.com/Elbujito/2112/internal/clients/dbc/adapters"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config/features"
+	"github.com/Elbujito/2112/lib/fx/xutils"
 
 	"gorm.io/gorm"
 	gLogger "gorm.io/gorm/logger"
@@ -57,7 +58,7 @@ func (dbc *DBClient) Configure(v any) {
 	dbc.adapter.SetConfig(dbc.config)
 	if err := dbc.adapter.ValidateConfig(); err != nil {
 		logger.Error(err.Error())
-		fx.Exit(1)
+		xutils.Exit(1)
 	}
 }
 
@@ -65,14 +66,14 @@ func (dbc *DBClient) ResolveDriver() {
 	dsn, err := dbc.adapter.GetDSN()
 	if err != nil {
 		logger.Error(err.Error())
-		fx.Exit(1)
+		xutils.Exit(1)
 	}
 	dbc.dsn = dsn
 
 	driver, err := dbc.adapter.GetDriver()
 	if err != nil {
 		logger.Error(err.Error())
-		fx.Exit(1)
+		xutils.Exit(1)
 	}
 	dbc.driver = driver
 }
@@ -81,14 +82,14 @@ func (dbc *DBClient) ResolveServerDriver() {
 	dsn, err := dbc.adapter.GetServerDSN()
 	if err != nil {
 		logger.Error(err.Error())
-		fx.Exit(1)
+		xutils.Exit(1)
 	}
 	dbc.dsn = dsn
 
 	driver, err := dbc.adapter.GetServerDriver()
 	if err != nil {
 		logger.Error(err.Error())
-		fx.Exit(1)
+		xutils.Exit(1)
 	}
 	dbc.driver = driver
 }

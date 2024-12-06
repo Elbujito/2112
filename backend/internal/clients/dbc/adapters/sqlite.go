@@ -5,13 +5,14 @@ import (
 	"reflect"
 
 	"github.com/Elbujito/2112/internal/config/features"
+	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
 func init() {
-	Adapters.AppendAdapter(constants.DB_PLATFORM_SQLITE, &SQLiteAdapter{
+	Adapters.AppendAdapter(xconstants.DB_PLATFORM_SQLITE, &SQLiteAdapter{
 		requiredConfig: []string{"Name"},
 	})
 }

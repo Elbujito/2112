@@ -5,12 +5,13 @@ import (
 
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/clients/service"
+	"github.com/Elbujito/2112/lib/fx/xutils"
 )
 
 func StartWatcher() {
 	serviceCli := service.GetClient()
 	config := serviceCli.GetConfig()
-	interval := fx.IntFromStr(config.WatcherSleepInterval)
+	interval := xutils.IntFromStr(config.WatcherSleepInterval)
 
 	go func() {
 		// This is a sample watcher

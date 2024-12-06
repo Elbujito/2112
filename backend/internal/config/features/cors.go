@@ -1,5 +1,7 @@
 package features
 
+import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+
 type CorsConfig struct {
 	AllowOrigins  string `mapstructure:"CORS_ALLOW_ORIGINS"`
 	AllowMethods  string `mapstructure:"CORS_ALLOW_METHODS"`
@@ -10,7 +12,7 @@ type CorsConfig struct {
 }
 
 var cors = &Feature{
-	Name:       constants.FEATURE_CORS,
+	Name:       xconstants.FEATURE_CORS,
 	Config:     &CorsConfig{},
 	enabled:    true,
 	configured: false,

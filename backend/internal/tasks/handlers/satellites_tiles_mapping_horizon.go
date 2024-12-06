@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/internal/domain"
+	"github.com/Elbujito/2112/lib/fx/xpolygon"
+	"github.com/Elbujito/2112/lib/fx/xspace"
 )
 
 type SatellitesTilesMappingsByHorizonHandler struct {
@@ -121,7 +123,7 @@ func (h *SatellitesTilesMappingsByHorizonHandler) computeMappings(
 	// Iterate over time steps
 	for t := startTime; t.Before(endTime); t = t.Add(timeStep) {
 		// Compute the satellite's horizon at the current time step
-		visibleRegion, err := space.ComputeSatelliteHorizon(t, tle)
+		visibleRegion, err := xspace.ComputeSatelliteHorizon(t, tle.Line1, tle.Line2)
 		if err != nil {
 			return fmt.Errorf("failed to compute satellite horizon: %w", err)
 		}
@@ -138,9 +140,9 @@ func (h *SatellitesTilesMappingsByHorizonHandler) computeMappings(
 				// Check if the tile's center is within the satellite's visible region (horizon)
 				if isTileVisibleFromRegion(tile, visibleRegion) {
 					// Calculate visibility for the tile
-					aos, maxElevation := space.ComputeVisibilityWindow(
+					aos, maxElevation := xspace.ComputeVisibilityWindow(
 						tle.NoradID, tle.Line1, tle.Line2,
-						polygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon},
+						xpolygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon},
 						tile.Radius, t, endTime, timeStep,
 					)
 
@@ -189,6 +191,6 @@ func groupTilesByRegion(tiles []domain.Tile) map[string][]domain.Tile {
 }
 
 // Check if a tile is visible from a given region
-func isTileVisibleFromRegion(tile domain.Tile, visibleRegion []polygon.Point) bool {
-	return polygon.IsPointInPolygon(polygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon}, visibleRegion)
+func isTileVisibleFromRegion(tile domain.Tile, visibleRegion []xpolygon.Point) bool {
+	return xpolygon.IsPointInPolygon(xpolygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon}, visibleRegion)
 }

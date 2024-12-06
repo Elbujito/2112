@@ -4,19 +4,20 @@ import (
 	"context"
 	"time"
 
+	"github.com/Elbujito/2112/lib/fx/xpolygon"
 	"github.com/google/uuid"
 )
 
 // TileRepository defines the interface for Tile repository operations.
 type TileRepository interface {
-	FindByQuadkey(ctx context.Context, key polygon.Quadkey) (*Tile, error)                         // Find a tile by Quadkey
+	FindByQuadkey(ctx context.Context, key xpolygon.Quadkey) (*Tile, error)                        // Find a tile by Quadkey
 	FindBySpatialLocation(ctx context.Context, lat, lon float64) (*Tile, error)                    // Find a tile by spatial location
 	FindTilesInRegion(ctx context.Context, minLat, minLon, maxLat, maxLon float64) ([]Tile, error) // Find tiles intersecting a region
 	FindAll(ctx context.Context) ([]Tile, error)                                                   // Retrieve all tiles
 	Save(ctx context.Context, tile Tile) error                                                     // Save a new tile
 	Update(ctx context.Context, tile Tile) error                                                   // Update an existing tile
 	Upsert(ctx context.Context, tile Tile) error                                                   // Upsert (insert or update) a tile
-	DeleteByQuadkey(ctx context.Context, key polygon.Quadkey) error                                // Delete a tile by Quadkey
+	DeleteByQuadkey(ctx context.Context, key xpolygon.Quadkey) error                               // Delete a tile by Quadkey
 	DeleteBySpatialLocation(ctx context.Context, lat, lon float64) error                           // Delete a tile by spatial location
 }
 
@@ -25,18 +26,18 @@ type Tile struct {
 	ID        string // Unique identifier (UUID)
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Quadkey   string          // Quadkey representing the tile
-	ZoomLevel int             // Zoom level of the tile
-	CenterLat float64         // Center latitude of the tile
-	CenterLon float64         // Center longitude of the tile
-	NbFaces   int             // Number of faces in the tile's geometry
-	Radius    float64         // Radius of the tile (in meters or other unit)
-	Vertices  []polygon.Point // Vertices representing the boundary of the tile
+	Quadkey   string           // Quadkey representing the tile
+	ZoomLevel int              // Zoom level of the tile
+	CenterLat float64          // Center latitude of the tile
+	CenterLon float64          // Center longitude of the tile
+	NbFaces   int              // Number of faces in the tile's geometry
+	Radius    float64          // Radius of the tile (in meters or other unit)
+	Vertices  []xpolygon.Point // Vertices representing the boundary of the tile
 }
 
 // NewTile constructor
 // NewTile constructor
-func NewTile(polygon polygon.Polygon) Tile {
+func NewTile(polygon xpolygon.Polygon) Tile {
 	return Tile{
 		ID:        uuid.NewString(), // Generate a new UUID
 		CreatedAt: time.Now(),
