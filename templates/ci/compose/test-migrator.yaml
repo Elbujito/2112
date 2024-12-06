@@ -1,0 +1,19 @@
+version: "3.7"
+services:
+  test-db-creator:
+    container_name: test-db-creator
+    build:
+      context: ../../
+      dockerfile: ./ci/docker/Dockerfile
+    env_file: ./docker.dev.env
+    command: ["service", "-e", "-d", "db", "create"]
+  test-db-migrator:
+    container_name: test-db-migrator
+    build:
+      context: ../../
+      dockerfile: ./ci/docker/Dockerfile
+    env_file: ./docker.dev.env
+    command: ["service", "-e", "-d", "db", "migrate"]
+    depends_on:
+      test-db-creator:
+        condition: service_completed_successfully

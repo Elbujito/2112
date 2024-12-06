@@ -1,0 +1,11 @@
+DISABLE_FEATURES=ory_keto,ory_kratos,redis,cors
+DB_HOST=host.docker.internal
+DB_PORT=5440
+DB_USER=test
+DB_PASSWORD=test
+DB_NAME=test
+DB_PLATFORM=postgres
+DB_SSL_MODE=disable
+LOG_LEVEL=debug
+DISABLE_FEATURES=ory_keto,ory_kratos,redis,cors
+

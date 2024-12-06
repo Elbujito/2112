@@ -1,0 +1,62 @@
+version: "3.7"
+services:
+  # Main Application Service
+  test-service:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile # Path to the Dockerfile relative to the context
+    container_name: test-service # Assign a name to the container
+    env_file: ../config/test/test.dev-env
+    ports:
+      - "8081:8081"
+      - "8080:8080"
+      - "8079:8079"
+    depends_on:
+      test-db-seeder:
+        condition: service_completed_successfully
+    restart: always # Restart the container on failure
+    command: ["service", "start"]
+
+  # Database Migration Service
+  test-db-migrator:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile
+    container_name: test-db-migrator
+    env_file: ../config/test/test.dev-env
+    command: ["service","db", "migrate"] # Run migration
+    depends_on:
+      test-postgres:
+        condition: service_healthy
+    restart: "no" # Run once and exit
+
+  # Database Seeding Service
+  test-db-seeder:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile
+    container_name: test-db-seeder
+    env_file: ../config/test/test-postgres.dev-env
+    command: ["service","db", "seed"] # Run seeding
+    depends_on:
+      test-db-migrator:
+        condition: service_completed_successfully
+    restart: "no" # Run once and exit
+
+  # PostgreSQL Database
+  test-postgres:
+    extends:
+      file: ./test-postgres.yaml
+      service: test-postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+
+  # Python Database
+  test-python:
+    extends:
+      file: ./test-python.yaml
+      service: test-python
+  

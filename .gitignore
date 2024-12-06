@@ -10,6 +10,7 @@ ci/data/sqlite/*
 ci/data/mysql/*
 ci/data/postgres/*
 ci/data/postgres
+ci/data/
 
 # Logs #
 *.log
@@ -34,6 +35,8 @@ venv/
 python/satellite_server/__pycache__/*
 backend/vendor/*
 backend/vendor/
+
+templates/ci/data
 
 .husky
 

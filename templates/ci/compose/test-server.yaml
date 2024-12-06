@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  # Main Application Service
+  test-service:
+    build:
+      context: ../../.
+      dockerfile: ci/docker/Dockerfile # Path to the Dockerfile relative to the context
+    container_name: test-service # Assign a name to the container
+    env_file: ../config/test/test.dev-env
+    ports:
+      - "8081:8081"
+      - "8080:8080"
+      - "8079:8079"
+    depends_on:
+      test-db-seeder:
+        condition: service_completed_successfully
+    restart: always # Restart the container on failure
+    command: ["service", "start"]
