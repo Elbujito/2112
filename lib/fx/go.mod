@@ -1,4 +1,4 @@
-module github.com/Elbujito/2112/lib/fx/xutils
+module github.com/Elbujito/2112/lib/fx
 
 go 1.22
 
