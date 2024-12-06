@@ -5,8 +5,8 @@ import (
 	"math"
 	"time"
 
-	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
-	xpolygon "github.com/Elbujito/2112/lib/fx/xpolygon"
+	xconstants "github.com/Elbujito/2112/lib/fx/xutils/xconstants"
+	xpolygon "github.com/Elbujito/2112/lib/fx/xutils/xpolygon"
 	"github.com/joshuaferrara/go-satellite"
 )
 

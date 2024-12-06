@@ -3,7 +3,6 @@ package proc
 import (
 	"fmt"
 
-	"github.com/Elbujito/2112/lib/fx"
 	"github.com/Elbujito/2112/template/go-server/internal/api/routers"
 	clientsPkg "github.com/Elbujito/2112/template/go-server/internal/clients"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/cors"

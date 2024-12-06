@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	xpolygon "github.com/Elbujito/2112/lib/fx/xpolygon"
+	xpolygon "github.com/Elbujito/2112/lib/fx/xutils/xpolygon"
 	"github.com/joshuaferrara/go-satellite"
 )
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	xtime "github.com/Elbujito/2112/lib/fx/time"
+	xtime "github.com/Elbujito/2112/lib/fx/xutils/time"
 	"github.com/google/uuid"
 )
 

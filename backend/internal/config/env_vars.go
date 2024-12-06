@@ -9,7 +9,6 @@ import (
 
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config/features"
-	"github.com/Elbujito/2112/lib/fx"
 
 	"github.com/spf13/viper"
 )

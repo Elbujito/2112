@@ -16,7 +16,7 @@ import (
 	serviceapi "github.com/Elbujito/2112/internal/api/services"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/lib/fx/constants"
+	"github.com/Elbujito/2112/lib/fx/xutils/constants"
 
 	"github.com/labstack/echo/v4"
 )

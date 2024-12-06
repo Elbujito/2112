@@ -6,7 +6,6 @@ import (
 
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config/features"
-	"github.com/Elbujito/2112/lib/fx"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )

@@ -4,7 +4,7 @@ import (
 	"log"
 	"math"
 
-	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+	xconstants "github.com/Elbujito/2112/lib/fx/xutils/xconstants"
 )
 
 // Polygon represents a geographic polygon.

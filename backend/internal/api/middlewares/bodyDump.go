@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"github.com/Elbujito/2112/lib/fx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )

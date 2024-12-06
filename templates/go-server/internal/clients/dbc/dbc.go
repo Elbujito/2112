@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Elbujito/2112/lib/fx"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/dbc/adapters"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 	"github.com/Elbujito/2112/template/go-server/internal/config/features"

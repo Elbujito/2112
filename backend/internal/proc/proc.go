@@ -13,7 +13,6 @@ import (
 	"github.com/Elbujito/2112/internal/clients/service"
 	"github.com/Elbujito/2112/internal/config"
 	"github.com/Elbujito/2112/internal/data/models"
-	"github.com/Elbujito/2112/lib/fx"
 )
 
 func InitServiceEnv(serviceName string, version string) {

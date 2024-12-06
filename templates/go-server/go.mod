@@ -3,6 +3,7 @@ module github.com/Elbujito/2112/template/go-server
 go 1.22
 
 require (
+	github.com/Elbujito/2112/lib/fx/xutils v1.0.3 // indirect
 	github.com/go-gormigrate/gormigrate/v2 v2.1.1
 	github.com/go-playground/validator/v10 v10.18.0
 	github.com/google/uuid v1.6.0
@@ -18,7 +19,6 @@ require (
 	gorm.io/driver/postgres v1.5.4
 	gorm.io/driver/sqlite v1.5.4
 	gorm.io/gorm v1.25.5
-	github.com/Elbujito/2112/lib/fx v1.0.2 // indirect
 )
 
 require (

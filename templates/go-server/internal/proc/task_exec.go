@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Elbujito/2112/lib/fx"
 	"github.com/Elbujito/2112/template/go-server/internal/data"
 	repository "github.com/Elbujito/2112/template/go-server/internal/repositories"
 	"github.com/Elbujito/2112/template/go-server/internal/tasks"

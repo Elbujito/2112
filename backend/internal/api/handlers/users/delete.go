@@ -5,7 +5,7 @@ import (
 
 	"github.com/Elbujito/2112/internal/api/handlers"
 	"github.com/Elbujito/2112/internal/clients/kratos"
-	"github.com/Elbujito/2112/lib/fx/constants"
+	"github.com/Elbujito/2112/lib/fx/xutils/constants"
 
 	"github.com/labstack/echo/v4"
 )
