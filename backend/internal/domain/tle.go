@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Elbujito/2112/lib/fx/xtime"
 	"github.com/google/uuid"
@@ -11,11 +12,11 @@ import (
 
 // TLE represents the domain entity for Two-Line Element sets.
 type TLE struct {
-	ID      string     // Unique identifier
-	NoradID string     // NORAD ID associated with the satellite
-	Line1   string     // First line of the TLE
-	Line2   string     // Second line of the TLE
-	Epoch   xtime.Time // Time associated with the TLE
+	ID      string    // Unique identifier
+	NoradID string    // NORAD ID associated with the satellite
+	Line1   string    // First line of the TLE
+	Line2   string    // Second line of the TLE
+	Epoch   time.Time // Time associated with the TLE
 }
 
 // Validate ensures that the TLE fields are valid.
