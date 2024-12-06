@@ -1,30 +1,58 @@
-# This workflow will build a golang project
+# This workflow will build a Go project
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
 
-name: Go
+name: Go Build Workflow
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches:
+      - main
+      - dev
   pull_request:
-    branches: [ "main", "dev" ]
+    branches:
+      - main
+      - dev
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+      # Checkout the code
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: '1.22'
+      # Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
 
-    - name: Build the application
-      run: |
-        cd backend
-        go build -o ./out/service -ldflags="-w -s -extldflags '-static'" .
+      # Cache Go modules to speed up builds
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
-    # - name: Test
-    #   run: go test -v ./...
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          cd backend
+          go mod tidy
+
+      # Build the application
+      - name: Build the application
+        run: |
+          cd backend
+          go build -o ./out/service -ldflags="-w -s -extldflags '-static'" .
+
+      # (Optional) Run tests
+      - name: Run tests
+        run: |
+          cd backend
+          go test -v ./...
+
