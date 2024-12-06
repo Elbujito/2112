@@ -1,7 +1,5 @@
 package cors
 
-import "github.com/Elbujito/2112/lib/fx/constants"
-
 var client *CorsClient
 
 func init() {

@@ -1,9 +1,5 @@
 package features
 
-import (
-	"github.com/Elbujito/2112/lib/fx/constants"
-)
-
 type ServiceConfig struct {
 	Host                   string `mapstructure:"HOST"`
 	ProtectedApiPort       string `mapstructure:"PROTECTED_API_PORT"`

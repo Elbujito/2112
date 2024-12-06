@@ -1,8 +1,6 @@
 package middlewares
 
 import (
-	"github.com/Elbujito/2112/lib/fx/constants"
-
 	"github.com/labstack/echo/v4"
 )
 

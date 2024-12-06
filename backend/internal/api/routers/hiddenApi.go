@@ -6,7 +6,6 @@ import (
 	"github.com/Elbujito/2112/internal/api/middlewares"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/lib/fx/constants"
 )
 
 var hiddenApiRouter *PublicRouter

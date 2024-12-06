@@ -1,7 +1,5 @@
 package features
 
-import "github.com/Elbujito/2112/lib/fx/constants"
-
 type CorsConfig struct {
 	AllowOrigins  string `mapstructure:"CORS_ALLOW_ORIGINS"`
 	AllowMethods  string `mapstructure:"CORS_ALLOW_METHODS"`

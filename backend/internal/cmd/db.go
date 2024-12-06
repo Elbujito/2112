@@ -4,7 +4,6 @@ import (
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/cmd/db"
 	"github.com/Elbujito/2112/internal/proc"
-	"github.com/Elbujito/2112/lib/fx/constants"
 
 	"github.com/spf13/cobra"
 )

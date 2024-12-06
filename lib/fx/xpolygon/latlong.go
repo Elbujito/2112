@@ -1,6 +1,6 @@
 package xpolygon
 
-import xconstants "github.com/Elbujito/2112/lib/fx/pkg/xconstants"
+import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
 
 // Coordinate represents a geographic coordinate value
 type Coordinate struct {

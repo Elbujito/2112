@@ -1,7 +1,5 @@
 package features
 
-import "github.com/Elbujito/2112/lib/fx/constants"
-
 type DatabaseConfig struct {
 	Host     string `mapstructure:"DB_HOST"`
 	Port     string `mapstructure:"DB_PORT"`

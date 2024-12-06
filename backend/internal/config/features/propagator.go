@@ -1,7 +1,5 @@
 package features
 
-import "github.com/Elbujito/2112/lib/fx/constants"
-
 type PropagatorConfig struct {
 	BaseUrl string `mapstructure:"PROPAGATOR_URL"`
 }

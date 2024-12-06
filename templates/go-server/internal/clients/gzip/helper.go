@@ -1,7 +1,5 @@
 package gzip
 
-import "github.com/Elbujito/2112/lib/fx/constants"
-
 var client *GzipClient
 
 func init() {

@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/Elbujito/2112/lib/fx"
-	"github.com/Elbujito/2112/lib/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 	"github.com/Elbujito/2112/template/go-server/internal/config/features"
 

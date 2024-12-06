@@ -1,7 +1,6 @@
 package dbc
 
 import (
-	"github.com/Elbujito/2112/lib/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/dbc/adapters"
 
 	"gorm.io/gorm"

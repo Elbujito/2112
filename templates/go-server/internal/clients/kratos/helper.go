@@ -1,7 +1,5 @@
 package kratos
 
-import "github.com/Elbujito/2112/lib/fx/constants"
-
 func init() {
 	kratosClient = &Kratos{
 		name:    constants.FEATURE_ORY_KRATOS,

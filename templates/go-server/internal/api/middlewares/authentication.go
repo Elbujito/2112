@@ -3,7 +3,6 @@ package middlewares
 import (
 	"fmt"
 
-	"github.com/Elbujito/2112/lib/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/kratos"
 
 	"github.com/labstack/echo/v4"

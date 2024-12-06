@@ -1,7 +1,5 @@
 package features
 
-import "github.com/Elbujito/2112/lib/fx/constants"
-
 type GzipConfig struct {
 	Level string `mapstructure:"GZIP_LEVEL"`
 }

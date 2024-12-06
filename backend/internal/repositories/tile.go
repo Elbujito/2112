@@ -7,7 +7,6 @@ import (
 	"github.com/Elbujito/2112/internal/data"
 	"github.com/Elbujito/2112/internal/data/models"
 	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/lib/fx/polygon"
 	"gorm.io/gorm"
 )
 

@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/lib/fx/polygon"
 )
 
 // Tile Model

@@ -1,7 +1,5 @@
 package features
 
-import "github.com/Elbujito/2112/lib/fx/constants"
-
 type CelestrackConfig struct {
 	BaseUrl string `mapstructure:"CELESTRACK_URL"`
 	Satcat  string `mapstructure:"CELESTRACK_SATCAT_URL"`

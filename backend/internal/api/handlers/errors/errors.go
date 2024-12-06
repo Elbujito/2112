@@ -3,8 +3,6 @@ package errors
 import (
 	"net/http"
 
-	"github.com/Elbujito/2112/lib/fx/constants"
-
 	"gorm.io/gorm"
 )
 

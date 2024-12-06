@@ -1,7 +1,5 @@
 package service
 
-import "github.com/Elbujito/2112/lib/fx/constants"
-
 var client *ServiceClient
 
 func init() {

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/Elbujito/2112/lib/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 	"github.com/Elbujito/2112/template/go-server/internal/cmd/db"
 	"github.com/Elbujito/2112/template/go-server/internal/proc"

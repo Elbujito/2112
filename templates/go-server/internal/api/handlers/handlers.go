@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	xconstants "github.com/Elbujito/2112/lib/fx/constants"
+	"github.com/Elbujito/2112/lib/fx/xconstants"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 	"github.com/Elbujito/2112/template/go-server/internal/config"
 

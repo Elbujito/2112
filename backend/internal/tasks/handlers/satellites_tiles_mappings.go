@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/lib/fx/polygon"
 	"github.com/Elbujito/2112/lib/fx/space"
 )
 
