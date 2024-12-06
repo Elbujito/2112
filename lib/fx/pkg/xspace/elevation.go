@@ -4,8 +4,8 @@ import (
 	"math"
 	"time"
 
-	xpolygon "github.com/Elbujito/2112/lib/fx/pkg/polygon"
 	xconstants "github.com/Elbujito/2112/lib/fx/pkg/xconstants"
+	xpolygon "github.com/Elbujito/2112/lib/fx/pkg/xpolygon"
 )
 
 // LatLonToCartesian converts latitude, longitude, and altitude to Cartesian coordinates
