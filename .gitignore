@@ -41,6 +41,9 @@ templates/go-server/vendor/*
 templates/go-server/vendor/
 tempaltes/python-server/__pycache__/*
 
+lib/fx/vendor/
+lib/fx/vendor/*
+
 .husky
 
 2112

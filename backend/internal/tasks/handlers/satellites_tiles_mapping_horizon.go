@@ -7,9 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Elbujito/2112/fx/polygon"
-	"github.com/Elbujito/2112/fx/space"
 	"github.com/Elbujito/2112/internal/domain"
+	"github.com/Elbujito/2112/fx/constants"
 )
 
 type SatellitesTilesMappingsByHorizonHandler struct {
