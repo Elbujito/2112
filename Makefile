@@ -28,6 +28,25 @@ export GOEXPERIMENT := boringcrypto
 .DEFAULT_GOAL := help
 
 ################################################################################
+# LINT
+################################################################################
+
+LINTER_VERSION = v1.54.2  # Replace with the desired version of golangci-lint
+
+.PHONY: lint-deps
+lint-deps:
+	go install golang.org/x/lint/golint@latest
+
+.PHONY: lint
+lint: lint-deps
+	golint ./backend/...
+
+.PHONY: lint
+lint:
+	cd backend && docker run -t --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:$(LINTER_VERSION) golangci-lint run ./... -v --timeout=4m
+
+
+################################################################################
 # Build
 ################################################################################
 

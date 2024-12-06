@@ -93,6 +93,25 @@ db-down: ## Stop the database service
 db-migrate: ## Run database migrations
 	cd $(REPO_PATH) && go run ./cmd/migrate
 
+
+################################################################################
+# LINT
+################################################################################
+
+LINTER_VERSION = v1.54.2  # Replace with the desired version of golangci-lint
+
+.PHONY: lint-deps
+lint-deps:
+	go install golang.org/x/lint/golint@latest
+
+.PHONY: lint
+lint: lint-deps
+	golint ./go-server/...
+
+.PHONY: lint
+lint:
+	cd go-server && docker run -t --rm -v $(CURDIR):/app -w /app golangci/golangci-lint:$(LINTER_VERSION) golangci-lint run ./... -v --timeout=4m
+
 ################################################################################
 # Help
 ################################################################################
