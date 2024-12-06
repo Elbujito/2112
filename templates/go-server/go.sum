@@ -6,6 +6,8 @@ github.com/Elbujito/2112/lib/fx v1.0.6 h1:x0t3IKkfMIcMvX7vS3YAdsTWcbXJpB8CLIymDZ
 github.com/Elbujito/2112/lib/fx v1.0.6/go.mod h1:3AyU74553c3stcT/7FfNcAmSL0nm+xiaS9h0aqp++D0=
 github.com/Elbujito/2112/lib/fx v1.0.7 h1:8V2v8sdWJRo6+pBolsYd85L68fceLXPUCgHJDD4Z4ss=
 github.com/Elbujito/2112/lib/fx v1.0.7/go.mod h1:3AyU74553c3stcT/7FfNcAmSL0nm+xiaS9h0aqp++D0=
+github.com/Elbujito/2112/lib/fx v1.0.8 h1:8C3uAjeEfzBnkxP6F/Q8qSqtZyNa6CbjRsYUO3Un6As=
+github.com/Elbujito/2112/lib/fx v1.0.8/go.mod h1:CNuiNp6nwenmIBTcahGhtB8fgDWmwt7J1mDC3jLMP58=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
