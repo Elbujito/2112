@@ -37,6 +37,9 @@ backend/vendor/*
 backend/vendor/
 
 templates/ci/data
+templates/go-server/vendor/*
+templates/go-server/vendor/
+tempaltes/python-server/__pycache__/*
 
 .husky
 
