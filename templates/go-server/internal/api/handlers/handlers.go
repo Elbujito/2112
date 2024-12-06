@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Elbujito/2112/lib/fx/constants"
+	xconstants "github.com/Elbujito/2112/lib/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 	"github.com/Elbujito/2112/template/go-server/internal/config"
 
@@ -13,7 +13,7 @@ import (
 
 func Success(payload interface{}) *ApiResponse {
 	return BuildResponse(
-		constants.STATUS_CODE_SERVICE_SUCCESS,
+		xconstants.STATUS_CODE_SERVICE_SUCCESS,
 		constants.MSG_SUCCESS,
 		[]string{},
 		payload)

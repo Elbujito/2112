@@ -21,6 +21,7 @@ require (
 )
 
 require (
+	github.com/Elbujito/2112/lib/fx v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
