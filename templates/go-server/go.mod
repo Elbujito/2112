@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.23.4
 
 require (
-	github.com/Elbujito/2112/lib/fx v1.0.6
+	github.com/Elbujito/2112/lib/fx v1.0.7
 	github.com/go-gormigrate/gormigrate/v2 v2.1.3
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/google/uuid v1.6.0
