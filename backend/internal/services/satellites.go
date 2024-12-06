@@ -7,7 +7,7 @@ import (
 
 	propagator "github.com/Elbujito/2112/internal/clients/propagate"
 	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/lib/fx/xutils/space"
+	"github.com/Elbujito/2112/lib/fx/xspace"
 )
 
 type SatelliteService struct {
@@ -22,7 +22,7 @@ func NewSatelliteService(tleRepo domain.TLERepository, propagateClient *propagat
 	return SatelliteService{tleRepo: tleRepo, propagateClient: propagateClient, celestrackClient: celestrackClient, repo: repo}
 }
 
-func (s *SatelliteService) Propagate(ctx context.Context, noradID string, duration time.Duration, interval time.Duration) ([]space.SatellitePosition, error) {
+func (s *SatelliteService) Propagate(ctx context.Context, noradID string, duration time.Duration, interval time.Duration) ([]xspace.SatellitePosition, error) {
 	// Validate inputs
 	if noradID == "" {
 		return nil, fmt.Errorf("NORAD ID is required")
@@ -51,7 +51,7 @@ func (s *SatelliteService) Propagate(ctx context.Context, noradID string, durati
 	}
 
 	// Convert the API response to the internal SatellitePosition format
-	var positions []space.SatellitePosition
+	var positions []xspace.SatellitePosition
 	for _, pos := range propagatedPositions {
 		// Parse the time from the API response
 		parsedTime, err := time.Parse(time.RFC3339, pos.Time)
@@ -59,7 +59,7 @@ func (s *SatelliteService) Propagate(ctx context.Context, noradID string, durati
 			return nil, fmt.Errorf("failed to parse time %s for NORAD ID %s: %w", pos.Time, noradID, err)
 		}
 
-		positions = append(positions, space.SatellitePosition{
+		positions = append(positions, xspace.SatellitePosition{
 			Latitude:  pos.Latitude,
 			Longitude: pos.Longitude,
 			Altitude:  pos.Altitude,

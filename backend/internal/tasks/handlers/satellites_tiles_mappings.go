@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/lib/fx/xutils/space"
+	"github.com/Elbujito/2112/lib/fx/xspace"
 )
 
 type SatellitesTilesMappingsHandler struct {
@@ -113,7 +113,7 @@ func (h *SatellitesTilesMappingsHandler) computeSatellitesTilesMappings(
 
 	// Dynamically calculate timestep if not provided
 	if timeStepDuration == 0 && sat.Altitude != nil {
-		timeStepDuration = space.CalculateOptimalTimestep(*sat.Altitude, tiles[0].Radius)
+		timeStepDuration = xxspace.CalculateOptimalTimestep(*sat.Altitude, tiles[0].Radius)
 	} else {
 		timeStepDuration = time.Hour * 1
 	}
@@ -121,7 +121,7 @@ func (h *SatellitesTilesMappingsHandler) computeSatellitesTilesMappings(
 	visibilityBatch := make([]domain.TileSatelliteMapping, 0, len(tiles))
 	for t := startTime; t.Before(endTime); t = t.Add(timeStepDuration) {
 		for _, tile := range tiles {
-			aos, maxElevation := space.ComputeVisibilityWindow(
+			aos, maxElevation := xxspace.ComputeVisibilityWindow(
 				tle.NoradID, tle.Line1, tle.Line2,
 				polygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon}, tile.Radius, t, endTime, timeStepDuration,
 			)

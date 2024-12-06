@@ -13,7 +13,7 @@ import (
 
 	"github.com/Elbujito/2112/internal/api/mappers"
 	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/lib/fx/xutils/space"
+	"github.com/Elbujito/2112/lib/fx/xspace"
 )
 
 type CelestrackClient struct {
@@ -139,7 +139,7 @@ func (client *CelestrackClient) FetchSatelliteMetadata(ctx context.Context) ([]*
 			perigee, _ = parseFloat(perigeeStr)
 		}
 
-		altitude := space.ComputeAverageAltitude(apogee, perigee)
+		altitude := xspace.ComputeAverageAltitude(apogee, perigee)
 
 		satellite := &mappers.SatelliteMetadata{
 			NoradID:        record[indices["NORAD_CAT_ID"]],

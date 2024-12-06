@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	xtime "github.com/Elbujito/2112/lib/fx/xutils/time"
+	xtime "github.com/Elbujito/2112/lib/fx/xtime"
 	"github.com/google/uuid"
 )
 
@@ -16,7 +16,7 @@ type TLE struct {
 	NoradID string    // NORAD ID associated with the satellite
 	Line1   string    // First line of the TLE
 	Line2   string    // Second line of the TLE
-	Epoch   time.Time // Time associated with the TLE
+	Epoch   xtime.Time // Time associated with the TLE
 }
 
 // Validate ensures that the TLE fields are valid.
@@ -37,7 +37,7 @@ func (tle *TLE) Validate() error {
 // It validates the input and returns an error if any field is invalid.
 func NewTLE(noradID string, line1 string, line2 string) (TLE, error) {
 
-	tleEpoch, err := xtime.ParseEpoch(line1)
+	tleEpoch, err := xxtime.ParseEpoch(line1)
 	if err != nil {
 		return TLE{}, fmt.Errorf("failed to parse epoch from TLE line: %v", err)
 	}
