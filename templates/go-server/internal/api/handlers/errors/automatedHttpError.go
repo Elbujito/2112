@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Elbujito/2112/fx/constants"
+	"github.com/Elbujito/2112/lib/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/api/handlers"
 
 	"github.com/labstack/echo/v4"

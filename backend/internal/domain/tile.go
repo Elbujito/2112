@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Elbujito/2112/fx/polygon"
+	"github.com/Elbujito/2112/lib/fx/polygon"
 	"github.com/google/uuid"
 )
 

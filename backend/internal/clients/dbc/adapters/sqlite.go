@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/internal/config/features"
+	"github.com/Elbujito/2112/lib/fx/constants"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"

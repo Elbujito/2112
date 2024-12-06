@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"github.com/Elbujito/2112/fx/constants"
+	"github.com/Elbujito/2112/lib/fx/constants"
 	"github.com/Elbujito/2112/template/go-server/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/template/go-server/internal/api/handlers/healthz"
 	usersHandlers "github.com/Elbujito/2112/template/go-server/internal/api/handlers/users"

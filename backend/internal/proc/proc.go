@@ -3,7 +3,6 @@ package proc
 import (
 	"fmt"
 
-	"github.com/Elbujito/2112/fx"
 	"github.com/Elbujito/2112/internal/api/routers"
 	clientsPkg "github.com/Elbujito/2112/internal/clients"
 	"github.com/Elbujito/2112/internal/clients/cors"
@@ -14,6 +13,7 @@ import (
 	"github.com/Elbujito/2112/internal/clients/service"
 	"github.com/Elbujito/2112/internal/config"
 	"github.com/Elbujito/2112/internal/data/models"
+	"github.com/Elbujito/2112/lib/fx"
 )
 
 func InitServiceEnv(serviceName string, version string) {

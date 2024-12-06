@@ -1,6 +1,6 @@
 package features
 
-import "github.com/Elbujito/2112/fx/constants"
+import "github.com/Elbujito/2112/lib/fx/constants"
 
 type RedisConfig struct {
 	Host     string `mapstructure:"REDIS_HOST"`

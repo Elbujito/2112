@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Elbujito/2112/fx/constants"
 	"github.com/Elbujito/2112/internal/clients/logger"
 	"github.com/Elbujito/2112/internal/config"
 

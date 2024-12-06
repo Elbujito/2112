@@ -1,6 +1,6 @@
 package features
 
-import "github.com/Elbujito/2112/fx/constants"
+import "github.com/Elbujito/2112/lib/fx/constants"
 
 type KetoConfig struct {
 	ReadService  string `mapstructure:"KETO_READ_SERVICE"`

@@ -3,7 +3,7 @@ package proc
 import (
 	"time"
 
-	"github.com/Elbujito/2112/fx"
+	"github.com/Elbujito/2112/lib/fx"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/service"
 )

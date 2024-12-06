@@ -1,7 +1,7 @@
 package features
 
 import (
-	"github.com/Elbujito/2112/fx/constants"
+	"github.com/Elbujito/2112/lib/fx/constants"
 )
 
 type ServiceConfig struct {

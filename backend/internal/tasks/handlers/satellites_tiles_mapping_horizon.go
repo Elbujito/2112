@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/fx/constants"
 )
 
 type SatellitesTilesMappingsByHorizonHandler struct {
