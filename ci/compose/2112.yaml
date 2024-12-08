@@ -26,7 +26,7 @@ services:
     env_file: ../config/2112/2112.dev-env
     command: ["service","db", "migrate"] # Run migration
     depends_on:
-      2112-timescale:
+      2112-postgres:
         condition: service_healthy
     restart: "no" # Run once and exit
 
@@ -97,10 +97,10 @@ services:
     restart: "no" # Run once and exit
 
   # PostgreSQL Database
-  2112-timescale:
+  2112-postgres:
     extends:
-      file: ./2112-timescale.yaml
-      service: 2112-timescale
+      file: ./2112-postgres.yaml
+      service: 2112-postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
