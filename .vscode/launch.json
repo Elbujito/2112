@@ -10,7 +10,12 @@
       "type": "go",
       "mode": "debug",
       "env": {},
-      "args": ["start", "privateApi", "-e", "-d"],
+      "args": [
+        "start",
+        "privateApi",
+        "-e",
+        "-d"
+      ],
       "showLog": true,
       "host": "127.0.0.1",
       "request": "launch",
@@ -21,7 +26,12 @@
       "type": "go",
       "mode": "debug",
       "env": {},
-      "args": ["start", "public", "-e", "-d"],
+      "args": [
+        "start",
+        "public",
+        "-e",
+        "-d"
+      ],
       "showLog": true,
       "host": "127.0.0.1",
       "request": "launch",
@@ -32,7 +42,12 @@
       "type": "go",
       "mode": "debug",
       "env": {},
-      "args": ["start", "worker", "-e", "-d"],
+      "args": [
+        "start",
+        "worker",
+        "-e",
+        "-d"
+      ],
       "showLog": true,
       "host": "127.0.0.1",
       "request": "launch",
@@ -43,7 +58,12 @@
       "type": "go",
       "mode": "debug",
       "env": {},
-      "args": ["db", "create", "-e", "-d"],
+      "args": [
+        "db",
+        "create",
+        "-e",
+        "-d"
+      ],
       "showLog": true,
       "request": "launch",
       "host": "127.0.0.1",
@@ -54,7 +74,13 @@
       "type": "go",
       "mode": "debug",
       "env": {},
-      "args": ["db", "drop", "-e", "-d", "--confirm"],
+      "args": [
+        "db",
+        "drop",
+        "-e",
+        "-d",
+        "--confirm"
+      ],
       "showLog": true,
       "request": "launch",
       "host": "127.0.0.1",
@@ -65,7 +91,12 @@
       "type": "go",
       "mode": "debug",
       "env": {},
-      "args": ["db", "migrate", "-e", "-d"],
+      "args": [
+        "db",
+        "migrate",
+        "-e",
+        "-d"
+      ],
       "showLog": true,
       "request": "launch",
       "host": "127.0.0.1",
@@ -76,7 +107,12 @@
       "type": "go",
       "mode": "debug",
       "env": {},
-      "args": ["db", "rollback", "-e", "-d"],
+      "args": [
+        "db",
+        "rollback",
+        "-e",
+        "-d"
+      ],
       "showLog": true,
       "request": "launch",
       "host": "127.0.0.1",
@@ -87,11 +123,28 @@
       "type": "go",
       "mode": "debug",
       "env": {},
-      "args": ["db", "seed", "-e", "-d"],
+      "args": [
+        "db",
+        "seed",
+        "-e",
+        "-d"
+      ],
       "showLog": true,
       "request": "launch",
       "host": "127.0.0.1",
     },
-
+    {
+      "program": "${workspaceRoot}/test/graphql-gateway/internal/main.go",
+      "name": "Graphql gateway",
+      "type": "go",
+      "mode": "debug",
+      "env": {},
+      "args": [
+        ""
+      ],
+      "showLog": true,
+      "request": "launch",
+      "host": "127.0.0.1",
+    },
   ]
 }
