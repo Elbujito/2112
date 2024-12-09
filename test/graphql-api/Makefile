@@ -1,5 +1,5 @@
 # Makefile for gqlgen automation
-VERSION: 0.0.1
+VERSION: 0.0.2
 
 # Variables
 PACKAGE_PATH = github.com/Elbujito/2112/graphql-api/model
