@@ -7,10 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
-	"github.com/Elbujito/2112/template/go-server/internal/config/features"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/xutils"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/logger"
+	"github.com/Elbujito/2112/src/template/go-server/internal/config/features"
+	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xconstants"
+	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xutils"
 	"github.com/spf13/viper"
 )
 

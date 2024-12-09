@@ -1,6 +1,6 @@
 package features
 
-import "github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
+import "github.com/Elbujito/2112/src/template/go-server/pkg/fx/xconstants"
 
 type GzipConfig struct {
 	Level string `mapstructure:"GZIP_LEVEL"`

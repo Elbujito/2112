@@ -3,9 +3,9 @@ package healthz
 import (
 	"net/http"
 
-	"github.com/Elbujito/2112/template/go-server/internal/api/handlers"
-	"github.com/Elbujito/2112/template/go-server/internal/api/helpers"
-	"github.com/Elbujito/2112/template/go-server/internal/clients/dbc"
+	"github.com/Elbujito/2112/src/template/go-server/internal/api/handlers"
+	"github.com/Elbujito/2112/src/template/go-server/internal/api/helpers"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/dbc"
 
 	"github.com/labstack/echo/v4"
 )

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Elbujito/2112/template/go-server/internal/data"
-	repository "github.com/Elbujito/2112/template/go-server/internal/repositories"
-	"github.com/Elbujito/2112/template/go-server/internal/tasks"
-	"github.com/Elbujito/2112/template/go-server/internal/tasks/handlers"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/xutils"
+	"github.com/Elbujito/2112/src/template/go-server/internal/data"
+	repository "github.com/Elbujito/2112/src/template/go-server/internal/repositories"
+	"github.com/Elbujito/2112/src/template/go-server/internal/tasks"
+	"github.com/Elbujito/2112/src/template/go-server/internal/tasks/handlers"
+	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xutils"
 )
 
 func TaskExec(ctx context.Context, args []string) {

@@ -3,7 +3,7 @@ package service
 import (
 	"reflect"
 
-	"github.com/Elbujito/2112/template/go-server/internal/config/features"
+	"github.com/Elbujito/2112/src/template/go-server/internal/config/features"
 )
 
 type ServiceClient struct {

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Elbujito/2112/template/go-server/internal/api/handlers"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
+	"github.com/Elbujito/2112/src/template/go-server/internal/api/handlers"
+	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xconstants"
 
 	"github.com/labstack/echo/v4"
 )

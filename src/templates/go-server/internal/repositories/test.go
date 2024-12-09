@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/Elbujito/2112/template/go-server/internal/data"
-	"github.com/Elbujito/2112/template/go-server/internal/domain"
+	"github.com/Elbujito/2112/src/template/go-server/internal/data"
+	"github.com/Elbujito/2112/src/template/go-server/internal/domain"
 	"gorm.io/gorm/clause"
 )
 

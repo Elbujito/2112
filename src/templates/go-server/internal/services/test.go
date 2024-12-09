@@ -1,6 +1,6 @@
 package services
 
-import "github.com/Elbujito/2112/template/go-server/internal/domain"
+import "github.com/Elbujito/2112/src/template/go-server/internal/domain"
 
 type TestService struct {
 	repo domain.TestRepository

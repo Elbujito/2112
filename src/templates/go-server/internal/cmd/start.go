@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
-	"github.com/Elbujito/2112/template/go-server/internal/cmd/start"
-	"github.com/Elbujito/2112/template/go-server/internal/config"
-	"github.com/Elbujito/2112/template/go-server/internal/proc"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/logger"
+	"github.com/Elbujito/2112/src/template/go-server/internal/cmd/start"
+	"github.com/Elbujito/2112/src/template/go-server/internal/config"
+	"github.com/Elbujito/2112/src/template/go-server/internal/proc"
 
 	"github.com/spf13/cobra"
 )

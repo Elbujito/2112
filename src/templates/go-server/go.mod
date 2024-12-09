@@ -1,4 +1,4 @@
-module github.com/Elbujito/2112/template/go-server
+module github.com/Elbujito/2112/src/template/go-server
 
 go 1.22.0
 

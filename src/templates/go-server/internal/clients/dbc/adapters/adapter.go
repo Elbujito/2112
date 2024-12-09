@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"github.com/Elbujito/2112/template/go-server/internal/config/features"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
+	"github.com/Elbujito/2112/src/template/go-server/internal/config/features"
+	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xconstants"
 
 	"gorm.io/gorm"
 )

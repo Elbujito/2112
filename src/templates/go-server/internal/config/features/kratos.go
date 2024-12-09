@@ -1,6 +1,6 @@
 package features
 
-import "github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
+import "github.com/Elbujito/2112/src/template/go-server/pkg/fx/xconstants"
 
 type KratosConfig struct {
 	PublicService string `mapstructure:"KRATOS_PUBLIC_SERVICE"`

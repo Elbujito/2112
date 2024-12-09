@@ -3,17 +3,17 @@ package proc
 import (
 	"fmt"
 
-	"github.com/Elbujito/2112/template/go-server/internal/api/routers"
-	clientsPkg "github.com/Elbujito/2112/template/go-server/internal/clients"
-	"github.com/Elbujito/2112/template/go-server/internal/clients/cors"
-	"github.com/Elbujito/2112/template/go-server/internal/clients/dbc"
-	"github.com/Elbujito/2112/template/go-server/internal/clients/gzip"
-	"github.com/Elbujito/2112/template/go-server/internal/clients/kratos"
-	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
-	"github.com/Elbujito/2112/template/go-server/internal/clients/service"
-	"github.com/Elbujito/2112/template/go-server/internal/config"
-	"github.com/Elbujito/2112/template/go-server/internal/data/models"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/xutils"
+	"github.com/Elbujito/2112/src/template/go-server/internal/api/routers"
+	clientsPkg "github.com/Elbujito/2112/src/template/go-server/internal/clients"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/cors"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/dbc"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/gzip"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/kratos"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/logger"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/service"
+	"github.com/Elbujito/2112/src/template/go-server/internal/config"
+	"github.com/Elbujito/2112/src/template/go-server/internal/data/models"
+	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xutils"
 )
 
 func InitServiceEnv(serviceName string, version string) {

@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/xutils"
+	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xutils"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )

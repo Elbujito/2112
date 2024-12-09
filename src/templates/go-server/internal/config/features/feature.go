@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/logger"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )

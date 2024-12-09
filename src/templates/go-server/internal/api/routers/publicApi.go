@@ -8,14 +8,14 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/Elbujito/2112/template/go-server/internal/api/handlers/errors"
-	healthHandlers "github.com/Elbujito/2112/template/go-server/internal/api/handlers/healthz"
-	"github.com/Elbujito/2112/template/go-server/internal/api/handlers/test"
-	"github.com/Elbujito/2112/template/go-server/internal/api/middlewares"
-	serviceapi "github.com/Elbujito/2112/template/go-server/internal/api/services"
-	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
-	"github.com/Elbujito/2112/template/go-server/internal/config"
-	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
+	"github.com/Elbujito/2112/src/template/go-server/internal/api/handlers/errors"
+	healthHandlers "github.com/Elbujito/2112/src/template/go-server/internal/api/handlers/healthz"
+	"github.com/Elbujito/2112/src/template/go-server/internal/api/handlers/test"
+	"github.com/Elbujito/2112/src/template/go-server/internal/api/middlewares"
+	serviceapi "github.com/Elbujito/2112/src/template/go-server/internal/api/services"
+	"github.com/Elbujito/2112/src/template/go-server/internal/clients/logger"
+	"github.com/Elbujito/2112/src/template/go-server/internal/config"
+	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xconstants"
 
 	"github.com/labstack/echo/v4"
 )
