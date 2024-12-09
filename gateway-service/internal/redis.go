@@ -4,71 +4,74 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"sync"
+	"math/rand"
+	"time"
 
-	model "github.com/Elbujito/2112/graphql-api/graph/model"
+	"github.com/Elbujito/2112/graphql-api/graph/model"
 	"github.com/go-redis/redis/v8"
 )
 
 var ctx = context.Background()
 var rdb *redis.Client
 
-// In-memory storage
-var satelliteData = make(map[string]model.SatellitePosition)
-var satelliteTleData = make(map[string]model.SatelliteTle)
-var messageHistory []string
-var mutex = &sync.Mutex{} // Mutex to handle concurrent access to data
-
-// Initialize Redis client
 func initRedis(host, port string) {
 	rdb = redis.NewClient(&redis.Options{
 		Addr: host + ":" + port,
 	})
 
-	// Test Redis connection
-	_, err := rdb.Ping(ctx).Result()
-	if err != nil {
+	if _, err := rdb.Ping(ctx).Result(); err != nil {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
-
-	// Start the Redis listener in a background goroutine
-	go subscribeToRedis()
 }
 
-// Subscribe to Redis channels and update in-memory data
-func subscribeToRedis() {
+func subscribeToTleAndGeneratePositions(resolver *Resolver) {
 	pubsub := rdb.Subscribe(ctx, "satellite_tle")
 	defer pubsub.Close()
 
 	for msg := range pubsub.Channel() {
 		var tle model.SatelliteTle
 		if err := json.Unmarshal([]byte(msg.Payload), &tle); err != nil {
-			log.Printf("Error unmarshalling SatelliteTle data: %v", err)
+			log.Printf("Error unmarshalling SatelliteTle: %v", err)
 			continue
 		}
 
-		mutex.Lock()
-		satelliteTleData[tle.ID] = tle
-		messageHistory = append(messageHistory, msg.Payload)
-		mutex.Unlock()
+		// Simulate position generation
+		position := generateSatellitePosition(&tle)
 
-		log.Printf("Updated SatelliteTle data: %v", tle)
+		// Publish position to Redis
+		publishSatellitePosition(position)
+
+		// Notify WebSocket subscribers
+		resolver.Mutex.Lock()
+		for id, ch := range resolver.PositionSubscribers {
+			if id == position.ID {
+				ch <- position
+			}
+		}
+		resolver.Mutex.Unlock()
 	}
 }
 
-// Publish satellite position data to Redis
-func publishSatellitePosition(position model.SatellitePosition) {
+func publishSatellitePosition(position *model.SatellitePosition) {
 	payload, err := json.Marshal(position)
 	if err != nil {
-		log.Printf("Error marshalling SatellitePosition data: %v", err)
+		log.Printf("Error marshalling SatellitePosition: %v", err)
 		return
 	}
 
-	err = rdb.Publish(ctx, "satellite_positions", payload).Err()
-	if err != nil {
-		log.Printf("Error publishing SatellitePosition data to Redis: %v", err)
-		return
+	channel := "satellite_positions:" + position.ID
+	if err := rdb.Publish(ctx, channel, payload).Err(); err != nil {
+		log.Printf("Error publishing SatellitePosition to Redis: %v", err)
 	}
+}
 
-	log.Printf("Published SatellitePosition data to Redis: %v", position)
+func generateSatellitePosition(tle *model.SatelliteTle) *model.SatellitePosition {
+	rand.Seed(time.Now().UnixNano())
+	return &model.SatellitePosition{
+		ID:        tle.ID,
+		Name:      tle.Name,
+		Latitude:  rand.Float64()*180 - 90,  // Random latitude
+		Longitude: rand.Float64()*360 - 180, // Random longitude
+		Altitude:  rand.Float64()*500 + 200, // Random altitude
+	}
 }

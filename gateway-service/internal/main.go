@@ -25,16 +25,18 @@ func main() {
 		appPort = "4000"
 	}
 
+	resolver := NewResolver()
 	initRedis(redisHost, redisPort)
 
-	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{
-		Resolvers: &graph.Resolver{},
-	}))
+	// Start the TLE subscription and position generation
+	go subscribeToTleAndGeneratePositions(resolver)
 
-	// Setup HTTP handlers
+	// GraphQL server
+	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
+
 	http.Handle("/query", srv)
 	http.Handle("/", playground.Handler("GraphQL Playground", "/query"))
 
-	log.Printf("🚀 Gateway service running at http://localhost:%s/", appPort)
+	log.Printf("🚀 Server is running at http://localhost:%s/", appPort)
 	log.Fatal(http.ListenAndServe(":"+appPort, nil))
 }
