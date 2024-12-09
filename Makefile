@@ -1,13 +1,23 @@
 # Environment Variables
-VERSION_GRAPHQL_API ?= 0.0.9
+VERSION_GRAPHQL_API ?= 0.0.
+VERSION_GATEWAY_SERVICE ?= 0.0.1
+VERSION_PROPAGATOR_SERVICE ?= 0.0.1
+
 DOCKER_COMPOSE_FILE = deployments/compose/docker-compose.yaml
 DOCKER_PROJECT_NAME = 2112_project
 
 # Service-Specific Settings
-GRAPHQL_API = graphql-api
+GRAPHQL_API = src/graphql-api
+GATEWAY_SERVICE = src/gateway-service
+PROPAGATOR_SERVICE = src/propagator-service
 REDIS_SERVICE = redis-service
-KEYVAULT_SERVICE = keyvault-service
 
+
+ACTIVATE = $(VENV_DIR)/bin/activate
+VENV_DIR = $(GRAPHQL_API)/python/venv
+PYTHON_BIN = $(VENV_DIR)/bin/python
+PYTHON_VBIN = venv/bin/python
+PIP_BIN = $(VENV_DIR)/bin/pip
 # Exported Go Variables
 export GO111MODULE := on
 
@@ -22,17 +32,17 @@ export GO111MODULE := on
 build: ## Build all services
 	docker-compose -f $(DOCKER_COMPOSE_FILE) build
 
-.PHONY: build-graphql-api
-build-graphql-api: ## Build the GraphQL API service
-	docker-compose -f $(DOCKER_COMPOSE_FILE) build $(GRAPHQL_API)
+.PHONY: build-gateway-service
+build-gateway-service: ## Build the Gateway service
+	docker-compose -f $(DOCKER_COMPOSE_FILE) build $(GATEWAY_SERVICE)
+
+.PHONY: build-propagator-service
+build-propagator-service: ## Build the Propagator service
+	docker-compose -f $(DOCKER_COMPOSE_FILE) build $(PROPAGATOR_SERVICE)
 
 .PHONY: build-redis
 build-redis: ## Build the Redis service
 	docker-compose -f $(DOCKER_COMPOSE_FILE) build $(REDIS_SERVICE)
-
-.PHONY: build-keyvault
-build-keyvault: ## Build the KeyVault service
-	docker-compose -f $(DOCKER_COMPOSE_FILE) build $(KEYVAULT_SERVICE)
 
 ################################################################################
 # Run
@@ -57,17 +67,17 @@ restart: down up ## Restart all services
 logs: ## View logs for all services
 	docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f
 
-.PHONY: logs-graphql-api
-logs-graphql-api: ## View logs for the GraphQL API service
-	docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f $(GRAPHQL_API)
+.PHONY: logs-gateway-service
+logs-gateway-service: ## View logs for the Gateway service
+	docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f $(GATEWAY_SERVICE)
+
+.PHONY: logs-propagator-service
+logs-propagator-service: ## View logs for the Propagator service
+	docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f $(PROPAGATOR_SERVICE)
 
 .PHONY: logs-redis
 logs-redis: ## View logs for the Redis service
 	docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f $(REDIS_SERVICE)
-
-.PHONY: logs-keyvault
-logs-keyvault: ## View logs for the KeyVault service
-	docker-compose -f $(DOCKER_COMPOSE_FILE) logs -f $(KEYVAULT_SERVICE)
 
 ################################################################################
 # Clean
@@ -85,29 +95,83 @@ clean: ## Clean up all Docker resources
 
 .PHONY: gqlgen-generate
 gqlgen-generate: ## Generate GraphQL code with gqlgen
-	cd graphql-api && go run github.com/99designs/gqlgen generate
+	cd $(GRAPHQL_API)/go && go run github.com/99designs/gqlgen generate
 
 .PHONY: gqlgen-init
 gqlgen-init: ## Initialize the GraphQL API gqlgen project
-	cd graphql-api && go run github.com/99designs/gqlgen init
+	cd $(GRAPHQL_API)/go && go run github.com/99designs/gqlgen init
 
 .PHONY: gqlgen-clean
 gqlgen-clean: ## Clean GraphQL generated files
-	rm -f graphql-api/generated.go graphql-api/models_gen.go
+	rm -f $(GRAPHQL_API)/go/generated.go $(GRAPHQL_API)/go/models_gen.go
 
 .PHONY: gqlgen-vendor
 gqlgen-vendor: ## Update dependencies for gqlgen
-	cd graphql-api && go mod tidy && go mod vendor
+	cd $(GRAPHQL_API)/go && go mod tidy && go mod vendor
 
 .PHONY: gqlgen-run
 gqlgen-run: ## Run the GraphQL API project
-	cd graphql-api && go run .
+	cd $(GRAPHQL_API)/go && go run .
 
 .PHONY: gqlgen-publish
 gqlgen-publish: ## Publish the GraphQL API to GitHub
-	cd graphql-api && git add -A && git commit -m "Release version $(VERSION_GRAPHQL_API)" && \
+	cd $(GRAPHQL_API)/go && git add -A && git commit -m "Release version $(VERSION_GRAPHQL_API)" && \
 	git tag -a v$(VERSION_GRAPHQL_API) -m "Version $(VERSION_GRAPHQL_API)" && git push origin main && git push origin v$(VERSION_GRAPHQL_API)
 	@echo "GraphQL API published successfully with version $(VERSION_GRAPHQL_API)"
+
+
+.PHONY: create-venv
+create-venv: ## Create a virtual environment for the Python project
+	@echo "Creating virtual environment..."
+	python3 -m venv $(VENV_DIR)
+
+.PHONY: install-python
+install-python: create-venv ## Install Python dependencies in the virtual environment
+	@echo "Installing Python dependencies..."
+	$(PIP_BIN) install -r $(GRAPHQL_API)/python/requirements.txt
+	$(PYTHON_BIN) -m pip install twine
+
+.PHONY: generate-python
+generate-python: install-python ## Generate Python code from the GraphQL schema
+	@echo "Generating Python code from the GraphQL schema..."
+	$(PYTHON_BIN) $(GRAPHQL_API)/python/generate_python_from_schema.py
+
+.PHONY: run-python
+run-python: ## Run the Python GraphQL server using the virtual environment
+	@echo "Running the Python GraphQL server..."
+	$(PYTHON_BIN) -m uvicorn src.graphql_api.python.server:app --host 0.0.0.0 --port 8000
+
+.PHONY: clean-venv
+clean-venv: ## Remove the virtual environment
+	@echo "Removing virtual environment..."
+	rm -rf $(VENV_DIR)
+
+.PHONY: build-python-package
+build-python-package: generate-python ## Build the Python package
+	@echo "Building the Python package..."
+	cd $(GRAPHQL_API)/python && $(PYTHON_VBIN) setup.py sdist bdist_wheel
+
+.PHONY: publish-python
+publish-python: build-python-package ## Publish the Python package to PyPI
+	@echo "Publishing the Python package to PyPI..."
+	cd $(GRAPHQL_API)/python && $(PYTHON_VBIN) -m twine upload dist/*
+	@echo "Python package published successfully!"
+
+################################################################################
+# Gateway Service
+################################################################################
+
+.PHONY: gateway-run
+gateway-run: ## Run the Gateway service
+	cd $(GATEWAY_SERVICE) && python -m src.main
+
+################################################################################
+# Propagator Service
+################################################################################
+
+.PHONY: propagator-run
+propagator-run: ## Run the Propagator service
+	cd $(PROPAGATOR_SERVICE) && python -m src.main
 
 ################################################################################
 # Help

@@ -1,8 +1,0 @@
-*.pyc
-__pycache__/
-*.log
-*.spec
-dist/
-build/
-.env
-.git/
