@@ -1,4 +1,4 @@
-module graphql-api
+module github.com/Elbujito/2112/graphql-api
 
 go 1.23.4
 

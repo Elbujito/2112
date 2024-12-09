@@ -1,7 +1,7 @@
 package main
 
 import (
-	"graphql-api/graph"
+	"github.com/Elbujito/2112/graphql-api/graph"
 	"log"
 	"net/http"
 	"os"

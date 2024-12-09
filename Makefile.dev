@@ -1,4 +1,0 @@
-# Start local development environment for backend
-start-dev:
-	@echo "Starting local development environment..."
-	@docker compose --project-directory ./ -f ./ci/compose/2112-local-dev.yaml up

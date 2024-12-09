@@ -7,16 +7,17 @@ package graph
 import (
 	"context"
 	"fmt"
-	"graphql-api/graph/model"
+
+	model1 "github.com/Elbujito/2112/graphql-api/graph/model"
 )
 
 // SatellitePosition is the resolver for the satellitePosition field.
-func (r *queryResolver) SatellitePosition(ctx context.Context, id string) (*model.SatellitePosition, error) {
+func (r *queryResolver) SatellitePosition(ctx context.Context, id string) (*model1.SatellitePosition, error) {
 	panic(fmt.Errorf("not implemented: SatellitePosition - satellitePosition"))
 }
 
 // SatelliteTle is the resolver for the satelliteTle field.
-func (r *queryResolver) SatelliteTle(ctx context.Context, id string) (*model.SatelliteTle, error) {
+func (r *queryResolver) SatelliteTle(ctx context.Context, id string) (*model1.SatelliteTle, error) {
 	panic(fmt.Errorf("not implemented: SatelliteTle - satelliteTle"))
 }
 

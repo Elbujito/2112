@@ -8,7 +8,6 @@ import (
 	"embed"
 	"errors"
 	"fmt"
-	"graphql-api/graph/model"
 	"io"
 	"strconv"
 	"sync"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
+	"github.com/Elbujito/2112/graphql-api/graph/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -476,7 +476,7 @@ func (ec *executionContext) _Query_satellitePosition(ctx context.Context, field 
 	}
 	res := resTmp.(*model.SatellitePosition)
 	fc.Result = res
-	return ec.marshalOSatellitePosition2ᚖgraphqlᚑapiᚋgraphᚋmodelᚐSatellitePosition(ctx, field.Selections, res)
+	return ec.marshalOSatellitePosition2ᚖgithubᚗcomᚋElbujitoᚋ2112ᚋgraphqlᚑapiᚋgraphᚋmodelᚐSatellitePosition(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_satellitePosition(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -540,7 +540,7 @@ func (ec *executionContext) _Query_satelliteTle(ctx context.Context, field graph
 	}
 	res := resTmp.(*model.SatelliteTle)
 	fc.Result = res
-	return ec.marshalOSatelliteTle2ᚖgraphqlᚑapiᚋgraphᚋmodelᚐSatelliteTle(ctx, field.Selections, res)
+	return ec.marshalOSatelliteTle2ᚖgithubᚗcomᚋElbujitoᚋ2112ᚋgraphqlᚑapiᚋgraphᚋmodelᚐSatelliteTle(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Query_satelliteTle(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -3925,14 +3925,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return res
 }
 
-func (ec *executionContext) marshalOSatellitePosition2ᚖgraphqlᚑapiᚋgraphᚋmodelᚐSatellitePosition(ctx context.Context, sel ast.SelectionSet, v *model.SatellitePosition) graphql.Marshaler {
+func (ec *executionContext) marshalOSatellitePosition2ᚖgithubᚗcomᚋElbujitoᚋ2112ᚋgraphqlᚑapiᚋgraphᚋmodelᚐSatellitePosition(ctx context.Context, sel ast.SelectionSet, v *model.SatellitePosition) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
 	return ec._SatellitePosition(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalOSatelliteTle2ᚖgraphqlᚑapiᚋgraphᚋmodelᚐSatelliteTle(ctx context.Context, sel ast.SelectionSet, v *model.SatelliteTle) graphql.Marshaler {
+func (ec *executionContext) marshalOSatelliteTle2ᚖgithubᚗcomᚋElbujitoᚋ2112ᚋgraphqlᚑapiᚋgraphᚋmodelᚐSatelliteTle(ctx context.Context, sel ast.SelectionSet, v *model.SatelliteTle) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
