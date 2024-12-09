@@ -1,0 +1,29 @@
+schema {
+  query: Query
+  subscription: Subscription
+}
+
+type Query {
+  satellitePosition(id: ID!): SatellitePosition
+  satelliteTle(id: ID!): SatelliteTle
+  messageHistory: [String!]!
+}
+
+type SatellitePosition {
+  id: ID!
+  name: String!
+  latitude: Float!
+  longitude: Float!
+  altitude: Float!
+}
+
+type SatelliteTle {
+  id: ID!
+  name: String!
+  tleLine1: String!
+  tleLine2: String!
+}
+
+type Subscription {
+  messageReceived: String!
+}

@@ -1,48 +1,44 @@
 version: "3.7"
 
 services:
-  # App Service (Go)
   app-service:
     build:
       context: ../../.
       dockerfile: ci/docker/Dockerfile.app
     container_name: app-service
-    env_file: ../config/app-env
+    env_file: ../config/app-service-env
     ports:
       - "8081:8081"
     depends_on:
-      - satellite-position-service
+      - propagator-service
       - redis-service
     restart: always
 
-  # Satellite Position Service (Python)
-  satellite-position-service:
+  propagator-service:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile.satellite
-    container_name: satellite-position-service
-    env_file: ../config/satellite-env
+      dockerfile: ci/docker/Dockerfile.propagator
+    container_name: propagator-service
+    env_file: ../config/propagator-service-env
     ports:
       - "5000:5000"
     depends_on:
       - redis-service
     restart: always
 
-  # GraphQL Gateway (Go)
-  graphql-gateway:
+  gateway-service:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile.graphql
-    container_name: graphql-gateway
-    env_file: ../config/graphql-env
+      dockerfile: ci/docker/Dockerfile.gateway
+    container_name: gateway-service
+    env_file: ../config/gateway-service-env
     ports:
       - "4000:4000"
     depends_on:
-      - satellite-position-service
+      - propagator-service
       - redis-service
     restart: always
 
-  # Redis Service
   redis-service:
     build:
       context: ../../.
