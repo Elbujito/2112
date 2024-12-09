@@ -21,14 +21,14 @@ func (r *queryResolver) SatelliteTle(ctx context.Context, id string) (*model1.Sa
 	panic(fmt.Errorf("not implemented: SatelliteTle - satelliteTle"))
 }
 
-// MessageHistory is the resolver for the messageHistory field.
-func (r *queryResolver) MessageHistory(ctx context.Context) ([]string, error) {
-	panic(fmt.Errorf("not implemented: MessageHistory - messageHistory"))
+// SatellitePositionsInRange is the resolver for the satellitePositionsInRange field.
+func (r *queryResolver) SatellitePositionsInRange(ctx context.Context, id string, startTime string, endTime string) ([]*model1.SatellitePosition, error) {
+	panic(fmt.Errorf("not implemented: SatellitePositionsInRange - satellitePositionsInRange"))
 }
 
-// MessageReceived is the resolver for the messageReceived field.
-func (r *subscriptionResolver) MessageReceived(ctx context.Context) (<-chan string, error) {
-	panic(fmt.Errorf("not implemented: MessageReceived - messageReceived"))
+// SatellitePositionUpdated is the resolver for the satellitePositionUpdated field.
+func (r *subscriptionResolver) SatellitePositionUpdated(ctx context.Context, id string) (<-chan *model1.SatellitePosition, error) {
+	panic(fmt.Errorf("not implemented: SatellitePositionUpdated - satellitePositionUpdated"))
 }
 
 // Query returns QueryResolver implementation.
@@ -39,3 +39,18 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *queryResolver) MessageHistory(ctx context.Context) ([]string, error) {
+	panic(fmt.Errorf("not implemented: MessageHistory - messageHistory"))
+}
+func (r *subscriptionResolver) MessageReceived(ctx context.Context) (<-chan string, error) {
+	panic(fmt.Errorf("not implemented: MessageReceived - messageReceived"))
+}
+*/

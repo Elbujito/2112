@@ -26,7 +26,6 @@ func (r *Resolver) Subscription() graph.SubscriptionResolver {
 	return &subscriptionResolver{r}
 }
 
-// NotifySubscribers sends position updates to WebSocket subscribers
 func (r *Resolver) NotifySubscribers(position *model.SatellitePosition) {
 	r.Mutex.Lock()
 	defer r.Mutex.Unlock()

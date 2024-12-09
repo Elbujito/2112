@@ -49,9 +49,9 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Query struct {
-		MessageHistory    func(childComplexity int) int
-		SatellitePosition func(childComplexity int, id string) int
-		SatelliteTle      func(childComplexity int, id string) int
+		SatellitePosition         func(childComplexity int, id string) int
+		SatellitePositionsInRange func(childComplexity int, id string, startTime string, endTime string) int
+		SatelliteTle              func(childComplexity int, id string) int
 	}
 
 	SatellitePosition struct {
@@ -60,6 +60,7 @@ type ComplexityRoot struct {
 		Latitude  func(childComplexity int) int
 		Longitude func(childComplexity int) int
 		Name      func(childComplexity int) int
+		Timestamp func(childComplexity int) int
 	}
 
 	SatelliteTle struct {
@@ -70,17 +71,17 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		MessageReceived func(childComplexity int) int
+		SatellitePositionUpdated func(childComplexity int, id string) int
 	}
 }
 
 type QueryResolver interface {
 	SatellitePosition(ctx context.Context, id string) (*model.SatellitePosition, error)
 	SatelliteTle(ctx context.Context, id string) (*model.SatelliteTle, error)
-	MessageHistory(ctx context.Context) ([]string, error)
+	SatellitePositionsInRange(ctx context.Context, id string, startTime string, endTime string) ([]*model.SatellitePosition, error)
 }
 type SubscriptionResolver interface {
-	MessageReceived(ctx context.Context) (<-chan string, error)
+	SatellitePositionUpdated(ctx context.Context, id string) (<-chan *model.SatellitePosition, error)
 }
 
 type executableSchema struct {
@@ -102,13 +103,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Query.messageHistory":
-		if e.complexity.Query.MessageHistory == nil {
-			break
-		}
-
-		return e.complexity.Query.MessageHistory(childComplexity), true
-
 	case "Query.satellitePosition":
 		if e.complexity.Query.SatellitePosition == nil {
 			break
@@ -120,6 +114,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.SatellitePosition(childComplexity, args["id"].(string)), true
+
+	case "Query.satellitePositionsInRange":
+		if e.complexity.Query.SatellitePositionsInRange == nil {
+			break
+		}
+
+		args, err := ec.field_Query_satellitePositionsInRange_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SatellitePositionsInRange(childComplexity, args["id"].(string), args["startTime"].(string), args["endTime"].(string)), true
 
 	case "Query.satelliteTle":
 		if e.complexity.Query.SatelliteTle == nil {
@@ -168,6 +174,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SatellitePosition.Name(childComplexity), true
 
+	case "SatellitePosition.timestamp":
+		if e.complexity.SatellitePosition.Timestamp == nil {
+			break
+		}
+
+		return e.complexity.SatellitePosition.Timestamp(childComplexity), true
+
 	case "SatelliteTle.id":
 		if e.complexity.SatelliteTle.ID == nil {
 			break
@@ -196,12 +209,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SatelliteTle.TleLine2(childComplexity), true
 
-	case "Subscription.messageReceived":
-		if e.complexity.Subscription.MessageReceived == nil {
+	case "Subscription.satellitePositionUpdated":
+		if e.complexity.Subscription.SatellitePositionUpdated == nil {
 			break
 		}
 
-		return e.complexity.Subscription.MessageReceived(childComplexity), true
+		args, err := ec.field_Subscription_satellitePositionUpdated_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.SatellitePositionUpdated(childComplexity, args["id"].(string)), true
 
 	}
 	return 0, false
@@ -374,6 +392,65 @@ func (ec *executionContext) field_Query_satellitePosition_argsID(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_satellitePositionsInRange_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_satellitePositionsInRange_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	arg1, err := ec.field_Query_satellitePositionsInRange_argsStartTime(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["startTime"] = arg1
+	arg2, err := ec.field_Query_satellitePositionsInRange_argsEndTime(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["endTime"] = arg2
+	return args, nil
+}
+func (ec *executionContext) field_Query_satellitePositionsInRange_argsID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_satellitePositionsInRange_argsStartTime(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("startTime"))
+	if tmp, ok := rawArgs["startTime"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_satellitePositionsInRange_argsEndTime(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("endTime"))
+	if tmp, ok := rawArgs["endTime"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Query_satelliteTle_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -385,6 +462,29 @@ func (ec *executionContext) field_Query_satelliteTle_args(ctx context.Context, r
 	return args, nil
 }
 func (ec *executionContext) field_Query_satelliteTle_argsID(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+	if tmp, ok := rawArgs["id"]; ok {
+		return ec.unmarshalNID2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Subscription_satellitePositionUpdated_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Subscription_satellitePositionUpdated_argsID(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
+	return args, nil
+}
+func (ec *executionContext) field_Subscription_satellitePositionUpdated_argsID(
 	ctx context.Context,
 	rawArgs map[string]interface{},
 ) (string, error) {
@@ -497,6 +597,8 @@ func (ec *executionContext) fieldContext_Query_satellitePosition(ctx context.Con
 				return ec.fieldContext_SatellitePosition_longitude(ctx, field)
 			case "altitude":
 				return ec.fieldContext_SatellitePosition_altitude(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_SatellitePosition_timestamp(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatellitePosition", field.Name)
 		},
@@ -577,8 +679,8 @@ func (ec *executionContext) fieldContext_Query_satelliteTle(ctx context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Query_messageHistory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_messageHistory(ctx, field)
+func (ec *executionContext) _Query_satellitePositionsInRange(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_satellitePositionsInRange(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -591,7 +693,7 @@ func (ec *executionContext) _Query_messageHistory(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MessageHistory(rctx)
+		return ec.resolvers.Query().SatellitePositionsInRange(rctx, fc.Args["id"].(string), fc.Args["startTime"].(string), fc.Args["endTime"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -603,20 +705,45 @@ func (ec *executionContext) _Query_messageHistory(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]string)
+	res := resTmp.([]*model.SatellitePosition)
 	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalNSatellitePosition2ᚕᚖgithubᚗcomᚋElbujitoᚋ2112ᚋgraphqlᚑapiᚋgraphᚋmodelᚐSatellitePositionᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Query_messageHistory(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_satellitePositionsInRange(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SatellitePosition_id(ctx, field)
+			case "name":
+				return ec.fieldContext_SatellitePosition_name(ctx, field)
+			case "latitude":
+				return ec.fieldContext_SatellitePosition_latitude(ctx, field)
+			case "longitude":
+				return ec.fieldContext_SatellitePosition_longitude(ctx, field)
+			case "altitude":
+				return ec.fieldContext_SatellitePosition_altitude(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_SatellitePosition_timestamp(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SatellitePosition", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_satellitePositionsInRange_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -970,6 +1097,50 @@ func (ec *executionContext) fieldContext_SatellitePosition_altitude(_ context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _SatellitePosition_timestamp(ctx context.Context, field graphql.CollectedField, obj *model.SatellitePosition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SatellitePosition_timestamp(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Timestamp, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SatellitePosition_timestamp(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SatellitePosition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SatelliteTle_id(ctx context.Context, field graphql.CollectedField, obj *model.SatelliteTle) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SatelliteTle_id(ctx, field)
 	if err != nil {
@@ -1146,8 +1317,8 @@ func (ec *executionContext) fieldContext_SatelliteTle_tleLine2(_ context.Context
 	return fc, nil
 }
 
-func (ec *executionContext) _Subscription_messageReceived(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
-	fc, err := ec.fieldContext_Subscription_messageReceived(ctx, field)
+func (ec *executionContext) _Subscription_satellitePositionUpdated(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_satellitePositionUpdated(ctx, field)
 	if err != nil {
 		return nil
 	}
@@ -1160,21 +1331,18 @@ func (ec *executionContext) _Subscription_messageReceived(ctx context.Context, f
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Subscription().MessageReceived(rctx)
+		return ec.resolvers.Subscription().SatellitePositionUpdated(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return nil
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return nil
 	}
 	return func(ctx context.Context) graphql.Marshaler {
 		select {
-		case res, ok := <-resTmp.(<-chan string):
+		case res, ok := <-resTmp.(<-chan *model.SatellitePosition):
 			if !ok {
 				return nil
 			}
@@ -1182,7 +1350,7 @@ func (ec *executionContext) _Subscription_messageReceived(ctx context.Context, f
 				w.Write([]byte{'{'})
 				graphql.MarshalString(field.Alias).MarshalGQL(w)
 				w.Write([]byte{':'})
-				ec.marshalNString2string(ctx, field.Selections, res).MarshalGQL(w)
+				ec.marshalOSatellitePosition2ᚖgithubᚗcomᚋElbujitoᚋ2112ᚋgraphqlᚑapiᚋgraphᚋmodelᚐSatellitePosition(ctx, field.Selections, res).MarshalGQL(w)
 				w.Write([]byte{'}'})
 			})
 		case <-ctx.Done():
@@ -1191,15 +1359,40 @@ func (ec *executionContext) _Subscription_messageReceived(ctx context.Context, f
 	}
 }
 
-func (ec *executionContext) fieldContext_Subscription_messageReceived(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Subscription_satellitePositionUpdated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Subscription",
 		Field:      field,
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_SatellitePosition_id(ctx, field)
+			case "name":
+				return ec.fieldContext_SatellitePosition_name(ctx, field)
+			case "latitude":
+				return ec.fieldContext_SatellitePosition_latitude(ctx, field)
+			case "longitude":
+				return ec.fieldContext_SatellitePosition_longitude(ctx, field)
+			case "altitude":
+				return ec.fieldContext_SatellitePosition_altitude(ctx, field)
+			case "timestamp":
+				return ec.fieldContext_SatellitePosition_timestamp(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type SatellitePosition", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_satellitePositionUpdated_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -3042,7 +3235,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
-		case "messageHistory":
+		case "satellitePositionsInRange":
 			field := field
 
 			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
@@ -3051,7 +3244,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_messageHistory(ctx, field)
+				res = ec._Query_satellitePositionsInRange(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -3128,6 +3321,11 @@ func (ec *executionContext) _SatellitePosition(ctx context.Context, sel ast.Sele
 			}
 		case "altitude":
 			out.Values[i] = ec._SatellitePosition_altitude(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "timestamp":
+			out.Values[i] = ec._SatellitePosition_timestamp(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -3221,8 +3419,8 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 
 	switch fields[0].Name {
-	case "messageReceived":
-		return ec._Subscription_messageReceived(ctx, fields[0])
+	case "satellitePositionUpdated":
+		return ec._Subscription_satellitePositionUpdated(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
@@ -3599,6 +3797,60 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) marshalNSatellitePosition2ᚕᚖgithubᚗcomᚋElbujitoᚋ2112ᚋgraphqlᚑapiᚋgraphᚋmodelᚐSatellitePositionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.SatellitePosition) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNSatellitePosition2ᚖgithubᚗcomᚋElbujitoᚋ2112ᚋgraphqlᚑapiᚋgraphᚋmodelᚐSatellitePosition(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNSatellitePosition2ᚖgithubᚗcomᚋElbujitoᚋ2112ᚋgraphqlᚑapiᚋgraphᚋmodelᚐSatellitePosition(ctx context.Context, sel ast.SelectionSet, v *model.SatellitePosition) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._SatellitePosition(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3612,38 +3864,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
-	}
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
