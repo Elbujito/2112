@@ -6,7 +6,7 @@ import (
 
 const (
 	DEFAULT_PUBLIC_CESLESTRACK_URL        string = "https://celestrak.com/NORAD/elements/gp.php"
-	DEFAULT_PRIVATE_PROPAGATOR_URL        string = "http://2112-propagator:5000/satellite/propagate"
+	DEFAULT_PRIVATE_PROPAGATOR_URL        string = "http://propagator-service:5000/satellite/propagate"
 	DEFAULT_PUBLIC_CESLESTRACK_SATCAT_URL string = "https://celestrak.org/pub/satcat.csv"
 
 	// defaults

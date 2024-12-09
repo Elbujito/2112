@@ -1,32 +1,37 @@
+version: '3.8'
+
 services:
   app-service:
     build:
       context: ../../.
       dockerfile: deployments/docker/Dockerfile.app
     container_name: app-service
-    env_file: ../config/app-service-env
+    env_file: ../config/app-service.dev-env
     ports:
       - "8081:8081"
       - "8080:8080"
       - "8079:8079"
     depends_on:
-      # db-seeder:
-      #   condition: service_completed_successfully
-      - propagator-service
-      - redis-service
+      db-seeder:
+        condition: service_completed_successfully
+      propagator-service:
+        condition: service_healthy
+      redis-service:
+        condition: service_healthy
     restart: always
-    command: ["service", "start"]
+    command: ["app-service", "start"]
 
   propagator-service:
     build:
       context: ../../.
       dockerfile: deployments/docker/Dockerfile.propagator
     container_name: propagator-service
-    env_file: ../config/propagator-service-env
+    env_file: ../config/propagator-service.dev-env
     ports:
       - "5000:5000"
     depends_on:
-      - redis-service
+      redis-service:
+        condition: service_healthy
     restart: always
 
   gateway-service:
@@ -34,12 +39,14 @@ services:
       context: ../../.
       dockerfile: deployments/docker/Dockerfile.gateway
     container_name: gateway-service
-    env_file: ../config/gateway-service-env
+    env_file: ../config/gateway-service.dev-env
     ports:
       - "4000:4000"
     depends_on:
-      - propagator-service
-      - redis-service
+      propagator-service:
+        condition: service_healthy
+      redis-service:
+        condition: service_healthy
     restart: always
 
   redis-service:
@@ -52,8 +59,12 @@ services:
     volumes:
       - redis-data:/data
     restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
-  # PostgreSQL Database
   postgres-db:
     extends:
       file: ./postgres.yaml
@@ -64,31 +75,41 @@ services:
       retries: 5
       start_period: 30s
 
-  # Database Migration Service
+  db-creator:
+    container_name: db-creator
+    build:
+      context: ../../
+      dockerfile: ./deployments/docker/Dockerfile.app
+    env_file: ../config/app.dev-env
+    command: ["app-service", "-e", "-d", "db", "create"]
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+        
   db-migrator:
     build:
       context: ../../.
       dockerfile: deployments/docker/Dockerfile.app
     container_name: db-migrator
     env_file: ../config/app.dev-env
-    command: ["service","db", "migrate"] # Run migration
+    command: ["app-service", "db", "migrate"]
     depends_on:
-      postgres-db:
-        condition: service_healthy
-    restart: "no" # Run once and exit
+      db-creator:
+        condition: service_completed_successfully
+    restart: "no"
 
-  # Database Seeding Service
   db-seeder:
     build:
       context: ../../.
       dockerfile: deployments/docker/Dockerfile.app
     container_name: db-seeder
     env_file: ../config/postgres.dev-env
-    command: ["service","db", "seed"] # Run seeding
+    command: ["app-service", "db", "seed"]
     depends_on:
       db-migrator:
         condition: service_completed_successfully
-    restart: "no" # Run once and exit
+    restart: "no"
 
 volumes:
   redis-data:
+  postgres-data:
