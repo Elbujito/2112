@@ -4,9 +4,14 @@ schema {
 }
 
 type Query {
+  # Retrieve the position of a satellite by ID
   satellitePosition(id: ID!): SatellitePosition
+
+  # Retrieve the TLE data of a satellite by ID
   satelliteTle(id: ID!): SatelliteTle
-  messageHistory: [String!]!
+
+  # Retrieve positions of a satellite within a time range
+  satellitePositionsInRange(id: ID!, startTime: String!, endTime: String!): [SatellitePosition!]!
 }
 
 type SatellitePosition {
@@ -15,6 +20,7 @@ type SatellitePosition {
   latitude: Float!
   longitude: Float!
   altitude: Float!
+  timestamp: String! # ISO 8601 format
 }
 
 type SatelliteTle {

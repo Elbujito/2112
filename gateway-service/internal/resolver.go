@@ -25,3 +25,15 @@ func (r *Resolver) Query() graph.QueryResolver {
 func (r *Resolver) Subscription() graph.SubscriptionResolver {
 	return &subscriptionResolver{r}
 }
+
+// NotifySubscribers sends position updates to WebSocket subscribers
+func (r *Resolver) NotifySubscribers(position *model.SatellitePosition) {
+	r.Mutex.Lock()
+	defer r.Mutex.Unlock()
+
+	for id, ch := range r.PositionSubscribers {
+		if id == position.ID {
+			ch <- position
+		}
+	}
+}

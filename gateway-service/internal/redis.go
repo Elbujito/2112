@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"math/rand"
 	"time"
 
 	"github.com/Elbujito/2112/graphql-api/graph/model"
@@ -24,7 +23,7 @@ func initRedis(host, port string) {
 	}
 }
 
-func subscribeToTleAndGeneratePositions(resolver *Resolver) {
+func subscribeToRedisForTleUpdates(resolver *Resolver) {
 	pubsub := rdb.Subscribe(ctx, "satellite_tle")
 	defer pubsub.Close()
 
@@ -35,20 +34,19 @@ func subscribeToTleAndGeneratePositions(resolver *Resolver) {
 			continue
 		}
 
-		// Simulate position generation
-		position := generateSatellitePosition(&tle)
-
-		// Publish position to Redis
-		publishSatellitePosition(position)
-
-		// Notify WebSocket subscribers
-		resolver.Mutex.Lock()
-		for id, ch := range resolver.PositionSubscribers {
-			if id == position.ID {
-				ch <- position
-			}
+		// Simulate position update with timestamp
+		position := &model.SatellitePosition{
+			ID:        tle.ID,
+			Name:      tle.Name,
+			Latitude:  0.0, // Placeholder value
+			Longitude: 0.0, // Placeholder value
+			Altitude:  0.0, // Placeholder value
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
 		}
-		resolver.Mutex.Unlock()
+
+		// Publish to Redis and notify subscribers
+		publishSatellitePosition(position)
+		resolver.NotifySubscribers(position)
 	}
 }
 
@@ -62,16 +60,5 @@ func publishSatellitePosition(position *model.SatellitePosition) {
 	channel := "satellite_positions:" + position.ID
 	if err := rdb.Publish(ctx, channel, payload).Err(); err != nil {
 		log.Printf("Error publishing SatellitePosition to Redis: %v", err)
-	}
-}
-
-func generateSatellitePosition(tle *model.SatelliteTle) *model.SatellitePosition {
-	rand.Seed(time.Now().UnixNano())
-	return &model.SatellitePosition{
-		ID:        tle.ID,
-		Name:      tle.Name,
-		Latitude:  rand.Float64()*180 - 90,  // Random latitude
-		Longitude: rand.Float64()*360 - 180, // Random longitude
-		Altitude:  rand.Float64()*500 + 200, // Random altitude
 	}
 }
