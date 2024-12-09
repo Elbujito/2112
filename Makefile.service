@@ -1,5 +1,5 @@
 # Project settings
-DOCKER_COMPOSE_FILE = ci/compose/docker-compose.yaml
+DOCKER_COMPOSE_FILE = deployments/compose/docker-compose.yaml
 DOCKER_PROJECT_NAME = 2112_project
 
 # Service-specific settings

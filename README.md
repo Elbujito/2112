@@ -26,3 +26,18 @@ For more details on running and using the service, scroll down to "[Operations](
    ```bash
    git clone git@github.com:elbujito/2112.git
    cd 2112
+
+# GraphQL Gateway Setup
+
+This repository sets up a **GraphQL Gateway** service implemented in Go, which interacts with a **Redis** service for Pub/Sub messaging. The setup is containerized using **Docker** and managed with **Docker Compose**.
+
+## Project Structure
+
+- **GraphQL Gateway (Go)**: A GraphQL API for querying satellite position data.
+- **Redis Service**: Used for Pub/Sub messaging between services.
+- **Docker Compose**: Manages and orchestrates the services.
+
+## Prerequisites
+
+- **Docker** and **Docker Compose** installed on your machine.
+- **Go** installed (if you plan to modify the Go code locally).
