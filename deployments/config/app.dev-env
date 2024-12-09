@@ -1,4 +1,3 @@
-DISABLE_FEATURES=ory_keto,ory_kratos,redis,cors
 DB_HOST=host.docker.internal
 DB_PORT=5440
 DB_USER=2112

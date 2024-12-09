@@ -75,17 +75,17 @@ services:
       retries: 5
       start_period: 30s
 
-  db-creator:
-    container_name: db-creator
-    build:
-      context: ../../
-      dockerfile: ./deployments/docker/Dockerfile.app
-    env_file: ../config/app.dev-env
-    command: ["app-service", "-e", "-d", "db", "create"]
-    depends_on:
-      postgres-db:
-        condition: service_healthy
-        
+  # db-creator:
+  #   container_name: db-creator
+  #   build:
+  #     context: ../../
+  #     dockerfile: ./deployments/docker/Dockerfile.app
+  #   env_file: ../config/app.dev-env
+  #   command: ["app-service", "-e", "-d", "db", "create"]
+  #   depends_on:
+  #     postgres-db:
+  #       condition: service_healthy
+
   db-migrator:
     build:
       context: ../../.
@@ -94,8 +94,8 @@ services:
     env_file: ../config/app.dev-env
     command: ["app-service", "db", "migrate"]
     depends_on:
-      db-creator:
-        condition: service_completed_successfully
+      postgres-db:
+        condition: service_healthy
     restart: "no"
 
   db-seeder:

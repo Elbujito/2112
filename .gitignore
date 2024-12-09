@@ -48,4 +48,6 @@ lib/fx/vendor/*
 
 2112
 
-src/templates/ci/data/*
+src/templates/ci/data/** 
+deployments/data/** 
+deployments/data/postgres/** 
