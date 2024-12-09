@@ -1,5 +1,5 @@
 # Environment Variables
-VERSION_GRAPHQL_API ?= 0.0.4
+VERSION_GRAPHQL_API ?= 0.0.5
 DOCKER_COMPOSE_FILE = deployments/compose/docker-compose.yaml
 DOCKER_PROJECT_NAME = 2112_project
 
@@ -105,7 +105,7 @@ gqlgen-run: ## Run the GraphQL API project
 
 .PHONY: gqlgen-publish
 gqlgen-publish: ## Publish the GraphQL API to GitHub
-	cd graphql-api && git add . && git commit -m "Release version $(VERSION_GRAPHQL_API)" && \
+	cd graphql-api && git add -A && git commit -m "Release version $(VERSION_GRAPHQL_API)" && \
 	git tag -a v$(VERSION_GRAPHQL_API) -m "Version $(VERSION_GRAPHQL_API)" && git push origin main && git push origin v$(VERSION_GRAPHQL_API)
 	@echo "GraphQL API published successfully with version $(VERSION_GRAPHQL_API)"
 
