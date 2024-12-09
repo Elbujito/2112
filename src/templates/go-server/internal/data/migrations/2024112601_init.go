@@ -1,7 +1,7 @@
 package migrations
 
 import (
-	"github.com/Elbujito/2112/src/template/go-server/internal/data/models"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/data/models"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )

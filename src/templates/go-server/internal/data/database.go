@@ -1,7 +1,7 @@
 package data
 
 import (
-	"github.com/Elbujito/2112/src/template/go-server/internal/clients/dbc"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/clients/dbc"
 	"gorm.io/gorm"
 )
 

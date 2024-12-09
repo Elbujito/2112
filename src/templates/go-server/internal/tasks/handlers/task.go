@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Elbujito/2112/src/template/go-server/internal/config"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/config"
 )
 
 type TaskName string

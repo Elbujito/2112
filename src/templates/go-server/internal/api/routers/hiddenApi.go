@@ -1,12 +1,12 @@
 package routers
 
 import (
-	"github.com/Elbujito/2112/src/template/go-server/internal/api/handlers/errors"
-	healthHandlers "github.com/Elbujito/2112/src/template/go-server/internal/api/handlers/healthz"
-	"github.com/Elbujito/2112/src/template/go-server/internal/api/middlewares"
-	"github.com/Elbujito/2112/src/template/go-server/internal/clients/logger"
-	"github.com/Elbujito/2112/src/template/go-server/internal/config"
-	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xconstants"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/api/handlers/errors"
+	healthHandlers "github.com/Elbujito/2112/src/templates/go-server/internal/api/handlers/healthz"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/api/middlewares"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/clients/logger"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/config"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 )
 
 var hiddenApiRouter *PublicRouter

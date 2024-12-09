@@ -3,8 +3,8 @@ package users
 import (
 	"net/http"
 
-	"github.com/Elbujito/2112/src/template/go-server/internal/api/handlers"
-	"github.com/Elbujito/2112/src/template/go-server/internal/clients/kratos"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/api/handlers"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/clients/kratos"
 
 	"github.com/labstack/echo/v4"
 )

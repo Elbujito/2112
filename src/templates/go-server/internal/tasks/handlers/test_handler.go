@@ -3,7 +3,7 @@ package handlers
 import (
 	"context"
 
-	"github.com/Elbujito/2112/src/template/go-server/internal/domain"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/domain"
 )
 
 type TestHandler struct {

@@ -1,6 +1,6 @@
 package config
 
-import "github.com/Elbujito/2112/src/template/go-server/internal/config/features"
+import "github.com/Elbujito/2112/src/templates/go-server/internal/config/features"
 
 func InitEnv() {
 	Env.Init()

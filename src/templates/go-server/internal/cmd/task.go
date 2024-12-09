@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/Elbujito/2112/src/template/go-server/internal/clients/logger"
-	"github.com/Elbujito/2112/src/template/go-server/internal/cmd/task"
-	"github.com/Elbujito/2112/src/template/go-server/internal/proc"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/clients/logger"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/cmd/task"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/proc"
 
 	"github.com/spf13/cobra"
 )

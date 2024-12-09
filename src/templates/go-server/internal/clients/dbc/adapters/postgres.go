@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Elbujito/2112/src/template/go-server/internal/config/features"
-	"github.com/Elbujito/2112/src/template/go-server/pkg/fx/xconstants"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/config/features"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

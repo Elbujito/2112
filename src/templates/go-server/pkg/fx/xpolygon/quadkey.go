@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/Elbujito/2112/lib/fx/xconstants"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 )
 
 type Quadkey struct {

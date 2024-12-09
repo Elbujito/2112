@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Elbujito/2112/src/template/go-server/internal/domain"
-	"github.com/Elbujito/2112/src/template/go-server/internal/tasks/handlers"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/domain"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/tasks/handlers"
 )
 
 type TaskHandler interface {

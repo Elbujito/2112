@@ -5,7 +5,7 @@ import (
 	"math"
 	"time"
 
-	xpolygon "github.com/Elbujito/2112/lib/fx/xpolygon"
+	xpolygon "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xpolygon"
 	"github.com/joshuaferrara/go-satellite"
 )
 

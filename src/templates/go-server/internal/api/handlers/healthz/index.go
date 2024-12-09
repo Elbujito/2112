@@ -3,8 +3,8 @@ package healthz
 import (
 	"net/http"
 
-	"github.com/Elbujito/2112/src/template/go-server/internal/api/handlers"
-	"github.com/Elbujito/2112/src/template/go-server/internal/config"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/api/handlers"
+	"github.com/Elbujito/2112/src/templates/go-server/internal/config"
 
 	"github.com/labstack/echo/v4"
 )

@@ -1,6 +1,6 @@
 package features
 
-import "github.com/Elbujito/2112/src/template/go-server/pkg/fx/xconstants"
+import "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 
 type KetoConfig struct {
 	ReadService  string `mapstructure:"KETO_READ_SERVICE"`
