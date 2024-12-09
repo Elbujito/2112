@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/Elbujito/2112/template/go-server/internal/services"
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
 	"github.com/labstack/echo/v4"
 )
 
@@ -20,8 +21,8 @@ func NewTestHandler(service services.TestService) *TestHandler {
 func (h *TestHandler) GetTestByTest(c echo.Context) error {
 	noradID := c.QueryParam("test")
 	if noradID == "" {
-		c.Echo().Logger.Error(constants.ERROR_ID_NOT_FOUND)
-		return constants.ERROR_ID_NOT_FOUND
+		c.Echo().Logger.Error(xconstants.ERROR_ID_NOT_FOUND)
+		return xconstants.ERROR_ID_NOT_FOUND
 	}
 
 	return c.JSON(http.StatusOK, nil)

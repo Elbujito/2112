@@ -37,7 +37,7 @@ func (k *Kratos) ValidateSession(r *http.Request) (*oryKratos.Session, error) {
 	if cookie == nil {
 		return nil, errors.New("no session found in cookie")
 	}
-	resp, _, err := k.Public.FrontendApi.ToSession(context.Background()).Cookie(cookie.String()).Execute()
+	resp, _, err := k.Public.FrontendAPI.ToSession(context.Background()).Cookie(cookie.String()).Execute()
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (k *Kratos) ValidateSession(r *http.Request) (*oryKratos.Session, error) {
 
 func (k *Kratos) CreateIdentity(user map[string]interface{}, password string) (*oryKratos.Identity, error) {
 	newIdentity := *oryKratos.NewCreateIdentityBody("default", user)
-	response, _, err := k.admin.IdentityApi.
+	response, _, err := k.admin.IdentityAPI.
 		CreateIdentity(context.Background()).
 		CreateIdentityBody(newIdentity).
 		Execute()
@@ -57,21 +57,21 @@ func (k *Kratos) CreateIdentity(user map[string]interface{}, password string) (*
 }
 
 func (k *Kratos) GetAllIdentity() ([]oryKratos.Identity, error) {
-	identities, _, err := k.admin.IdentityApi.
+	identities, _, err := k.admin.IdentityAPI.
 		ListIdentities(context.Background()).
 		Execute()
 	return identities, err
 }
 
 func (k *Kratos) GetIdentity(id string) (*oryKratos.Identity, error) {
-	identity, _, err := k.admin.IdentityApi.
+	identity, _, err := k.admin.IdentityAPI.
 		GetIdentity(context.Background(), id).
 		Execute()
 	return identity, err
 }
 
 func (k *Kratos) DeleteIdentity(id string) error {
-	_, err := k.admin.IdentityApi.
+	_, err := k.admin.IdentityAPI.
 		DeleteIdentity(context.Background(), id).
 		Execute()
 	return err

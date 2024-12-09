@@ -1,10 +1,12 @@
 package cors
 
+import "github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
+
 var client *CorsClient
 
 func init() {
 	client = &CorsClient{
-		name: constants.FEATURE_CORS,
+		name: xconstants.FEATURE_CORS,
 	}
 }
 

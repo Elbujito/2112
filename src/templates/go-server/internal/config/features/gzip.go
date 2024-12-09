@@ -1,11 +1,13 @@
 package features
 
+import "github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
+
 type GzipConfig struct {
 	Level string `mapstructure:"GZIP_LEVEL"`
 }
 
 var gzip = &Feature{
-	Name:       constants.FEATURE_GZIP,
+	Name:       xconstants.FEATURE_GZIP,
 	Config:     &GzipConfig{},
 	enabled:    true,
 	configured: false,

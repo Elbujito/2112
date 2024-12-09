@@ -1,10 +1,8 @@
-version: "3.7"
-
 services:
   app-service:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile.app
+      dockerfile: deployments/docker/Dockerfile.app
     container_name: app-service
     env_file: ../config/app-service-env
     ports:
@@ -12,8 +10,8 @@ services:
       - "8080:8080"
       - "8079:8079"
     depends_on:
-      db-seeder:
-        condition: service_completed_successfully
+      # db-seeder:
+      #   condition: service_completed_successfully
       - propagator-service
       - redis-service
     restart: always
@@ -22,7 +20,7 @@ services:
   propagator-service:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile.propagator
+      dockerfile: deployments/docker/Dockerfile.propagator
     container_name: propagator-service
     env_file: ../config/propagator-service-env
     ports:
@@ -34,7 +32,7 @@ services:
   gateway-service:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile.gateway
+      dockerfile: deployments/docker/Dockerfile.gateway
     container_name: gateway-service
     env_file: ../config/gateway-service-env
     ports:
@@ -47,7 +45,7 @@ services:
   redis-service:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile.redis
+      dockerfile: deployments/docker/Dockerfile.redis
     container_name: redis-service
     ports:
       - "6379:6379"
@@ -70,7 +68,7 @@ services:
   db-migrator:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile
+      dockerfile: deployments/docker/Dockerfile.app
     container_name: db-migrator
     env_file: ../config/app.dev-env
     command: ["service","db", "migrate"] # Run migration
@@ -83,7 +81,7 @@ services:
   db-seeder:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile
+      dockerfile: deployments/docker/Dockerfile.app
     container_name: db-seeder
     env_file: ../config/postgres.dev-env
     command: ["service","db", "seed"] # Run seeding

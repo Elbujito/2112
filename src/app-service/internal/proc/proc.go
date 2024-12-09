@@ -3,17 +3,17 @@ package proc
 import (
 	"fmt"
 
-	"github.com/Elbujito/2112/internal/api/routers"
-	clientsPkg "github.com/Elbujito/2112/internal/clients"
-	"github.com/Elbujito/2112/internal/clients/cors"
-	"github.com/Elbujito/2112/internal/clients/dbc"
-	"github.com/Elbujito/2112/internal/clients/gzip"
-	"github.com/Elbujito/2112/internal/clients/kratos"
-	"github.com/Elbujito/2112/internal/clients/logger"
-	"github.com/Elbujito/2112/internal/clients/service"
-	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/internal/data/models"
-	"github.com/Elbujito/2112/lib/fx/xutils"
+	"github.com/Elbujito/2112/src/app-service/internal/api/routers"
+	clientsPkg "github.com/Elbujito/2112/src/app-service/internal/clients"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/cors"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/dbc"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/gzip"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/kratos"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/service"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
+	"github.com/Elbujito/2112/src/app-service/internal/data/models"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xutils"
 )
 
 func InitServiceEnv(serviceName string, version string) {

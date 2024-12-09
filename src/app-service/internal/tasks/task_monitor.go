@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/internal/services"
-	"github.com/Elbujito/2112/internal/tasks/handlers"
+	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	"github.com/Elbujito/2112/src/app-service/internal/services"
+	"github.com/Elbujito/2112/src/app-service/internal/tasks/handlers"
 )
 
 type TaskHandler interface {

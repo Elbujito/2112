@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Elbujito/2112/internal/data"
-	"github.com/Elbujito/2112/internal/data/models"
-	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/lib/fx/xpolygon"
+	"github.com/Elbujito/2112/src/app-service/internal/data"
+	"github.com/Elbujito/2112/src/app-service/internal/data/models"
+	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xpolygon"
 	"gorm.io/gorm"
 )
 

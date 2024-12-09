@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/Elbujito/2112/template/go-server/internal/clients/kratos"
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
 
 	"github.com/labstack/echo/v4"
 )
@@ -12,7 +13,7 @@ func AuthenticationMiddleware() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			// skip authentication for health check
-			if c.Path() == constants.NAME_HEALTH_PATH || c.Path() == fmt.Sprintf("%s%s", constants.NAME_HEALTH_PATH, constants.NAME_HEALTH_READY_PATH) {
+			if c.Path() == xconstants.NAME_HEALTH_PATH || c.Path() == fmt.Sprintf("%s%s", xconstants.NAME_HEALTH_PATH, xconstants.NAME_HEALTH_READY_PATH) {
 				return next(c)
 			}
 			// validate session
@@ -20,11 +21,11 @@ func AuthenticationMiddleware() echo.MiddlewareFunc {
 			session, err := kratosCli.ValidateSession(c.Request())
 			if err != nil {
 				c.Logger().Warn(err)
-				c.Logger().Error(constants.ERROR_SESSION_NOT_FOUND)
-				return constants.ERROR_NOT_AUTHORIZED
+				c.Logger().Error(xconstants.ERROR_SESSION_NOT_FOUND)
+				return xconstants.ERROR_NOT_AUTHORIZED
 			}
 			if !*session.Active {
-				return constants.ERROR_NOT_AUTHORIZED
+				return xconstants.ERROR_NOT_AUTHORIZED
 			}
 			c.Logger().Warn("Session found:")
 			c.Logger().Warn(session)

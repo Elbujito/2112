@@ -3,8 +3,8 @@ package db
 import (
 	"fmt"
 
-	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/internal/proc"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
+	"github.com/Elbujito/2112/src/app-service/internal/proc"
 
 	"github.com/spf13/cobra"
 )

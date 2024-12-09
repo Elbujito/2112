@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
 
 	"github.com/labstack/echo/v4"
 )
@@ -40,7 +41,7 @@ func (r *Router) Start(host string, port string) {
 		r.Echo.Logger.Info(fmt.Sprintf("Starting %s server on port: %s", r.Name, port))
 		if err := r.Echo.Start(host + ":" + port); err != nil && err != http.ErrServerClosed {
 			r.Echo.Logger.Fatal(err)
-			r.Echo.Logger.Fatal(constants.MSG_SERVER_SHUTTING_DOWN)
+			r.Echo.Logger.Fatal(xconstants.MSG_SERVER_SHUTTING_DOWN)
 		}
 	}()
 	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 10 seconds.

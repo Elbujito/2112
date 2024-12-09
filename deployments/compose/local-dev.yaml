@@ -1,15 +1,14 @@
-version: "3.7"
 services:
-  2112-dev-service:
-    container_name: 2112-dev-service
+  dev-service:
+    container_name: dev-service
     build:
       context: ./
-      dockerfile: ./ci/docker/Dockerfile.dev
+      dockerfile: ./deployments/docker/Dockerfile.dev
     ports:
       - "8081:8081"
       - "8080:8080"
       - "8079:8079"
-    env_file: ./ci/config/2112/2112.dev-env
+    env_file: ./deployments/config/app.dev-env
     volumes:
       - ./:/app
     command:

@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xutils"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -8,7 +9,7 @@ import (
 func BodyDumpMiddleware() echo.MiddlewareFunc {
 	return middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
 		if len(reqBody) > 0 {
-			obj, err := fx.PrettyJSONString(string(reqBody))
+			obj, err := xutils.PrettyJSONString(string(reqBody))
 			if err != nil {
 				c.Logger().Error("Error unmarshalling request body: ", err)
 				return

@@ -11,9 +11,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Elbujito/2112/internal/api/mappers"
-	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/lib/fx/xspace"
+	"github.com/Elbujito/2112/src/app-service/internal/api/mappers"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xspace"
 )
 
 type CelestrackClient struct {

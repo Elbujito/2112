@@ -3,9 +3,9 @@ package proc
 import (
 	"time"
 
-	"github.com/Elbujito/2112/internal/clients/logger"
-	"github.com/Elbujito/2112/internal/clients/service"
-	"github.com/Elbujito/2112/lib/fx/xutils"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/service"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xutils"
 )
 
 func StartWatcher() {

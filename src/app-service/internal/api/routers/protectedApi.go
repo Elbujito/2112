@@ -1,13 +1,13 @@
 package routers
 
 import (
-	"github.com/Elbujito/2112/internal/api/handlers/errors"
-	healthHandlers "github.com/Elbujito/2112/internal/api/handlers/healthz"
-	usersHandlers "github.com/Elbujito/2112/internal/api/handlers/users"
-	"github.com/Elbujito/2112/internal/api/middlewares"
-	"github.com/Elbujito/2112/internal/clients/logger"
-	"github.com/Elbujito/2112/internal/config"
-	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+	"github.com/Elbujito/2112/src/app-service/internal/api/handlers/errors"
+	healthHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/healthz"
+	usersHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/users"
+	"github.com/Elbujito/2112/src/app-service/internal/api/middlewares"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
+	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 )
 
 var protectedApiRouter *PublicRouter

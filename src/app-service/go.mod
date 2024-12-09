@@ -1,4 +1,4 @@
-module github.com/Elbujito/2112/app-service
+module github.com/Elbujito/2112/src/app-service
 
 go 1.22
 

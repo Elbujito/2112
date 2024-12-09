@@ -3,8 +3,8 @@ package proc
 import (
 	"fmt"
 
-	"github.com/Elbujito/2112/internal/clients/dbc"
-	"github.com/Elbujito/2112/internal/clients/logger"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/dbc"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 )
 
 func DBCreate() {

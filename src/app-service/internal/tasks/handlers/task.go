@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/Elbujito/2112/internal/config"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
 )
 
 type TaskName string

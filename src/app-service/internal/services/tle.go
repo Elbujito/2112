@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 
-	"github.com/Elbujito/2112/internal/api/mappers"
-	"github.com/Elbujito/2112/internal/domain"
+	"github.com/Elbujito/2112/src/app-service/internal/api/mappers"
+	"github.com/Elbujito/2112/src/app-service/internal/domain"
 )
 
 type celestrackClient interface {

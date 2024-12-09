@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Elbujito/2112/internal/domain"
-	"github.com/Elbujito/2112/lib/fx/xpolygon"
+	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xpolygon"
 )
 
 // Tile Model

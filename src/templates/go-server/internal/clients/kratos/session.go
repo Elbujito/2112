@@ -15,7 +15,7 @@ type KratosSession struct {
 
 func (s *KratosSession) SetSession(session *oryKratos.Session) {
 	s.SetCurrentSession(session)
-	s.SetCurrentUser(&session.Identity)
+	s.SetCurrentUser(session.Identity)
 }
 
 func (s *KratosSession) SetCurrentUser(user *oryKratos.Identity) {

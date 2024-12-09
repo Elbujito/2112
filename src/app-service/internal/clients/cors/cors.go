@@ -3,7 +3,7 @@ package cors
 import (
 	"reflect"
 
-	"github.com/Elbujito/2112/internal/config/features"
+	"github.com/Elbujito/2112/src/app-service/internal/config/features"
 )
 
 type CorsClient struct {

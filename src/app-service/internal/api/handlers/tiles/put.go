@@ -7,8 +7,8 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/Elbujito/2112/internal/api/mappers"
-	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+	"github.com/Elbujito/2112/src/app-service/internal/api/mappers"
+	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 )
 
 const TILE_URL = "https://%s.basemaps.cartocdn.com/light_all/%d/%d/%d.png" // CartoDB Positron URL

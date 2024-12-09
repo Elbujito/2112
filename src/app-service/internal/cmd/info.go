@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"github.com/Elbujito/2112/internal/clients/logger"
-	"github.com/Elbujito/2112/internal/cmd/info"
-	"github.com/Elbujito/2112/internal/config"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
+	"github.com/Elbujito/2112/src/app-service/internal/cmd/info"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
 
 	"github.com/spf13/cobra"
 )

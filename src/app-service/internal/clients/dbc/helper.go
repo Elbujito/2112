@@ -1,8 +1,8 @@
 package dbc
 
 import (
-	"github.com/Elbujito/2112/internal/clients/dbc/adapters"
-	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/dbc/adapters"
+	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 
 	"gorm.io/gorm"
 	gLogger "gorm.io/gorm/logger"

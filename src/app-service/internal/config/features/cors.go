@@ -1,6 +1,6 @@
 package features
 
-import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+import xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 
 type CorsConfig struct {
 	AllowOrigins  string `mapstructure:"CORS_ALLOW_ORIGINS"`

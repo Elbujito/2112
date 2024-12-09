@@ -1,6 +1,6 @@
 package config
 
-import "github.com/Elbujito/2112/internal/config/features"
+import "github.com/Elbujito/2112/src/app-service/internal/config/features"
 
 func InitEnv() {
 	Env.Init()

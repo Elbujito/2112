@@ -1,7 +1,7 @@
 package info
 
 import (
-	"github.com/Elbujito/2112/internal/proc"
+	"github.com/Elbujito/2112/src/app-service/internal/proc"
 
 	"github.com/spf13/cobra"
 )

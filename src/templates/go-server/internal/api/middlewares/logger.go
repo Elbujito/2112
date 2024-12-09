@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -8,7 +9,7 @@ import (
 func LoggerMiddleware() echo.MiddlewareFunc {
 	return middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format:           "${time_custom} ${user_agent} ${remote_ip} ${status} ${method} ${uri} ${latency_human} ${bytes_out}\n",
-		CustomTimeFormat: constants.DEFAULT_LOGGER_TIMESTAMP_FORMAT,
+		CustomTimeFormat: xconstants.DEFAULT_LOGGER_TIMESTAMP_FORMAT,
 	})
 }
 

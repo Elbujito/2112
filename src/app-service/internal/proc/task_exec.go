@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Elbujito/2112/internal/clients/celestrack"
-	propagator "github.com/Elbujito/2112/internal/clients/propagate"
-	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/internal/data"
-	repository "github.com/Elbujito/2112/internal/repositories"
-	"github.com/Elbujito/2112/internal/services"
-	"github.com/Elbujito/2112/internal/tasks"
-	"github.com/Elbujito/2112/internal/tasks/handlers"
-	"github.com/Elbujito/2112/lib/fx/xutils"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/celestrack"
+	propagator "github.com/Elbujito/2112/src/app-service/internal/clients/propagate"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
+	"github.com/Elbujito/2112/src/app-service/internal/data"
+	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
+	"github.com/Elbujito/2112/src/app-service/internal/services"
+	"github.com/Elbujito/2112/src/app-service/internal/tasks"
+	"github.com/Elbujito/2112/src/app-service/internal/tasks/handlers"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xutils"
 )
 
 func TaskExec(ctx context.Context, args []string) {

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Elbujito/2112/lib/fx/xtime"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xtime"
 	"github.com/google/uuid"
 )
 

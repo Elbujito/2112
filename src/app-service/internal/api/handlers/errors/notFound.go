@@ -3,8 +3,8 @@ package errors
 import (
 	"net/http"
 
-	"github.com/Elbujito/2112/internal/api/handlers"
-	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+	"github.com/Elbujito/2112/src/app-service/internal/api/handlers"
+	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 
 	"github.com/labstack/echo/v4"
 )

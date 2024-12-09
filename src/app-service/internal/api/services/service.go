@@ -1,12 +1,12 @@
 package serviceapi
 
 import (
-	"github.com/Elbujito/2112/internal/clients/celestrack"
-	propagator "github.com/Elbujito/2112/internal/clients/propagate"
-	"github.com/Elbujito/2112/internal/config"
-	"github.com/Elbujito/2112/internal/data"
-	repository "github.com/Elbujito/2112/internal/repositories"
-	"github.com/Elbujito/2112/internal/services"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/celestrack"
+	propagator "github.com/Elbujito/2112/src/app-service/internal/clients/propagate"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
+	"github.com/Elbujito/2112/src/app-service/internal/data"
+	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
+	"github.com/Elbujito/2112/src/app-service/internal/services"
 )
 
 // ServiceComponent holds all service instances for dependency injection.

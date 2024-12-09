@@ -1,9 +1,9 @@
 package proc
 
 import (
-	"github.com/Elbujito/2112/internal/clients/dbc"
-	"github.com/Elbujito/2112/internal/clients/logger"
-	"github.com/Elbujito/2112/internal/data/migrations"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/dbc"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
+	"github.com/Elbujito/2112/src/app-service/internal/data/migrations"
 )
 
 func DBMigrate() {

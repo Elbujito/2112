@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/Elbujito/2112/lib/fx/xpolygon"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xpolygon"
 	"github.com/google/uuid"
 )
 

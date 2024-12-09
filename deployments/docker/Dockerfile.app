@@ -15,11 +15,11 @@ WORKDIR /app
 RUN apk update && apk add --no-cache git make build-base
 
 # Copy Go modules and vendor
-COPY app-service/go.mod app-service/go.sum ./
-COPY app-service/vendor ./vendor
+COPY src/app-service/go.mod src/app-service/go.sum ./
+COPY src/app-service/vendor ./vendor
 
 # Copy application source
-COPY app-service ./
+COPY src/app-service ./
 
 # Build the application
 RUN GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 \

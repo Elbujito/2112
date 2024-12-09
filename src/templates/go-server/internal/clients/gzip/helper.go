@@ -1,10 +1,12 @@
 package gzip
 
+import "github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
+
 var client *GzipClient
 
 func init() {
 	client = &GzipClient{
-		name: constants.FEATURE_GZIP,
+		name: xconstants.FEATURE_GZIP,
 	}
 }
 

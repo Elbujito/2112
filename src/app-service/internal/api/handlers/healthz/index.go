@@ -3,8 +3,8 @@ package healthz
 import (
 	"net/http"
 
-	"github.com/Elbujito/2112/internal/api/handlers"
-	"github.com/Elbujito/2112/internal/config"
+	"github.com/Elbujito/2112/src/app-service/internal/api/handlers"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
 
 	"github.com/labstack/echo/v4"
 )

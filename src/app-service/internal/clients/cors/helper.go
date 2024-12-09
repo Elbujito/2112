@@ -1,6 +1,6 @@
 package cors
 
-import xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+import xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 
 var client *CorsClient
 

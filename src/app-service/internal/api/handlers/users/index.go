@@ -3,8 +3,8 @@ package users
 import (
 	"net/http"
 
-	"github.com/Elbujito/2112/internal/api/handlers"
-	"github.com/Elbujito/2112/internal/clients/kratos"
+	"github.com/Elbujito/2112/src/app-service/internal/api/handlers"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/kratos"
 
 	"github.com/labstack/echo/v4"
 )

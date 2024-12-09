@@ -1,5 +1,7 @@
 package features
 
+import "github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
+
 type ServiceConfig struct {
 	Host                   string `mapstructure:"HOST"`
 	ProtectedApiPort       string `mapstructure:"PROTECTED_API_PORT"`
@@ -12,7 +14,7 @@ type ServiceConfig struct {
 }
 
 var service = &Feature{
-	Name:       constants.FEATURE_SERVICE,
+	Name:       xconstants.FEATURE_SERVICE,
 	Config:     &ServiceConfig{},
 	enabled:    true,
 	configured: false,

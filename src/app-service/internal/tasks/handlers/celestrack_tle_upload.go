@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Elbujito/2112/internal/domain"
+	"github.com/Elbujito/2112/src/app-service/internal/domain"
 )
 
 type TleServiceClient interface {

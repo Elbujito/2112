@@ -4,6 +4,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
 	"github.com/neko-neko/echo-logrus/v2/log"
 	"github.com/sirupsen/logrus"
 )
@@ -12,7 +13,7 @@ var appLogger *log.MyLogger
 
 func init() {
 	log.Logger().SetOutput(os.Stdout)
-	log.Logger().SetLevel(getLogLevel(constants.DEFAULT_LOG_LEVEL))
+	log.Logger().SetLevel(getLogLevel(xconstants.DEFAULT_LOG_LEVEL))
 	log.Logger().SetFormatter(&logrus.TextFormatter{
 		TimestampFormat: time.RFC3339,
 		DisableColors:   false,
@@ -25,7 +26,7 @@ func SetLogger(lvl string) {
 }
 
 func SetDevMode() {
-	SetLogger(constants.DEFAULT_DEV_LOG_LEVEL)
+	SetLogger(xconstants.DEFAULT_DEV_LOG_LEVEL)
 }
 
 func GetLogger() *log.MyLogger {

@@ -13,6 +13,7 @@ import (
 	"github.com/Elbujito/2112/template/go-server/internal/clients/service"
 	"github.com/Elbujito/2112/template/go-server/internal/config"
 	"github.com/Elbujito/2112/template/go-server/internal/data/models"
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xutils"
 )
 
 func InitServiceEnv(serviceName string, version string) {
@@ -98,8 +99,8 @@ func PrintHiddenRoutesTable() {
 	routers.InitHiddenAPIRouter()
 	routes := routers.HiddenAPIRouter().Echo.Routes()
 
-	t := fx.PrepareRoutesTable(routes, "Hidden API Routes")
-	fx.SetTableBorderStyle(t, config.NoBorderFlag)
+	t := xutils.PrepareRoutesTable(routes, "Hidden API Routes")
+	xutils.SetTableBorderStyle(t, config.NoBorderFlag)
 
 	fmt.Println(t.Render())
 }
@@ -108,8 +109,8 @@ func PrintProtectedRoutesTable() {
 	routers.InitProtectedAPIRouter()
 	routes := routers.ProtectedAPIRouter().Echo.Routes()
 
-	t := fx.PrepareRoutesTable(routes, "Protected API Routes")
-	fx.SetTableBorderStyle(t, config.NoBorderFlag)
+	t := xutils.PrepareRoutesTable(routes, "Protected API Routes")
+	xutils.SetTableBorderStyle(t, config.NoBorderFlag)
 
 	fmt.Println(t.Render())
 }
@@ -118,8 +119,8 @@ func PrintPublicRoutesTable() {
 	publicApiRouter := routers.InitPublicAPIRouter(config.Env)
 	routes := publicApiRouter.Echo.Routes()
 
-	t := fx.PrepareRoutesTable(routes, "Public API Routes")
-	fx.SetTableBorderStyle(t, config.NoBorderFlag)
+	t := xutils.PrepareRoutesTable(routes, "Public API Routes")
+	xutils.SetTableBorderStyle(t, config.NoBorderFlag)
 
 	fmt.Println(t.Render())
 }

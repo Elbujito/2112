@@ -5,13 +5,14 @@ import (
 	"reflect"
 
 	"github.com/Elbujito/2112/template/go-server/internal/config/features"
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func init() {
-	Adapters.AppendAdapter(constants.DB_PLATFORM_POSTGRES, &PostgresAdapter{
+	Adapters.AppendAdapter(xconstants.DB_PLATFORM_POSTGRES, &PostgresAdapter{
 		requiredConfig: []string{"Host", "Port", "User", "Password", "Name", "SslMode", "Timezone"},
 	})
 }

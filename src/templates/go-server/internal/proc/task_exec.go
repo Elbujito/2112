@@ -9,6 +9,7 @@ import (
 	repository "github.com/Elbujito/2112/template/go-server/internal/repositories"
 	"github.com/Elbujito/2112/template/go-server/internal/tasks"
 	"github.com/Elbujito/2112/template/go-server/internal/tasks/handlers"
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xutils"
 )
 
 func TaskExec(ctx context.Context, args []string) {
@@ -17,7 +18,7 @@ func TaskExec(ctx context.Context, args []string) {
 		return
 	}
 	taskName := args[0]
-	taskArgs := fx.ResolveArgs(args[1:])
+	taskArgs := xutils.ResolveArgs(args[1:])
 
 	database := data.NewDatabase()
 

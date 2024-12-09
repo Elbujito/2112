@@ -7,6 +7,7 @@ import (
 	"github.com/Elbujito/2112/template/go-server/internal/api/middlewares"
 	"github.com/Elbujito/2112/template/go-server/internal/clients/logger"
 	"github.com/Elbujito/2112/template/go-server/internal/config"
+	"github.com/Elbujito/2112/template/go-server/pkg/fx/xconstants"
 )
 
 var protectedApiRouter *PublicRouter
@@ -60,7 +61,7 @@ func registerProtectedAPIMiddlewares() {
 	protectedApiRouter.RegisterMiddleware(middlewares.RequestHeadersMiddleware())
 	protectedApiRouter.RegisterMiddleware(middlewares.ResponseHeadersMiddleware())
 
-	if config.Feature(constants.FEATURE_GZIP).IsEnabled() {
+	if config.Feature(xconstants.FEATURE_GZIP).IsEnabled() {
 		protectedApiRouter.RegisterMiddleware(middlewares.GzipMiddleware())
 	}
 }
@@ -72,15 +73,15 @@ func registerProtectedApiDevModeMiddleware() {
 func registerProtectedApiSecurityMiddlewares() {
 	protectedApiRouter.RegisterMiddleware(middlewares.XSSCheckMiddleware())
 
-	if config.Feature(constants.FEATURE_CORS).IsEnabled() {
+	if config.Feature(xconstants.FEATURE_CORS).IsEnabled() {
 		protectedApiRouter.RegisterMiddleware(middlewares.CORSMiddleware())
 	}
 
-	if config.Feature(constants.FEATURE_ORY_KRATOS).IsEnabled() {
+	if config.Feature(xconstants.FEATURE_ORY_KRATOS).IsEnabled() {
 		protectedApiRouter.RegisterMiddleware(middlewares.AuthenticationMiddleware())
 	}
 
-	if config.Feature(constants.FEATURE_ORY_KETO).IsEnabled() {
+	if config.Feature(xconstants.FEATURE_ORY_KETO).IsEnabled() {
 		// keto middleware <- this will check if the user has the right permissions like system admin
 		// protectedApiRouter.RegisterMiddleware(middlewares.AuthenticationMiddleware())
 	}

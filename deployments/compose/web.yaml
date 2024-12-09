@@ -1,10 +1,10 @@
 services:
-  2112-web:
+  web:
     build:
       context: ../../.
-      dockerfile: ci/docker/Dockerfile.web
-    image: 2112-web
-    container_name: 2112-web
+      dockerfile: deployments/docker/Dockerfile.web
+    image: web
+    container_name: web
     ports:
       - "3000:3000"
     restart: unless-stopped

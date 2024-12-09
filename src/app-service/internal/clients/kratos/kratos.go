@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/Elbujito/2112/internal/config/features"
+	"github.com/Elbujito/2112/src/app-service/internal/config/features"
 
 	oryKratos "github.com/ory/kratos-client-go"
 )

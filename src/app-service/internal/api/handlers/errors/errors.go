@@ -3,7 +3,7 @@ package errors
 import (
 	"net/http"
 
-	xconstants "github.com/Elbujito/2112/lib/fx/xconstants"
+	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 	"gorm.io/gorm"
 )
 

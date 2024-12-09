@@ -1,8 +1,8 @@
 package proc
 
 import (
-	"github.com/Elbujito/2112/internal/api/routers"
-	"github.com/Elbujito/2112/internal/clients/service"
+	"github.com/Elbujito/2112/src/app-service/internal/api/routers"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/service"
 )
 
 func StartProtectedApi() {
