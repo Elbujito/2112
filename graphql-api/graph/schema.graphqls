@@ -25,5 +25,5 @@ type SatelliteTle {
 }
 
 type Subscription {
-  messageReceived: String!
+  satellitePositionUpdated(id: ID!): SatellitePosition
 }

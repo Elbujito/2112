@@ -1,5 +1,5 @@
 # Environment Variables
-VERSION_GRAPHQL_API ?= 0.0.5
+VERSION_GRAPHQL_API ?= 0.0.6
 DOCKER_COMPOSE_FILE = deployments/compose/docker-compose.yaml
 DOCKER_PROJECT_NAME = 2112_project
 
