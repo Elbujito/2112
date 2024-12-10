@@ -9,4 +9,4 @@ DB_NAME=2112
 DB_PLATFORM=postgres
 DB_SSL_MODE=disable
 LOG_LEVEL=debug
-DISABLE_FEATURES=ory_keto,ory_kratos,redis,cors
+DISABLE_FEATURES=ory_keto,ory_kratos,redis

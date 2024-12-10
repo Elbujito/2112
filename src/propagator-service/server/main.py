@@ -1,10 +1,9 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 import redis
 import json
 from skyfield.api import EarthSatellite, load, wgs84
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Dict
 import threading
 import logging
 
@@ -18,21 +17,6 @@ logger = logging.getLogger(__name__)
 # Redis client setup
 redis_client = redis.StrictRedis(host="redis-service", port=6379, decode_responses=True)
 
-# Data model for input validation
-class TLEData(BaseModel):
-    tle_line1: str
-    tle_line2: str
-    start_time: str
-    duration_minutes: int = 90
-    interval_seconds: int = 15
-
-class Position(BaseModel):
-    id: str
-    timestamp: str
-    latitude: float
-    longitude: float
-    altitude: float
-
 # Function to calculate satellite position based on TLE using Skyfield
 def propagate_satellite_position(
     satellite_id: str,
@@ -41,7 +25,7 @@ def propagate_satellite_position(
     start_time: str,
     duration_minutes: int = 1440,
     interval_seconds: int = 60
-) -> List[Position]:
+) -> List[Dict]:
     try:
         start_time = datetime.fromisoformat(start_time.replace("Z", "+00:00"))
 
@@ -57,13 +41,13 @@ def propagate_satellite_position(
                        current_time.hour, current_time.minute, current_time.second)
             geocentric = satellite.at(t)
             subpoint = wgs84.subpoint(geocentric)
-            positions.append(Position(
-                id=satellite_id,
-                timestamp=current_time.isoformat(),
-                latitude=subpoint.latitude.degrees,
-                longitude=subpoint.longitude.degrees,
-                altitude=subpoint.elevation.km
-            ))
+            positions.append({
+                "id": satellite_id,
+                "timestamp": current_time.isoformat(),
+                "latitude": subpoint.latitude.degrees,
+                "longitude": subpoint.longitude.degrees,
+                "altitude": subpoint.elevation.km
+            })
             current_time += timedelta(seconds=interval_seconds)
 
         return positions
@@ -72,14 +56,14 @@ def propagate_satellite_position(
         raise HTTPException(status_code=400, detail=f"Error in propagating satellite position: {e}")
 
 # Background task to propagate satellite position to Redis
-def publish_satellite_positions(satellite_id: str, positions: List[Position]):
+def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
     try:
         for pos in positions:
             # Use a structured Redis key for querying (e.g., satellite_positions:<id>:<timestamp>)
-            key = f"satellite_positions:{satellite_id}:{pos.timestamp}"
-            redis_client.set(key, json.dumps(pos.dict()))
-            redis_client.publish("satellite_positions", json.dumps(pos.dict()))
-            logger.info(f"Published position for {satellite_id} at {pos.timestamp}")
+            key = f"satellite_positions:{satellite_id}:{pos['timestamp']}"
+            redis_client.set(key, json.dumps(pos))
+            redis_client.publish("satellite_positions", json.dumps(pos))
+            logger.info(f"Published position for {satellite_id} at {pos['timestamp']}")
     except Exception as e:
         logger.error(f"Error publishing satellite position to Redis: {e}")
 
@@ -95,17 +79,19 @@ def subscribe_to_redis():
         if message["type"] == "message":
             try:
                 satellite_data = json.loads(message["data"])
-                if "tle_line1" in satellite_data and "tle_line2" in satellite_data and "id" in satellite_data:
-                    tle_line1 = satellite_data["tle_line1"]
-                    tle_line2 = satellite_data["tle_line2"]
-                    satellite_id = satellite_data["id"]
-                    start_time = satellite_data.get("start_time", datetime.utcnow().isoformat() + "Z")
+                tle_line1 = satellite_data.get("tle_line1")
+                tle_line2 = satellite_data.get("tle_line2")
+                satellite_id = satellite_data.get("id")
+                start_time = satellite_data.get("start_time", datetime.utcnow().isoformat() + "Z")
 
-                    # Propagate the satellite position
-                    positions = propagate_satellite_position(satellite_id, tle_line1, tle_line2, start_time)
+                if not tle_line1 or not tle_line2 or not satellite_id:
+                    raise ValueError("Incomplete TLE data received")
 
-                    # Publish positions to Redis
-                    publish_satellite_positions(satellite_id, positions)
+                # Propagate the satellite position
+                positions = propagate_satellite_position(satellite_id, tle_line1, tle_line2, start_time)
+
+                # Publish positions to Redis
+                publish_satellite_positions(satellite_id, positions)
             except Exception as e:
                 logger.error(f"Error processing Redis message: {e}")
 
@@ -120,57 +106,41 @@ def start_subscribe_to_redis():
     # Start subscribing to Redis in a separate thread
     threading.Thread(target=subscribe_to_redis, daemon=True).start()
 
-@app.route('/satellite/legacy/propagate', methods=['POST'])
-def propagate_satellite():
+# Health check endpoint
+@app.get("/health")
+def health_check():
     try:
-        data = request.json
-        tle_line1 = data['tle_line1']
-        tle_line2 = data['tle_line2']
-        
-        # Preprocess start_time to handle "Z" in ISO 8601
-        start_time = datetime.fromisoformat(data['start_time'].replace("Z", "+00:00"))
-        
-        duration_minutes = data.get('duration_minutes', 90)
-        interval_seconds = data.get('interval_seconds', 15)
-
-        ts = load.timescale()
-        satellite = EarthSatellite(tle_line1, tle_line2, "Satellite", ts)
-
-        end_time = start_time + timedelta(minutes=duration_minutes)
-        current_time = start_time
-        positions = []
-
-        while current_time <= end_time:
-            t = ts.utc(current_time.year, current_time.month, current_time.day,
-                       current_time.hour, current_time.minute, current_time.second)
-            geocentric = satellite.at(t)
-            subpoint = wgs84.subpoint(geocentric)
-            positions.append({
-                "time": current_time.isoformat(),
-                "latitude": subpoint.latitude.degrees,
-                "longitude": subpoint.longitude.degrees,
-                "altitude": subpoint.elevation.km
-            })
-            current_time += timedelta(seconds=interval_seconds)
-
-        return jsonify(positions)
+        redis_client.ping()
+        return {"status": "healthy"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Redis connection failed")
 
 # Endpoint to propagate satellite position based on TLE
 @app.post("/satellite/propagate")
-async def propagate_satellite(tle_data: TLEData, background_tasks: BackgroundTasks):
+async def propagate_satellite(request: Request, background_tasks: BackgroundTasks):
     """
     Propagate satellite position based on TLE data for a specified duration and interval.
     """
-    satellite_id = f"satellite-{hash(tle_data.tle_line1 + tle_data.tle_line2)}"
+    data = await request.json()
+    tle_line1 = data.get("tle_line1")
+    tle_line2 = data.get("tle_line2")
+    start_time = data.get("start_time")
+    duration_minutes = data.get("duration_minutes", 90)
+    interval_seconds = data.get("interval_seconds", 15)
+
+    if not tle_line1 or not tle_line2 or not start_time:
+        raise HTTPException(status_code=400, detail="TLE data and start time are required")
+
+    satellite_id = f"satellite-{hash(tle_line1 + tle_line2)}"
 
     # Propagate satellite position
     positions = propagate_satellite_position(
         satellite_id,
-        tle_data.tle_line1,
-        tle_data.tle_line2,
-        tle_data.start_time,
-        tle_data.duration_minutes,
-        tle_data.interval_seconds
+        tle_line1,
+        tle_line2,
+        start_time,
+        duration_minutes,
+        interval_seconds
     )
 
     # Start a background task to publish positions to Redis

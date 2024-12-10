@@ -33,7 +33,12 @@ services:
       redis-service:
         condition: service_healthy
     restart: always
-
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      
   gateway-service:
     build:
       context: ../../.
@@ -103,7 +108,7 @@ services:
       context: ../../.
       dockerfile: deployments/docker/Dockerfile.app
     container_name: db-seeder
-    env_file: ../config/postgres.dev-env
+    env_file: ../config/app.dev-env
     command: ["app-service", "db", "seed"]
     depends_on:
       db-migrator:
