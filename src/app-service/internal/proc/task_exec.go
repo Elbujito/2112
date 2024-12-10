@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/clients/celestrack"
 	propagator "github.com/Elbujito/2112/src/app-service/internal/clients/propagate"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/redis"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
@@ -27,9 +29,13 @@ func TaskExec(ctx context.Context, args []string) {
 	database := data.NewDatabase()
 
 	propagteClient := propagator.NewPropagatorClient(config.Env)
+	redisClient, err := redis.NewRedisClient(config.Env)
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
 
-	// Assuming you have a service or repository to fetch tiles by NORAD ID
-	tleRepo := repository.NewTLERepository(&database)
+	tleRepo := repository.NewTLERepository(&database, redisClient, 24*time.Hour)
 	celestrackClient := celestrack.NewCelestrackClient(config.Env)
 	satelliteRepo := repository.NewSatelliteRepository(&database)
 	visibilityRepo := repository.NewTileSatelliteMappingRepository(&database)

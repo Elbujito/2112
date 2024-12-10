@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
 )
 
 type TleServiceClient interface {
@@ -14,13 +15,13 @@ type TleServiceClient interface {
 
 type CelestrackTleUploadHandler struct {
 	satelliteRepo domain.SatelliteRepository
-	tleRepo       domain.TLERepository
+	tleRepo       repository.TleRepository
 	tleService    TleServiceClient
 }
 
 func NewCelestrackTleUploadHandler(
 	satelliteRepo domain.SatelliteRepository,
-	tleRepo domain.TLERepository,
+	tleRepo repository.TleRepository,
 	tleService TleServiceClient) CelestrackTleUploadHandler {
 	return CelestrackTleUploadHandler{
 		satelliteRepo: satelliteRepo,
@@ -64,7 +65,7 @@ func (h *CelestrackTleUploadHandler) upsertTLE(ctx context.Context, tle domain.T
 	if err != nil {
 		return fmt.Errorf("failed to ensure satellite existence: %v", err)
 	}
-	return h.tleRepo.Upsert(ctx, tle)
+	return h.tleRepo.UpdateTle(ctx, tle)
 }
 
 func (h *CelestrackTleUploadHandler) ensureSatelliteExists(ctx context.Context, noradID string, category string) error {

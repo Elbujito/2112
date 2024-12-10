@@ -8,20 +8,21 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xpolygon"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xspace"
 )
 
 type SatellitesTilesMappingsHandler struct {
 	tileRepo       domain.TileRepository
-	tleRepo        domain.TLERepository
+	tleRepo        repository.TleRepository
 	satelliteRepo  domain.SatelliteRepository
 	visibilityRepo domain.MappingRepository
 }
 
 func NewSatellitesTilesMappingsHandler(
 	tileRepo domain.TileRepository,
-	tleRepo domain.TLERepository,
+	tleRepo repository.TleRepository,
 	satelliteRepo domain.SatelliteRepository,
 	visibilityRepo domain.MappingRepository,
 ) SatellitesTilesMappingsHandler {
@@ -65,10 +66,11 @@ func (h *SatellitesTilesMappingsHandler) Run(ctx context.Context, args map[strin
 		return fmt.Errorf("failed to fetch satellites: %w", err)
 	}
 
-	tles, err := h.tleRepo.FindAll(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to fetch TLEs: %w", err)
-	}
+	// tles, err := h.tleRepo.FindAll(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to fetch TLEs: %w", err)
+	// }
+	tles := []domain.TLE{}
 	tleMap := mapTLEsByNoradID(tles)
 
 	tiles, err := h.tileRepo.FindAll(ctx)

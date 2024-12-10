@@ -2,22 +2,27 @@ package repository
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"log"
+	"time"
 
+	"github.com/Elbujito/2112/src/app-service/internal/clients/redis"
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	"github.com/Elbujito/2112/src/app-service/internal/data/models"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
-	"gorm.io/gorm"
+	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xtime"
 )
 
-// TleRepository is the concrete implementation of the TLERepository interface.
+// TleRepository implements the TLERepository interface with caching.
 type TleRepository struct {
-	db *data.Database
+	db          *data.Database
+	redisClient *redis.RedisClient
+	cacheTTL    time.Duration
 }
 
-// NewTLERepository creates a new instance of TLERepository.
-func NewTLERepository(db *data.Database) domain.TLERepository {
-	return &TleRepository{db: db}
+// NewTLERepository initializes the repository with a cache TTL.
+func NewTLERepository(db *data.Database, redisClient *redis.RedisClient, cacheTTL time.Duration) TleRepository {
+	return TleRepository{db: db, redisClient: redisClient, cacheTTL: cacheTTL}
 }
 
 // mapToDomainTLE converts a models.TLE to a domain.TLE.
@@ -34,78 +39,120 @@ func mapToDomainTLE(model models.TLE) domain.TLE {
 // mapToModelTLE converts a domain.TLE to a models.TLE.
 func mapToModelTLE(domainTLE domain.TLE) models.TLE {
 	return models.TLE{
-		ModelBase: models.ModelBase{ID: domainTLE.ID},
-		NoradID:   domainTLE.NoradID,
-		Line1:     domainTLE.Line1,
-		Line2:     domainTLE.Line2,
-		Epoch:     domainTLE.Epoch,
+		NoradID: domainTLE.NoradID,
+		Line1:   domainTLE.Line1,
+		Line2:   domainTLE.Line2,
+		Epoch:   domainTLE.Epoch,
 	}
 }
 
-// FindByNoradID retrieves all TLEs for a given NORAD ID.
-func (r *TleRepository) FindByNoradID(ctx context.Context, noradID string) ([]domain.TLE, error) {
-	var modelTLEs []models.TLE
-	result := r.db.DbHandler.Where("norad_id = ?", noradID).Find(&modelTLEs)
-	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-		return nil, nil
+// Cache-Aside Get: Check cache first, fallback to database, and update cache.
+func (r *TleRepository) GetTle(ctx context.Context, id string) (domain.TLE, error) {
+	key := fmt.Sprintf("satellite:tle:%s", id)
+
+	// Check Redis cache
+	data, err := r.redisClient.HGetAll(ctx, key)
+	if err == nil && len(data) > 0 {
+		epoch, parseErr := xtime.ParseEpoch(data["epoch"])
+		if parseErr == nil {
+			return domain.TLE{
+				ID:    id,
+				Line1: data["line_1"],
+				Line2: data["line_2"],
+				Epoch: epoch,
+			}, nil
+		}
 	}
+
+	// Fallback to database
+	var modelTLE models.TLE
+	result := r.db.DbHandler.First(&modelTLE, "id = ?", id)
 	if result.Error != nil {
-		return nil, result.Error
+		return domain.TLE{}, result.Error
 	}
 
-	// Map models to domain
-	var domainTLEs []domain.TLE
-	for _, modelTLE := range modelTLEs {
-		domainTLEs = append(domainTLEs, mapToDomainTLE(modelTLE))
+	// Map model to domain
+	tle := mapToDomainTLE(modelTLE)
+
+	// Update Redis cache
+	cacheData := map[string]interface{}{
+		"line_1": tle.Line1,
+		"line_2": tle.Line2,
+		"epoch":  tle.Epoch,
+		"id":     tle.NoradID,
 	}
-	return domainTLEs, nil
+	if err := r.redisClient.HSet(ctx, key, cacheData); err != nil {
+		log.Printf("Failed to update Redis cache for key %s: %v\n", key, err)
+	}
+	err = r.redisClient.Expire(ctx, key, r.cacheTTL)
+	if err != nil {
+		return tle, err
+	}
+	return tle, nil
 }
 
-// FindAll retrieves all TLE records from the database.
-func (r *TleRepository) FindAll(ctx context.Context) ([]domain.TLE, error) {
-	var modelTLEs []models.TLE
-	result := r.db.DbHandler.Find(&modelTLEs)
-	if result.Error != nil {
-		return nil, result.Error
-	}
-
-	// Map models to domain
-	var domainTLEs []domain.TLE
-	for _, modelTLE := range modelTLEs {
-		domainTLEs = append(domainTLEs, mapToDomainTLE(modelTLE))
-	}
-	return domainTLEs, nil
-}
-
-// Save inserts a new TLE record into the database.
-func (r *TleRepository) Save(ctx context.Context, tle domain.TLE) error {
+// Cache-Aside Save: Save to the database and update the cache.
+func (r *TleRepository) SaveTle(ctx context.Context, tle domain.TLE) error {
+	// Save to database
 	modelTLE := mapToModelTLE(tle)
-	return r.db.DbHandler.Create(&modelTLE).Error
-}
+	if err := r.db.DbHandler.Create(&modelTLE).Error; err != nil {
+		return err
+	}
 
-// Update modifies an existing TLE record in the database.
-func (r *TleRepository) Update(ctx context.Context, tle domain.TLE) error {
-	modelTLE := mapToModelTLE(tle)
-	return r.db.DbHandler.Save(&modelTLE).Error
-}
-
-// Upsert inserts or updates a TLE record in the database.
-func (r *TleRepository) Upsert(ctx context.Context, tle domain.TLE) error {
-	existingTLEs, err := r.FindByNoradID(ctx, tle.NoradID)
+	// Update cache
+	key := fmt.Sprintf("satellite:tle:%s", tle.ID)
+	cacheData := map[string]interface{}{
+		"line_1": tle.Line1,
+		"line_2": tle.Line2,
+		"epoch":  tle.Epoch,
+		"id":     tle.NoradID,
+	}
+	if err := r.redisClient.HSet(ctx, key, cacheData); err != nil {
+		log.Printf("Failed to update Redis cache for key %s: %v\n", key, err)
+	}
+	err := r.redisClient.Expire(ctx, key, r.cacheTTL)
 	if err != nil {
 		return err
 	}
-	if len(existingTLEs) > 0 {
-		existingTLE := existingTLEs[0]
-		existingTLE.Line1 = tle.Line1
-		existingTLE.Line2 = tle.Line2
-		existingTLE.Epoch = tle.Epoch
-		return r.Update(ctx, existingTLE)
-	}
-	return r.Save(ctx, tle)
+	return nil
 }
 
-// Delete removes a TLE record by its noradID.
-func (r *TleRepository) DeleteByNoradID(ctx context.Context, noradID string) error {
-	return r.db.DbHandler.Where("norad_id = ?", noradID).Delete(&models.TLE{}).Error
+// Cache-Aside Update: Update the database and refresh the cache.
+func (r *TleRepository) UpdateTle(ctx context.Context, tle domain.TLE) error {
+	// Update database
+	modelTLE := mapToModelTLE(tle)
+	if err := r.db.DbHandler.Save(&modelTLE).Error; err != nil {
+		return err
+	}
+
+	// Refresh cache
+	key := fmt.Sprintf("satellite:tle:%s", tle.ID)
+	cacheData := map[string]interface{}{
+		"line_1": tle.Line1,
+		"line_2": tle.Line2,
+		"epoch":  tle.Epoch,
+		"id":     tle.NoradID,
+	}
+	if err := r.redisClient.HSet(ctx, key, cacheData); err != nil {
+		log.Printf("Failed to update Redis cache for key %s: %v\n", key, err)
+	}
+	err := r.redisClient.Expire(ctx, key, r.cacheTTL)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Cache-Aside Delete: Remove from the database and invalidate the cache.
+func (r *TleRepository) DeleteTle(ctx context.Context, id string) error {
+	// Delete from database
+	if err := r.db.DbHandler.Delete(&models.TLE{}, "id = ?", id).Error; err != nil {
+		return err
+	}
+
+	key := fmt.Sprintf("satellite:tle:%s", id)
+	if err := r.redisClient.Del(ctx, key); err != nil {
+		log.Printf("Failed to delete Redis cache for key %s: %v\n", key, err)
+	}
+	return nil
 }

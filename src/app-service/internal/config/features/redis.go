@@ -6,6 +6,7 @@ type RedisConfig struct {
 	Host     string `mapstructure:"REDIS_HOST"`
 	Port     string `mapstructure:"REDIS_PORT"`
 	Password string `mapstructure:"REDIS_PASSWORD"`
+	CacheTTL string `mapstructure:"REDIS_CACHE_TTL"`
 }
 
 var redis = &Feature{
@@ -23,4 +24,8 @@ var redis = &Feature{
 
 func init() {
 	Features.Add(redis)
+}
+
+func (r * RedisConfig) GetAddr() string {
+	return r.Host + ":" + r.Port
 }

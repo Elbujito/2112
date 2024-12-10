@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
 	"github.com/Elbujito/2112/src/app-service/internal/services"
 	"github.com/Elbujito/2112/src/app-service/internal/tasks/handlers"
 )
@@ -18,7 +19,7 @@ type TaskMonitor struct {
 	Tasks map[handlers.TaskName]TaskHandler
 }
 
-func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo domain.TLERepository, tileRepo domain.TileRepository, visibilityRepo domain.MappingRepository, tleService services.TleService, satelliteService services.SatelliteService) (TaskMonitor, error) {
+func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository.TleRepository, tileRepo domain.TileRepository, visibilityRepo domain.MappingRepository, tleService services.TleService, satelliteService services.SatelliteService) (TaskMonitor, error) {
 
 	celestrackTleUpload := handlers.NewCelestrackTleUploadHandler(
 		satelliteRepo,
@@ -75,4 +76,17 @@ func (t *TaskMonitor) GetMatchingTask(taskName handlers.TaskName) (task TaskHand
 		return task, fmt.Errorf("task no found for [%s]", taskName)
 	}
 	return hh, nil
+}
+
+func (t *TaskMonitor) RunTaskAsGoroutine(ctx context.Context, taskName handlers.TaskName, args map[string]string) error {
+	handler, err := t.GetMatchingTask(taskName)
+	if err != nil {
+		return err
+	}
+	go func() {
+		if runErr := handler.Run(ctx, args); runErr != nil {
+			fmt.Printf("Error running task [%s]: %v\n", taskName, runErr)
+		}
+	}()
+	return nil
 }

@@ -7,18 +7,19 @@ import (
 
 	propagator "github.com/Elbujito/2112/src/app-service/internal/clients/propagate"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xspace"
 )
 
 type SatelliteService struct {
-	tleRepo          domain.TLERepository // Assuming you have a TLE repository to get TLEs from a database
+	tleRepo          repository.TleRepository
 	propagateClient  *propagator.PropagatorClient
 	celestrackClient celestrackClient
 	repo             domain.SatelliteRepository
 }
 
 // NewSatelliteService creates a new instance of SatelliteService.
-func NewSatelliteService(tleRepo domain.TLERepository, propagateClient *propagator.PropagatorClient, celestrackClient celestrackClient, repo domain.SatelliteRepository) SatelliteService {
+func NewSatelliteService(tleRepo repository.TleRepository, propagateClient *propagator.PropagatorClient, celestrackClient celestrackClient, repo domain.SatelliteRepository) SatelliteService {
 	return SatelliteService{tleRepo: tleRepo, propagateClient: propagateClient, celestrackClient: celestrackClient, repo: repo}
 }
 
@@ -32,12 +33,9 @@ func (s *SatelliteService) Propagate(ctx context.Context, noradID string, durati
 	}
 
 	// Get the TLE data for the satellite by NORAD ID
-	tle, err := s.tleRepo.FindByNoradID(ctx, noradID)
+	tle, err := s.tleRepo.GetTle(ctx, noradID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch TLE data for NORAD ID %s: %w", noradID, err)
-	}
-	if len(tle) == 0 {
-		return nil, fmt.Errorf("no TLE data found for NORAD ID %s", noradID)
 	}
 
 	// Set up the time range
@@ -45,7 +43,7 @@ func (s *SatelliteService) Propagate(ctx context.Context, noradID string, durati
 	// endTime := startTime.Add(duration)
 
 	// Use PropagatorClient to propagate satellite positions
-	propagatedPositions, err := s.propagateClient.FetchPropagation(ctx, tle[0].Line1, tle[0].Line2, startTime.Format(time.RFC3339), int(duration.Minutes()), int(interval.Seconds()))
+	propagatedPositions, err := s.propagateClient.FetchPropagation(ctx, tle.Line1, tle.Line2, startTime.Format(time.RFC3339), int(duration.Minutes()), int(interval.Seconds()))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch propagated positions for NORAD ID %s: %w", noradID, err)
 	}

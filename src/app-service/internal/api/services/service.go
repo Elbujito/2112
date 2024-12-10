@@ -1,8 +1,12 @@
 package serviceapi
 
 import (
+	"log"
+	"time"
+
 	"github.com/Elbujito/2112/src/app-service/internal/clients/celestrack"
 	propagator "github.com/Elbujito/2112/src/app-service/internal/clients/propagate"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/redis"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
@@ -20,8 +24,14 @@ func NewServiceComponent(env *config.SEnv) *ServiceComponent {
 	// Initialize database connection
 	database := data.NewDatabase()
 
+	redisClient, err := redis.NewRedisClient(config.Env)
+	if err != nil {
+		log.Println(err.Error())
+		return nil
+	}
+
 	// Initialize repositories
-	tleRepo := repository.NewTLERepository(&database)
+	tleRepo := repository.NewTLERepository(&database, redisClient, 24*time.Hour)
 	satelliteRepo := repository.NewSatelliteRepository(&database)
 	tileRepo := repository.NewTileRepository(&database)
 

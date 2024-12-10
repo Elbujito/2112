@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"time"
@@ -53,14 +52,4 @@ func NewTLE(noradID string, line1 string, line2 string) (TLE, error) {
 		return TLE{}, err
 	}
 	return tle, nil
-}
-
-// TLERepository defines the interface for TLE repository operations.
-type TLERepository interface {
-	FindByNoradID(ctx context.Context, noradID string) ([]TLE, error)
-	FindAll(ctx context.Context) ([]TLE, error)
-	Save(ctx context.Context, tle TLE) error
-	Update(ctx context.Context, tle TLE) error
-	Upsert(ctx context.Context, tle TLE) error
-	DeleteByNoradID(ctx context.Context, noradID string) error
 }

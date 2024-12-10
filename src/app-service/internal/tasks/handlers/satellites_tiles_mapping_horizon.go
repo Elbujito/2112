@@ -8,20 +8,21 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xpolygon"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xspace"
 )
 
 type SatellitesTilesMappingsByHorizonHandler struct {
 	tileRepo      domain.TileRepository
-	tleRepo       domain.TLERepository
+	tleRepo       repository.TleRepository
 	satelliteRepo domain.SatelliteRepository
 	mappingRepo   domain.MappingRepository
 }
 
 func NewSatellitesTilesMappingsByHorizonHandler(
 	tileRepo domain.TileRepository,
-	tleRepo domain.TLERepository,
+	tleRepo repository.TleRepository,
 	satelliteRepo domain.SatelliteRepository,
 	visibilityRepo domain.MappingRepository,
 ) SatellitesTilesMappingsByHorizonHandler {
@@ -73,10 +74,11 @@ func (h *SatellitesTilesMappingsByHorizonHandler) Run(ctx context.Context, args 
 		return fmt.Errorf("failed to fetch satellites: %w", err)
 	}
 
-	tles, err := h.tleRepo.FindAll(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to fetch TLEs: %w", err)
-	}
+	// tles, err := h.tleRepo.FindAll(ctx)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to fetch TLEs: %w", err)
+	// }
+	tles := []domain.TLE{}
 	tleMap := make(map[string]domain.TLE)
 	for _, tle := range tles {
 		tleMap[tle.NoradID] = tle
