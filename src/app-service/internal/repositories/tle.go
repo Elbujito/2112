@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/clients/redis"
@@ -189,4 +190,33 @@ func (r *TleRepository) publishTleToBroker(ctx context.Context, tle domain.TLE) 
 
 	log.Printf("Successfully published TLE update to channel %s\n", channel)
 	return nil
+}
+
+// QuerySatellitePositions fetches satellite positions from Redis within a given time range.
+func (r *TleRepository) QuerySatellitePositions(ctx context.Context, satelliteID string, startTime, endTime time.Time) ([]domain.SatellitePosition, error) {
+	// Define the Redis key pattern for satellite positions
+	key := fmt.Sprintf("satellite_positions:%s", satelliteID)
+
+	// Convert time to UNIX timestamps for range query
+	startTimestamp := strconv.FormatInt(startTime.Unix(), 10)
+	endTimestamp := strconv.FormatInt(endTime.Unix(), 10)
+
+	// Query Redis for positions within the time range
+	results, err := r.redisClient.ZRangeByScore(ctx, key, startTimestamp, endTimestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query Redis for satellite positions: %w", err)
+	}
+
+	// Parse the results into SatellitePosition objects
+	var positions []domain.SatellitePosition
+	for _, result := range results {
+		var position domain.SatellitePosition
+		if err := json.Unmarshal([]byte(result), &position); err != nil {
+			log.Printf("Failed to parse satellite position: %v\n", err)
+			continue
+		}
+		positions = append(positions, position)
+	}
+
+	return positions, nil
 }

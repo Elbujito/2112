@@ -7,7 +7,6 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	"github.com/Elbujito/2112/src/app-service/internal/data/models"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
-	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xpolygon"
 	"gorm.io/gorm"
 )
 
@@ -82,8 +81,8 @@ func (r *TileRepository) Update(ctx context.Context, tile domain.Tile) error {
 }
 
 // DeleteByQuadkey removes a Tile record by its quadkey.
-func (r *TileRepository) DeleteByQuadkey(ctx context.Context, key xpolygon.Quadkey) error {
-	return r.db.DbHandler.Where("quadkey = ?", key.Key()).Delete(&models.Tile{}).Error
+func (r *TileRepository) DeleteByQuadkey(ctx context.Context, key string) error {
+	return r.db.DbHandler.Where("quadkey = ?", key).Delete(&models.Tile{}).Error
 }
 
 // Upsert inserts or updates a Tile record in the database.
@@ -104,7 +103,7 @@ func (r *TileRepository) Upsert(ctx context.Context, tile domain.Tile) error {
 }
 
 // DeleteBySpatialLocation removes a Tile record by its geographical location.
-func (r *TileRepository) DeleteBySpatialLocation(ctx context.Context, lat, lon float64) error {
+func (r *TileRepository) DeleteBySpatialLocation(ctx context.Context, lat float64, lon float64) error {
 	var tile models.Tile
 	result := r.db.DbHandler.Raw(`
 		SELECT *
@@ -137,4 +136,39 @@ func (r *TileRepository) FindTilesInRegion(ctx context.Context, minLat, minLon, 
 		domainTiles = append(domainTiles, models.MapToDomain(t))
 	}
 	return domainTiles, nil
+}
+
+// FindTilesVisibleFromPoint retrieves tiles visible from a given point with a specified radius.
+func (r *TileRepository) FindTilesVisibleFromPoint(ctx context.Context, lat, lon, radius float64) ([]domain.Tile, error) {
+	var tiles []models.Tile
+	result := r.db.DbHandler.Raw(`
+		SELECT *
+		FROM tiles
+		WHERE ST_Intersects(
+			geometry,
+			ST_Buffer(
+				ST_SetSRID(ST_Point(?, ?), 4326),
+				?
+			)
+		)
+	`, lon, lat, radius).Scan(&tiles)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// Map models to domain
+	var domainTiles []domain.Tile
+	for _, t := range tiles {
+		domainTiles = append(domainTiles, models.MapToDomain(t))
+	}
+	return domainTiles, nil
+}
+
+// SaveBatch allows batch insertion of tiles for optimized performance.
+func (r *TileRepository) SaveBatch(ctx context.Context, tiles []domain.Tile) error {
+	modelTiles := make([]models.Tile, len(tiles))
+	for i, t := range tiles {
+		modelTiles[i] = models.MapFromDomain(t)
+	}
+	return r.db.DbHandler.Create(&modelTiles).Error
 }

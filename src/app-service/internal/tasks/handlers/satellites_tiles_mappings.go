@@ -2,157 +2,148 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
 	"time"
 
+	"github.com/Elbujito/2112/src/app-service/internal/clients/redis"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
-	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xpolygon"
-	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xspace"
 )
 
 type SatellitesTilesMappingsHandler struct {
-	tileRepo       domain.TileRepository
-	tleRepo        repository.TleRepository
-	satelliteRepo  domain.SatelliteRepository
-	visibilityRepo domain.MappingRepository
+	tileRepo      domain.TileRepository
+	tleRepo       repository.TleRepository
+	satelliteRepo domain.SatelliteRepository
+	mappingRepo   domain.MappingRepository
+	redisClient   *redis.RedisClient
 }
 
+// NewSatellitesTilesMappingsHandler creates a new instance of the handler.
 func NewSatellitesTilesMappingsHandler(
 	tileRepo domain.TileRepository,
 	tleRepo repository.TleRepository,
 	satelliteRepo domain.SatelliteRepository,
-	visibilityRepo domain.MappingRepository,
+	mappingRepo domain.MappingRepository,
+	redisClient *redis.RedisClient,
 ) SatellitesTilesMappingsHandler {
 	return SatellitesTilesMappingsHandler{
-		tileRepo:       tileRepo,
-		tleRepo:        tleRepo,
-		satelliteRepo:  satelliteRepo,
-		visibilityRepo: visibilityRepo,
+		tileRepo:      tileRepo,
+		tleRepo:       tleRepo,
+		satelliteRepo: satelliteRepo,
+		mappingRepo:   mappingRepo,
+		redisClient:   redisClient,
 	}
 }
 
 func (h *SatellitesTilesMappingsHandler) GetTask() Task {
 	return Task{
 		Name:         "satellites_tiles_mappings",
-		Description:  "Computes satellite visibilities for all tiles",
-		RequiredArgs: []string{"timeStepInSeconds", "periodInMinutes"},
+		Description:  "Computes satellite visibilities for all tiles by satellite horizon",
+		RequiredArgs: []string{"visibilityRadiusKm"},
 	}
 }
 
+// Run executes the visibility computation process.
 func (h *SatellitesTilesMappingsHandler) Run(ctx context.Context, args map[string]string) error {
-	// Parse period argument
-	periodInMinutes, err := ParseIntArg(args, "periodInMinutes")
+	radiusInKm, err := strconv.ParseFloat(args["visibilityRadiusKm"], 64)
 	if err != nil {
-		return fmt.Errorf("missing or invalid argument 'periodInMinutes': %w", err)
-	}
-	periodDuration := time.Duration(periodInMinutes) * time.Minute
-
-	// Parse timestep argument (optional)
-	timeStepDuration := time.Duration(0)
-	if argTimeStep, ok := args["timeStepInSeconds"]; ok && argTimeStep != "" {
-		timeStepInSeconds, err := strconv.Atoi(argTimeStep)
-		if err != nil {
-			return fmt.Errorf("invalid 'timeStepInSeconds' argument: %w", err)
-		}
-		timeStepDuration = time.Duration(timeStepInSeconds) * time.Second
+		return fmt.Errorf("invalid radius: %w", err)
 	}
 
-	// Fetch satellites, TLEs, and tiles
-	satellites, err := h.satelliteRepo.FindAll(ctx)
+	// Call the Subscribe method
+	h.Subscribe(ctx, "event_satellite_positions_updated", radiusInKm)
+
+	return nil
+}
+
+// Run executes the visibility computation process.
+func (h *SatellitesTilesMappingsHandler) Exec(ctx context.Context, id string, startTime time.Time, endTime time.Time, radiusInKm float64) error {
+
+	sat, err := h.satelliteRepo.FindByNoradID(ctx, id)
 	if err != nil {
 		return fmt.Errorf("failed to fetch satellites: %w", err)
 	}
 
-	// tles, err := h.tleRepo.FindAll(ctx)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to fetch TLEs: %w", err)
-	// }
-	tles := []domain.TLE{}
-	tleMap := mapTLEsByNoradID(tles)
-
-	tiles, err := h.tileRepo.FindAll(ctx)
+	positions, err := h.tleRepo.QuerySatellitePositions(ctx, sat.NoradID, startTime, endTime)
 	if err != nil {
-		return fmt.Errorf("failed to fetch tiles: %w", err)
+		log.Printf("Error query satellite positions for satellite %s: %v\n", sat.NoradID, err)
+		return nil
 	}
-
-	// Compute mappings
-	startTime := time.Now()
-	endTime := startTime.Add(periodDuration)
-
-	for _, sat := range satellites {
-		err := h.computeSatellitesTilesMappings(ctx, sat, tleMap, tiles, startTime, endTime, timeStepDuration)
+	for _, pos := range positions {
+		err = h.computeTileMappings(ctx, sat, pos, radiusInKm)
 		if err != nil {
-			log.Printf("Error computing mappings for satellite %s: %v", sat.NoradID, err)
-			continue
+			log.Printf("Error computing mappings for satellite %s: %v\n", sat.NoradID, err)
 		}
 	}
-
 	return nil
 }
 
-func mapTLEsByNoradID(tles []domain.TLE) map[string]domain.TLE {
-	tleMap := make(map[string]domain.TLE, len(tles))
-	for _, tle := range tles {
-		tleMap[tle.NoradID] = tle
-	}
-	return tleMap
-}
-
-func (h *SatellitesTilesMappingsHandler) computeSatellitesTilesMappings(
+// computeTileMappings computes visibility for a satellite position.
+func (h *SatellitesTilesMappingsHandler) computeTileMappings(
 	ctx context.Context,
 	sat domain.Satellite,
-	tleMap map[string]domain.TLE,
-	tiles []domain.Tile,
-	startTime, endTime time.Time,
-	timeStepDuration time.Duration,
+	position domain.SatellitePosition,
+	radiusInKm float64,
 ) error {
-	tle, ok := tleMap[sat.NoradID]
-	if !ok {
-		return fmt.Errorf("no TLE data found for satellite %s", sat.NoradID)
+	visibleTiles, err := h.tileRepo.FindTilesVisibleFromPoint(ctx, position.Latitude, position.Longitude, radiusInKm)
+	if err != nil {
+		return fmt.Errorf("failed to find visible tiles: %w", err)
 	}
 
-	// Dynamically calculate timestep if not provided
-	if timeStepDuration == 0 && sat.Altitude != nil {
-		timeStepDuration = xspace.CalculateOptimalTimestep(*sat.Altitude, tiles[0].Radius)
-	} else {
-		timeStepDuration = time.Hour * 1
+	mappings := make([]domain.TileSatelliteMapping, len(visibleTiles))
+	for i, tile := range visibleTiles {
+		mappings[i] = domain.NewMapping(
+			sat.NoradID,
+			tile.ID,
+			position.Time,
+			position.Altitude,
+		)
 	}
 
-	visibilityBatch := make([]domain.TileSatelliteMapping, 0, len(tiles))
-	for t := startTime; t.Before(endTime); t = t.Add(timeStepDuration) {
-		for _, tile := range tiles {
-			aos, maxElevation := xspace.ComputeVisibilityWindow(
-				tle.NoradID, tle.Line1, tle.Line2,
-				xpolygon.Point{Latitude: tile.CenterLat, Longitude: tile.CenterLon}, tile.Radius, t, endTime, timeStepDuration,
-			)
-
-			if !aos.IsZero() {
-				visibilityBatch = append(visibilityBatch, domain.NewMapping(
-					sat.NoradID, tile.ID, aos, maxElevation,
-				))
-			}
-
-			// Save in batches
-			if len(visibilityBatch) >= 100 {
-				h.saveVisibilityBatch(ctx, visibilityBatch, sat.NoradID)
-				visibilityBatch = visibilityBatch[:0] // Reset batch
-			}
+	if len(mappings) > 0 {
+		if err := h.mappingRepo.SaveBatch(ctx, mappings); err != nil {
+			return fmt.Errorf("failed to save mappings: %w", err)
 		}
-	}
-
-	// Save remaining visibilities
-	if len(visibilityBatch) > 0 {
-		h.saveVisibilityBatch(ctx, visibilityBatch, sat.NoradID)
 	}
 
 	return nil
 }
 
-func (h *SatellitesTilesMappingsHandler) saveVisibilityBatch(ctx context.Context, batch []domain.TileSatelliteMapping, noradID string) {
-	if err := h.visibilityRepo.SaveBatch(ctx, batch); err != nil {
-		log.Printf("Failed to save batch for satellite %s: %v", noradID, err)
+// Subscribe listens for satellite position updates and computes visibility.
+func (h *SatellitesTilesMappingsHandler) Subscribe(ctx context.Context, channel string, radiusInKm float64) error {
+	err := h.redisClient.Subscribe(ctx, channel, func(message string) error {
+		// Parse the incoming message
+		var update struct {
+			SatelliteID string `json:"satellite_id"`
+			StartTime   string `json:"start_time"`
+			EndTime     string `json:"end_time"`
+		}
+		if err := json.Unmarshal([]byte(message), &update); err != nil {
+			log.Printf("Failed to parse update message: %v\n", err)
+			return err
+		}
+
+		// Convert StartTime and EndTime to time.Time
+		startTime, err := time.Parse(time.RFC3339, update.StartTime)
+		if err != nil {
+			log.Printf("Failed to parse start time: %v\n", err)
+			return err
+		}
+		endTime, err := time.Parse(time.RFC3339, update.EndTime)
+		if err != nil {
+			log.Printf("Failed to parse end time: %v\n", err)
+			return err
+		}
+
+		return h.Exec(ctx, update.SatelliteID, startTime, endTime, radiusInKm)
+	})
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to channel %s: %w", channel, err)
 	}
+
+	log.Printf("Subscribed to Redis channel: %s\n", channel)
+	return nil
 }

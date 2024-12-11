@@ -51,6 +51,19 @@ services:
     restart: no
     command: ["app-service", "task", "exec", "celestrack_tle_upload", "category=active"]
 
+
+  satellite-mappings-service:
+    build:
+      context: ../../.
+      dockerfile: deployments/docker/Dockerfile.app
+    container_name: satellite-mappings-service
+    env_file: ../config/app-service.dev-env
+    depends_on:
+      app-service:
+        condition: service_healthy
+    restart: no
+    command: ["app-service", "task", "exec", "satellites_tiles_mappings", "visibilityRadiusKm=78"]
+
   propagator-service:
     build:
       context: ../../.

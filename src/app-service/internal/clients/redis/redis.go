@@ -107,3 +107,52 @@ func (r *RedisClient) Publish(ctx context.Context, channel string, message inter
 	log.Printf("Successfully published message to channel %s\n", channel)
 	return nil
 }
+
+// Subscribe listens for messages on a Redis Pub/Sub channel and processes them using the provided handler.
+func (r *RedisClient) Subscribe(ctx context.Context, channel string, handler func(string) error) error {
+	pubsub := r.client.Subscribe(channel)
+
+	// Ensure the subscription is successfully created
+	_, err := pubsub.Receive()
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to channel %s: %w", channel, err)
+	}
+
+	log.Printf("Subscribed to Redis channel: %s\n", channel)
+
+	// Start listening for messages
+	ch := pubsub.Channel()
+	for {
+		select {
+		case msg := <-ch:
+			log.Printf("Received message from channel %s: %s\n", channel, msg.Payload)
+
+			// Pass the message to the handler function
+			if err := handler(msg.Payload); err != nil {
+				log.Printf("Error processing message from channel %s: %v\n", channel, err)
+			}
+
+		case <-ctx.Done():
+			// Unsubscribe and stop listening if context is canceled
+			if err := pubsub.Close(); err != nil {
+				log.Printf("Error unsubscribing from channel %s: %v\n", channel, err)
+			}
+			log.Printf("Unsubscribed from Redis channel: %s\n", channel)
+			return nil
+		}
+	}
+}
+
+// ZRangeByScore retrieves members of a sorted set by score range.
+func (r *RedisClient) ZRangeByScore(ctx context.Context, key string, min, max string) ([]string, error) {
+	// Query Redis for members within the specified score range
+	results, err := r.client.ZRangeByScore(key, redis.ZRangeBy{
+		Min: min,
+		Max: max,
+	}).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to query Redis for key %s with score range [%s, %s]: %w", key, min, max, err)
+	}
+
+	return results, nil
+}

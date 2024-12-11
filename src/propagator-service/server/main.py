@@ -56,6 +56,7 @@ def propagate_satellite_position(
         raise HTTPException(status_code=400, detail=f"Error in propagating satellite position: {e}")
 
 # Background task to propagate satellite position to Redis
+# Background task to propagate satellite position to Redis
 def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
     try:
         for pos in positions:
@@ -64,6 +65,18 @@ def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
             redis_client.set(key, json.dumps(pos))
             redis_client.publish("satellite_positions", json.dumps(pos))
             logger.info(f"Published position for {satellite_id} at {pos['timestamp']}")
+
+        # Publish an update event after processing all positions
+        update_event = {
+            "event": "event_satellite_positions_updated",
+            "satellite_id": satellite_id,
+            "start_time": positions[0]["timestamp"] if positions else None,
+            "end_time": positions[-1]["timestamp"] if positions else None,
+            "positions_count": len(positions),
+        }
+        redis_client.publish("event_satellite_positions_updated", json.dumps(update_event))
+        logger.info(f"Published satellite update event for {satellite_id}")
+
     except Exception as e:
         logger.error(f"Error publishing satellite position to Redis: {e}")
 
@@ -99,8 +112,8 @@ def subscribe_to_tle_updates():
                 # Trigger satellite propagation
                 logger.info(f"Starting propagation for satellite {satellite_id}")
                 start_time = epoch
-                duration_minutes = 90  # Default propagation duration
-                interval_seconds = 15  # Default propagation interval
+                duration_minutes = 1440  # Default propagation duration
+                interval_seconds = 1  # Default propagation interval
 
                 # Propagate the satellite positions
                 positions = propagate_satellite_position(

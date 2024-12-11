@@ -44,7 +44,7 @@ func TaskExec(ctx context.Context, args []string) {
 	tleService := services.NewTleService(celestrackClient)
 	satService := services.NewSatelliteService(tleRepo, propagteClient, celestrackClient, satelliteRepo)
 
-	monitor, err := tasks.NewTaskMonitor(satelliteRepo, tleRepo, tileRepo, visibilityRepo, tleService, satService)
+	monitor, err := tasks.NewTaskMonitor(satelliteRepo, tleRepo, tileRepo, visibilityRepo, tleService, satService, redisClient)
 	if err != nil {
 		log.Println(err.Error())
 		return

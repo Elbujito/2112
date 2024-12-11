@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Elbujito/2112/src/app-service/internal/clients/redis"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
 	"github.com/Elbujito/2112/src/app-service/internal/services"
@@ -19,7 +20,7 @@ type TaskMonitor struct {
 	Tasks map[handlers.TaskName]TaskHandler
 }
 
-func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository.TleRepository, tileRepo domain.TileRepository, visibilityRepo domain.MappingRepository, tleService services.TleService, satelliteService services.SatelliteService) (TaskMonitor, error) {
+func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository.TleRepository, tileRepo domain.TileRepository, visibilityRepo domain.MappingRepository, tleService services.TleService, satelliteService services.SatelliteService, redisClient *redis.RedisClient) (TaskMonitor, error) {
 
 	celestrackTleUpload := handlers.NewCelestrackTleUploadHandler(
 		satelliteRepo,
@@ -31,18 +32,12 @@ func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository
 		tileRepo,
 	)
 
-	mappingsHandler := handlers.NewSatellitesTilesMappingsHandler(
+	mappingHandler := handlers.NewSatellitesTilesMappingsHandler(
 		tileRepo,
 		tleRepo,
 		satelliteRepo,
 		visibilityRepo,
-	)
-
-	mappingByHorizonHandler := handlers.NewSatellitesTilesMappingsByHorizonHandler(
-		tileRepo,
-		tleRepo,
-		satelliteRepo,
-		visibilityRepo,
+		redisClient,
 	)
 
 	celestrackSatelliteUpload := handlers.NewCelesTrackSatelliteUploadHandler(
@@ -53,8 +48,7 @@ func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository
 	tasks := map[handlers.TaskName]TaskHandler{
 		celestrackTleUpload.GetTask().Name:       &celestrackTleUpload,
 		generateTilesHandler.GetTask().Name:      &generateTilesHandler,
-		mappingsHandler.GetTask().Name:           &mappingsHandler,
-		mappingByHorizonHandler.GetTask().Name:   &mappingByHorizonHandler,
+		mappingHandler.GetTask().Name:            &mappingHandler,
 		celestrackSatelliteUpload.GetTask().Name: &celestrackSatelliteUpload,
 	}
 	return TaskMonitor{
