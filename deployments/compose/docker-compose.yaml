@@ -20,6 +20,36 @@ services:
         condition: service_healthy
     restart: always
     command: ["app-service", "start"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-H", "Accept: application/json", "http://localhost:8081/health/alive"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  generate-tiles-service:
+    build:
+      context: ../../.
+      dockerfile: deployments/docker/Dockerfile.app
+    container_name: generate-tiles-service
+    env_file: ../config/app-service.dev-env
+    depends_on:
+      app-service:
+        condition: service_healthy
+    restart: no
+    command: ["app-service", "task", "exec", "generate_tiles", "radiusInMeter=100000", "faces=8"]
+
+
+  tle-upload-service:
+    build:
+      context: ../../.
+      dockerfile: deployments/docker/Dockerfile.app
+    container_name: tle-upload-service
+    env_file: ../config/app-service.dev-env
+    depends_on:
+      app-service:
+        condition: service_healthy
+    restart: no
+    command: ["app-service", "task", "exec", "celestrack_tle_upload", "category=active"]
 
   propagator-service:
     build:
@@ -38,7 +68,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      
+
   gateway-service:
     build:
       context: ../../.
@@ -80,16 +110,16 @@ services:
       retries: 5
       start_period: 30s
 
-  # db-creator:
-  #   container_name: db-creator
-  #   build:
-  #     context: ../../
-  #     dockerfile: ./deployments/docker/Dockerfile.app
-  #   env_file: ../config/app.dev-env
-  #   command: ["app-service", "-e", "-d", "db", "create"]
-  #   depends_on:
-  #     postgres-db:
-  #       condition: service_healthy
+  db-creator:
+    container_name: db-creator
+    build:
+      context: ../../
+      dockerfile: ./deployments/docker/Dockerfile.app
+    env_file: ../config/app.dev-env
+    command: ["app-service", "-e", "-d", "db", "create"]
+    depends_on:
+      postgres-db:
+        condition: service_healthy
 
   db-migrator:
     build:
@@ -114,6 +144,16 @@ services:
       db-migrator:
         condition: service_completed_successfully
     restart: "no"
+
+  web:
+    build:
+      context: ../../.
+      dockerfile: deployments/docker/Dockerfile.web
+    image: web
+    container_name: web
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
 
 volumes:
   redis-data:

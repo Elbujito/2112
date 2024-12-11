@@ -35,7 +35,7 @@ func TaskExec(ctx context.Context, args []string) {
 		return
 	}
 
-	tleRepo := repository.NewTLERepository(&database, redisClient, 24*time.Hour)
+	tleRepo := repository.NewTLERepository(&database, redisClient, 3600*time.Hour)
 	celestrackClient := celestrack.NewCelestrackClient(config.Env)
 	satelliteRepo := repository.NewSatelliteRepository(&database)
 	visibilityRepo := repository.NewTileSatelliteMappingRepository(&database)

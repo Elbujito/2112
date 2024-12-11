@@ -1,5 +1,5 @@
 import React from "react";
-import { Scrollbars } from "react-custom-scrollbars";
+import { Scrollbars } from "react-custom-scrollbars-2";
 
 export const CustomScrollbar = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => {
   const renderTrack = ({ style, ...props }: any) => {

@@ -10,7 +10,7 @@ import (
 
 // TileRepository defines the interface for Tile repository operations.
 type TileRepository interface {
-	FindByQuadkey(ctx context.Context, key xpolygon.Quadkey) (*Tile, error)                        // Find a tile by Quadkey
+	FindByQuadkey(ctx context.Context, key string) (*Tile, error)                                  // Find a tile by Quadkey
 	FindBySpatialLocation(ctx context.Context, lat, lon float64) (*Tile, error)                    // Find a tile by spatial location
 	FindTilesInRegion(ctx context.Context, minLat, minLon, maxLat, maxLon float64) ([]Tile, error) // Find tiles intersecting a region
 	FindAll(ctx context.Context) ([]Tile, error)                                                   // Retrieve all tiles

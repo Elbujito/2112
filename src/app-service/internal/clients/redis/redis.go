@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/config"
@@ -88,5 +89,21 @@ func (r *RedisClient) Set(ctx context.Context, key string, value interface{}) er
 	if err := r.client.Set(key, value, 0).Err(); err != nil {
 		return fmt.Errorf("failed to set value: %w", err)
 	}
+	return nil
+}
+
+// Publish sends a message to a Redis Pub/Sub channel.
+func (r *RedisClient) Publish(ctx context.Context, channel string, message interface{}) error {
+	// Log the publishing attempt
+	log.Printf("Publishing message to channel %s: %v\n", channel, message)
+
+	// Attempt to publish the message
+	if err := r.client.Publish(channel, message).Err(); err != nil {
+		log.Printf("Failed to publish message to channel %s: %v\n", channel, err)
+		return fmt.Errorf("failed to publish message to channel %s: %w", channel, err)
+	}
+
+	// Log successful publishing
+	log.Printf("Successfully published message to channel %s\n", channel)
 	return nil
 }

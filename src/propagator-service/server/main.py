@@ -67,44 +67,49 @@ def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
     except Exception as e:
         logger.error(f"Error publishing satellite position to Redis: {e}")
 
-# Background task to handle Redis subscription for incoming satellite updates
-def subscribe_to_redis():
+# Background task to handle Redis subscription for incoming TLE updates
+def subscribe_to_tle_updates():
     """
-    Subscribe to Redis channel and process incoming satellite updates.
+    Subscribe to Redis channel for TLE updates and process the data.
     """
     pubsub = redis_client.pubsub()
-    pubsub.subscribe("satellite_tle_data")
+    pubsub.subscribe("satellite_tle_updates")  # Subscribe to the 'satellite_tle_updates' channel
+
+    logger.info("Subscribed to Redis channel: satellite_tle_updates")
 
     for message in pubsub.listen():
         if message["type"] == "message":
             try:
+                # Parse the TLE update message
                 satellite_data = json.loads(message["data"])
                 tle_line1 = satellite_data.get("tle_line1")
                 tle_line2 = satellite_data.get("tle_line2")
                 satellite_id = satellite_data.get("id")
-                start_time = satellite_data.get("start_time", datetime.utcnow().isoformat() + "Z")
+                epoch = satellite_data.get("epoch", datetime.utcnow().isoformat() + "Z")
 
                 if not tle_line1 or not tle_line2 or not satellite_id:
-                    raise ValueError("Incomplete TLE data received")
+                    logger.warning("Incomplete TLE data received")
+                    continue
 
-                # Propagate the satellite position
-                positions = propagate_satellite_position(satellite_id, tle_line1, tle_line2, start_time)
+                # Update the cache with the received TLE data
+                update_tle_cache(satellite_id, tle_line1, tle_line2, epoch)
 
-                # Publish positions to Redis
-                publish_satellite_positions(satellite_id, positions)
+                # Optional: Trigger immediate propagation or schedule tasks
+                logger.info(f"Received TLE update for satellite {satellite_id}")
+
             except Exception as e:
-                logger.error(f"Error processing Redis message: {e}")
+                logger.error(f"Error processing TLE message: {e}")
+
+# Start the Redis subscription in a separate thread when the application starts
+@app.on_event("startup")
+def start_tle_subscription():
+    # Start subscribing to Redis in a separate thread
+    threading.Thread(target=subscribe_to_tle_updates, daemon=True).start()
 
 # Root endpoint for checking service status
 @app.get("/")
 def read_root():
     return {"message": "Satellite Propagation Service is running"}
-
-# Start the Redis subscription in a separate thread when the application starts
-@app.on_event("startup")
-def start_subscribe_to_redis():
-    # Start subscribing to Redis in a separate thread
-    threading.Thread(target=subscribe_to_redis, daemon=True).start()
 
 # Health check endpoint
 @app.get("/health")

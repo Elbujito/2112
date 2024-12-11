@@ -21,9 +21,9 @@ func NewTileRepository(db *data.Database) domain.TileRepository {
 }
 
 // FindByQuadkey retrieves a Tile by its quadkey.
-func (r *TileRepository) FindByQuadkey(ctx context.Context, quadkey xpolygon.Quadkey) (*domain.Tile, error) {
+func (r *TileRepository) FindByQuadkey(ctx context.Context, quadkey string) (*domain.Tile, error) {
 	var tile models.Tile
-	result := r.db.DbHandler.Where("quadkey = ?", quadkey.Key()).First(&tile)
+	result := r.db.DbHandler.Where("quadkey = ?", quadkey).First(&tile)
 	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return nil, nil
 	} else if result.Error != nil {
@@ -89,11 +89,7 @@ func (r *TileRepository) DeleteByQuadkey(ctx context.Context, key xpolygon.Quadk
 // Upsert inserts or updates a Tile record in the database.
 func (r *TileRepository) Upsert(ctx context.Context, tile domain.Tile) error {
 	// Check for an existing tile using the spatial location or quadkey
-	existingTile, err := r.FindByQuadkey(ctx, xpolygon.Quadkey{
-		Latitude:  tile.CenterLat,
-		Longitude: tile.CenterLon,
-		Level:     tile.ZoomLevel,
-	})
+	existingTile, err := r.FindByQuadkey(ctx, tile.Quadkey)
 	if err != nil {
 		return err
 	}

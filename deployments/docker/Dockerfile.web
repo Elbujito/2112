@@ -1,23 +1,22 @@
 # Use a lightweight Node.js base image for building the app
-FROM node:18-alpine AS builder
+FROM node:20.18.1-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
 
 # Copy only package files for dependency installation
-COPY web/package.json web/package-lock.json ./
+COPY src/web/package.json ./
 
-# Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy the rest of the application code, including the `public` directory
-COPY web/ ./
+COPY src/web/ ./
 
 # Build the Next.js app
 RUN npm run build
 
 # Use a lightweight Node.js base image for production
-FROM node:18-alpine
+FROM node:20-alpine
 
 # Set the working directory
 WORKDIR /app

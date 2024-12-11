@@ -28,6 +28,9 @@ RUN GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 \
 # Stage 2: Create a lightweight image
 FROM alpine:3.18
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Create runtime directories
 RUN mkdir -p /var/app-service/logs /var/2112/config /var/2112/data
 

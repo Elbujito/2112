@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -114,18 +115,21 @@ func (r *TleRepository) SaveTle(ctx context.Context, tle domain.TLE) error {
 	if err != nil {
 		return err
 	}
+	err = r.publishTleToBroker(ctx, tle)
+	if err != nil {
+		log.Printf("Failed to publish TLE to message broker: %v\n", err)
+	}
 	return nil
+
 }
 
 // Cache-Aside Update: Update the database and refresh the cache.
 func (r *TleRepository) UpdateTle(ctx context.Context, tle domain.TLE) error {
-	// Update database
 	modelTLE := mapToModelTLE(tle)
 	if err := r.db.DbHandler.Save(&modelTLE).Error; err != nil {
 		return err
 	}
 
-	// Refresh cache
 	key := fmt.Sprintf("satellite:tle:%s", tle.ID)
 	cacheData := map[string]interface{}{
 		"line_1": tle.Line1,
@@ -139,6 +143,10 @@ func (r *TleRepository) UpdateTle(ctx context.Context, tle domain.TLE) error {
 	err := r.redisClient.Expire(ctx, key, r.cacheTTL)
 	if err != nil {
 		return err
+	}
+	err = r.publishTleToBroker(ctx, tle)
+	if err != nil {
+		log.Printf("Failed to publish TLE to message broker: %v\n", err)
 	}
 	return nil
 }
@@ -154,5 +162,31 @@ func (r *TleRepository) DeleteTle(ctx context.Context, id string) error {
 	if err := r.redisClient.Del(ctx, key); err != nil {
 		log.Printf("Failed to delete Redis cache for key %s: %v\n", key, err)
 	}
+	return nil
+}
+
+// Helper function to publish TLE to the message broker
+func (r *TleRepository) publishTleToBroker(ctx context.Context, tle domain.TLE) error {
+	// Example message broker client (e.g., Redis Pub/Sub)
+	message := map[string]interface{}{
+		"id":     tle.NoradID,
+		"line_1": tle.Line1,
+		"line_2": tle.Line2,
+		"epoch":  tle.Epoch,
+	}
+
+	// Serialize the message (JSON example)
+	messageJSON, err := json.Marshal(message)
+	if err != nil {
+		return fmt.Errorf("failed to serialize message: %w", err)
+	}
+
+	// Publish the message to a Redis Pub/Sub channel (or any other message broker)
+	channel := "satellite_tle_updates"
+	if err := r.redisClient.Publish(ctx, channel, messageJSON); err != nil {
+		return fmt.Errorf("failed to publish message to channel %s: %w", channel, err)
+	}
+
+	log.Printf("Successfully published TLE update to channel %s\n", channel)
 	return nil
 }
