@@ -27,6 +27,7 @@ func main() {
 
 	resolver := NewResolver()
 	initRedis(redisHost, redisPort)
+	subscribeToRedisForPositionUpdates(resolver)
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 	http.Handle("/query", srv)
@@ -34,4 +35,5 @@ func main() {
 
 	log.Printf("🚀 Server running at http://localhost:%s/", appPort)
 	log.Fatal(http.ListenAndServe(":"+appPort, nil))
+
 }

@@ -80,25 +80,47 @@ def subscribe_to_tle_updates():
     for message in pubsub.listen():
         if message["type"] == "message":
             try:
+                # Log the raw message received
+                logger.debug(f"Raw message received: {message}")
+
                 # Parse the TLE update message
                 satellite_data = json.loads(message["data"])
-                tle_line1 = satellite_data.get("tle_line1")
-                tle_line2 = satellite_data.get("tle_line2")
+                logger.debug(f"Parsed satellite data: {json.dumps(satellite_data, indent=2)}")
+
+                tle_line1 = satellite_data.get("line_1")
+                tle_line2 = satellite_data.get("line_2")
                 satellite_id = satellite_data.get("id")
                 epoch = satellite_data.get("epoch", datetime.utcnow().isoformat() + "Z")
 
                 if not tle_line1 or not tle_line2 or not satellite_id:
-                    logger.warning("Incomplete TLE data received")
+                    logger.warning(f"Incomplete TLE data received: {json.dumps(satellite_data, indent=2)}")
                     continue
 
-                # Update the cache with the received TLE data
-                update_tle_cache(satellite_id, tle_line1, tle_line2, epoch)
+                # Trigger satellite propagation
+                logger.info(f"Starting propagation for satellite {satellite_id}")
+                start_time = epoch
+                duration_minutes = 90  # Default propagation duration
+                interval_seconds = 15  # Default propagation interval
 
-                # Optional: Trigger immediate propagation or schedule tasks
-                logger.info(f"Received TLE update for satellite {satellite_id}")
+                # Propagate the satellite positions
+                positions = propagate_satellite_position(
+                    satellite_id,
+                    tle_line1,
+                    tle_line2,
+                    start_time,
+                    duration_minutes,
+                    interval_seconds
+                )
+
+                # Publish the propagated positions to Redis
+                publish_satellite_positions(satellite_id, positions)
+
+                logger.info(f"Finished propagation and publishing for satellite {satellite_id}")
 
             except Exception as e:
                 logger.error(f"Error processing TLE message: {e}")
+
+
 
 # Start the Redis subscription in a separate thread when the application starts
 @app.on_event("startup")
@@ -127,8 +149,8 @@ async def propagate_satellite(request: Request, background_tasks: BackgroundTask
     Propagate satellite position based on TLE data for a specified duration and interval.
     """
     data = await request.json()
-    tle_line1 = data.get("tle_line1")
-    tle_line2 = data.get("tle_line2")
+    tle_line1 = data.get("line_1")
+    tle_line2 = data.get("line_2")
     start_time = data.get("start_time")
     duration_minutes = data.get("duration_minutes", 90)
     interval_seconds = data.get("interval_seconds", 15)
