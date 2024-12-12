@@ -19,7 +19,7 @@ type TileRepository interface {
 	Upsert(ctx context.Context, tile Tile) error                                                   // Upsert (insert or update) a tile
 	DeleteByQuadkey(ctx context.Context, key string) error                                         // Delete a tile by Quadkey
 	DeleteBySpatialLocation(ctx context.Context, lat float64, lon float64) error
-	FindTilesVisibleFromPoint(ctx context.Context, lat, lon, radius float64) ([]Tile, error) // Delete a tile by spatial location
+	FindTilesVisibleFromLine(ctx context.Context, lat1, lon1, lat2, lon2, radius float64) ([]Tile, error)
 }
 
 // Tile represents the domain entity Tile

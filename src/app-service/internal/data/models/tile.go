@@ -12,19 +12,19 @@ import (
 // Tile Model
 type Tile struct {
 	ModelBase
-	Quadkey        string  `gorm:"size:256;unique;not null"`   // Unique identifier for the tile (Quadkey)
-	ZoomLevel      int     `gorm:"not null"`                   // Zoom level for the tile
-	CenterLat      float64 `gorm:"not null"`                   // Center latitude of the tile
-	CenterLon      float64 `gorm:"not null"`                   // Center longitude of the tile
-	SpatialIndex   string  `gorm:"type:geometry;spatialIndex"` // Geometry column for spatial queries
-	NbFaces        int     `gorm:"not null"`                   // Number of faces in the tile's shape
-	Radius         float64 `gorm:"not null"`                   // Radius of the tile in meters
-	BoundariesJSON string  `gorm:"type:json"`                  // Serialized JSON of the boundary vertices of the tile
+	Quadkey        string  `gorm:"size:256;unique;not null"`                  // Unique identifier for the tile (Quadkey)
+	ZoomLevel      int     `gorm:"not null"`                                  // Zoom level for the tile
+	CenterLat      float64 `gorm:"not null"`                                  // Center latitude of the tile
+	CenterLon      float64 `gorm:"not null"`                                  // Center longitude of the tile
+	SpatialIndex   string  `gorm:"type:geometry(Polygon, 4326);spatialIndex"` // Geometry column for spatial queries
+	NbFaces        int     `gorm:"not null"`                                  // Number of faces in the tile's shape
+	Radius         float64 `gorm:"not null"`                                  // Radius of the tile in meters
+	BoundariesJSON string  `gorm:"type:json"`                                 // Serialized JSON of the boundary vertices of the tile
 }
 
 // Validate validates the fields of the Tile model.
 func (t *Tile) Validate() error {
-	// Check required fields
+	// Validate required fields
 	if t.Quadkey == "" {
 		return errors.New("quadkey is required")
 	}
@@ -81,13 +81,12 @@ func MapFromDomain(domainTile domain.Tile) Tile {
 
 // MapToDomain converts a models.Tile to a domain.Tile.
 func MapToDomain(modelTile Tile) domain.Tile {
-	// var boundaries []polygon.Point
-
 	// Deserialize boundaries
-	// err := json.Unmarshal([]byte(modelTile.BoundariesJSON), &boundaries)
-	// if err != nil {
-	// 	boundaries = nil // Default to nil if deserialization fails
-	// }
+	var boundaries []xpolygon.Point
+	err := json.Unmarshal([]byte(modelTile.BoundariesJSON), &boundaries)
+	if err != nil {
+		boundaries = nil // Default to nil if deserialization fails
+	}
 
 	// Convert to domain
 	return domain.Tile{
@@ -98,7 +97,7 @@ func MapToDomain(modelTile Tile) domain.Tile {
 		CenterLon: modelTile.CenterLon,
 		NbFaces:   modelTile.NbFaces,
 		Radius:    modelTile.Radius,
-		// Vertices:  boundaries,
+		Vertices:  boundaries,
 	}
 }
 

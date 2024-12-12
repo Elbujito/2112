@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	"github.com/Elbujito/2112/src/app-service/internal/data/models"
@@ -103,7 +104,7 @@ func (r *TileRepository) Upsert(ctx context.Context, tile domain.Tile) error {
 }
 
 // DeleteBySpatialLocation removes a Tile record by its geographical location.
-func (r *TileRepository) DeleteBySpatialLocation(ctx context.Context, lat float64, lon float64) error {
+func (r *TileRepository) DeleteBySpatialLocation(ctx context.Context, lat, lon float64) error {
 	var tile models.Tile
 	result := r.db.DbHandler.Raw(`
 		SELECT *
@@ -138,29 +139,45 @@ func (r *TileRepository) FindTilesInRegion(ctx context.Context, minLat, minLon, 
 	return domainTiles, nil
 }
 
-// FindTilesVisibleFromPoint retrieves tiles visible from a given point with a specified radius.
-func (r *TileRepository) FindTilesVisibleFromPoint(ctx context.Context, lat, lon, radius float64) ([]domain.Tile, error) {
+// FindTilesVisibleFromLine retrieves tiles visible along a line (defined by two points) with a specified radius.
+func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, lat1, lon1, lat2, lon2, radius float64) ([]domain.Tile, error) {
 	var tiles []models.Tile
-	result := r.db.DbHandler.Raw(`
+
+	// Execute the SQL query with logging
+	query := `
 		SELECT *
 		FROM tiles
 		WHERE ST_Intersects(
-			geometry,
+			spatial_index,
 			ST_Buffer(
-				ST_SetSRID(ST_Point(?, ?), 4326),
+				ST_MakeLine(
+					ST_SetSRID(ST_Point(?, ?), 4326),
+					ST_SetSRID(ST_Point(?, ?), 4326)
+				),
 				?
 			)
 		)
-	`, lon, lat, radius).Scan(&tiles)
+	`
+
+	log.Printf("Executing query: %s with params: lon1=%f, lat1=%f, lon2=%f, lat2=%f, radius=%f\n", query, lon1, lat1, lon2, lat2, radius)
+
+	result := r.db.DbHandler.Raw(query, lon1, lat1, lon2, lat2, radius).Scan(&tiles)
+
+	// Log any errors encountered during the query execution
 	if result.Error != nil {
+		log.Printf("Error executing query: %v\n", result.Error)
 		return nil, result.Error
 	}
+
+	// Log the number of tiles retrieved
+	log.Printf("Query succeeded: Retrieved %d tiles\n", len(tiles))
 
 	// Map models to domain
 	var domainTiles []domain.Tile
 	for _, t := range tiles {
 		domainTiles = append(domainTiles, models.MapToDomain(t))
 	}
+
 	return domainTiles, nil
 }
 

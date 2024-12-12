@@ -194,6 +194,8 @@ func (r *TleRepository) publishTleToBroker(ctx context.Context, tle domain.TLE) 
 
 // QuerySatellitePositions fetches satellite positions from Redis within a given time range.
 func (r *TleRepository) QuerySatellitePositions(ctx context.Context, satelliteID string, startTime, endTime time.Time) ([]domain.SatellitePosition, error) {
+	log.Printf("Querying satellite positions for satellite ID: %s, from %s to %s\n", satelliteID, startTime, endTime)
+
 	// Define the Redis key pattern for satellite positions
 	key := fmt.Sprintf("satellite_positions:%s", satelliteID)
 
@@ -207,6 +209,11 @@ func (r *TleRepository) QuerySatellitePositions(ctx context.Context, satelliteID
 		return nil, fmt.Errorf("failed to query Redis for satellite positions: %w", err)
 	}
 
+	if len(results) == 0 {
+		log.Printf("No satellite positions found for satellite ID: %s, from %s to %s\n", satelliteID, startTime, endTime)
+		return nil, nil
+	}
+
 	// Parse the results into SatellitePosition objects
 	var positions []domain.SatellitePosition
 	for _, result := range results {
@@ -218,5 +225,6 @@ func (r *TleRepository) QuerySatellitePositions(ctx context.Context, satelliteID
 		positions = append(positions, position)
 	}
 
+	log.Printf("Found %d satellite positions for satellite ID: %s, from %s to %s\n", len(positions), satelliteID, startTime, endTime)
 	return positions, nil
 }

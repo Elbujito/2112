@@ -12,6 +12,7 @@ func init() {
 	m := &gormigrate.Migration{
 		ID: "2024112604_create_quadkey_visibility_schema",
 		Migrate: func(db *gorm.DB) error {
+			// Define the Satellite table
 			type Satellite struct {
 				models.ModelBase
 				Name           string     `gorm:"size:255;not null"`        // Satellite name
@@ -30,6 +31,7 @@ func init() {
 				Altitude       *float64   `gorm:"type:float"`               // Altitude in kilometers (optional)
 			}
 
+			// Define the TLE table
 			type TLE struct {
 				models.ModelBase
 				NoradID string    `gorm:"not null;index"` // Foreign key to Satellite table
@@ -38,6 +40,7 @@ func init() {
 				Epoch   time.Time `gorm:"not null"` // Time associated with the TLE
 			}
 
+			// Define the Tile table
 			type Tile struct {
 				models.ModelBase
 				Quadkey        string  `gorm:"size:256;unique;not null"`                  // Unique identifier for the tile (Quadkey)
@@ -50,6 +53,7 @@ func init() {
 				SpatialIndex   string  `gorm:"type:geometry(Polygon, 4326);spatialIndex"` // PostGIS geometry type with SRID 4326
 			}
 
+			// Define the TileSatelliteMapping table
 			type TileSatelliteMapping struct {
 				models.ModelBase
 				NoradID      string    `gorm:"not null;index"` // Foreign key to Satellite table
@@ -64,9 +68,9 @@ func init() {
 				return err
 			}
 			return nil
-
 		},
 		Rollback: func(db *gorm.DB) error {
+			// Drop tables in reverse order to satisfy foreign key constraints
 			return db.Migrator().DropTable("tile_satellite_mappings", "tiles", "tles", "satellites")
 		},
 	}
