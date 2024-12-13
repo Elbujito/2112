@@ -22,28 +22,22 @@ type MappingRepository interface {
 
 // TileSatelliteMapping represents the domain entity TileSatelliteMapping
 type TileSatelliteMapping struct {
-	ID           string // Unique identifier
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	NoradID      string
-	TileID       string
-	Aos          time.Time
-	MaxElevation float64
+	ID        string // Unique identifier
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	NoradID   string
+	TileID    string
 }
 
 // NewMapping constructor
 func NewMapping(noradID string,
-	tileID string,
-	startTime time.Time,
-	maxElevation float64) TileSatelliteMapping {
+	tileID string) TileSatelliteMapping {
 	return TileSatelliteMapping{
-		ID:           uuid.NewString(),
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
-		NoradID:      noradID,
-		TileID:       tileID,
-		Aos:          startTime,
-		MaxElevation: maxElevation,
+		ID:        uuid.NewString(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		NoradID:   noradID,
+		TileID:    tileID,
 	}
 
 }

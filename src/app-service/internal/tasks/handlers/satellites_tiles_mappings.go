@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/clients/redis"
@@ -41,30 +40,24 @@ func NewSatellitesTilesMappingsHandler(
 func (h *SatellitesTilesMappingsHandler) GetTask() Task {
 	return Task{
 		Name:         "satellites_tiles_mappings",
-		Description:  "Computes satellite visibilities for all tiles by satellite horizon",
-		RequiredArgs: []string{"visibilityRadiusKm"},
+		Description:  "Computes satellite visibilities for all tiles by satellite path",
+		RequiredArgs: []string{},
 	}
 }
 
 // Run executes the visibility computation process.
 func (h *SatellitesTilesMappingsHandler) Run(ctx context.Context, args map[string]string) error {
 	log.Println("Starting Run method")
-	radiusInKm, err := strconv.ParseFloat(args["visibilityRadiusKm"], 64)
-	if err != nil {
-		return fmt.Errorf("invalid radius: %w", err)
-	}
-
-	// Call the Subscribe method
-	log.Printf("Subscribing to channel with radius: %f km\n", radiusInKm)
-	return h.Subscribe(ctx, "event_satellite_positions_updated", radiusInKm)
+	log.Println("Subscribing to event_satellite_positions_updated channel")
+	return h.Subscribe(ctx, "event_satellite_positions_updated")
 }
 
-// Exec executes the visibility computation process, considering intersections.
-func (h *SatellitesTilesMappingsHandler) Exec(ctx context.Context, id string, startTime time.Time, endTime time.Time, radiusInKm float64) error {
+// Exec executes the visibility computation process, considering satellite paths.
+func (h *SatellitesTilesMappingsHandler) Exec(ctx context.Context, id string, startTime time.Time, endTime time.Time) error {
 	log.Printf("Starting Exec method for satellite ID: %s, from %s to %s\n", id, startTime, endTime)
 	sat, err := h.satelliteRepo.FindByNoradID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("failed to fetch satellites: %w", err)
+		return fmt.Errorf("failed to fetch satellite: %w", err)
 	}
 
 	positions, err := h.tleRepo.QuerySatellitePositions(ctx, sat.NoradID, startTime, endTime)
@@ -72,54 +65,37 @@ func (h *SatellitesTilesMappingsHandler) Exec(ctx context.Context, id string, st
 		return fmt.Errorf("error querying satellite positions for satellite %s: %w", sat.NoradID, err)
 	}
 
-	var prevPosition *domain.SatellitePosition
-	for _, pos := range positions {
-		if prevPosition != nil {
-			log.Printf("Computing mappings for satellite %s from position %v to %v\n", sat.NoradID, prevPosition, pos)
-			if err := h.computeTileMappings(ctx, sat, *prevPosition, pos, radiusInKm); err != nil {
-				return fmt.Errorf("error computing mappings for satellite %s: %w", sat.NoradID, err)
-			}
-		}
-		prevPosition = &pos
+	if len(positions) < 2 {
+		log.Printf("Not enough positions to compute mappings for satellite %s\n", sat.NoradID)
+		return nil
 	}
+
+	log.Printf("Computing mappings for satellite %s\n", sat.NoradID)
+	if err := h.computeTileMappings(ctx, sat, positions); err != nil {
+		return fmt.Errorf("error computing mappings for satellite %s: %w", sat.NoradID, err)
+	}
+
 	log.Printf("Completed Exec method for satellite ID: %s\n", id)
 	return nil
 }
 
-// computeTileMappings computes visibility for two consecutive satellite positions (intersection).
+// computeTileMappings computes visibility for a list of satellite positions.
 func (h *SatellitesTilesMappingsHandler) computeTileMappings(
 	ctx context.Context,
 	sat domain.Satellite,
-	prevPosition domain.SatellitePosition,
-	currPosition domain.SatellitePosition,
-	radiusInKm float64,
+	positions []domain.SatellitePosition,
 ) error {
-	log.Printf("Finding visible tiles for satellite %s from position %v to %v\n", sat.NoradID, prevPosition, currPosition)
-	// Find tiles visible from the line formed by two positions
-	visibleTiles, err := h.tileRepo.FindTilesVisibleFromLine(
-		ctx,
-		prevPosition.Latitude, prevPosition.Longitude,
-		currPosition.Latitude, currPosition.Longitude,
-		radiusInKm,
-	)
+	log.Printf("Finding visible tiles for satellite %s along its path\n", sat.NoradID)
+
+	// Find tiles visible along the satellite's path
+	mappings, err := h.tileRepo.FindTilesVisibleFromLine(ctx, sat, positions)
 	if err != nil {
-		return fmt.Errorf("failed to find visible tiles along the line: %w", err)
+		return fmt.Errorf("failed to find visible tiles along the path: %w", err)
 	}
 
-	if len(visibleTiles) == 0 {
-		log.Printf("No visible tiles found for satellite %s from position %v to %v\n", sat.NoradID, prevPosition, currPosition)
+	if len(mappings) == 0 {
+		log.Printf("No visible tiles found for satellite %s along its path\n", sat.NoradID)
 		return nil
-	}
-
-	log.Printf("Found %d visible tiles for satellite %s from position %v to %v\n", len(visibleTiles), sat.NoradID, prevPosition, currPosition)
-	mappings := make([]domain.TileSatelliteMapping, len(visibleTiles))
-	for i, tile := range visibleTiles {
-		mappings[i] = domain.NewMapping(
-			sat.NoradID,
-			tile.ID,
-			currPosition.Time, // Use the current position's timestamp
-			currPosition.Altitude,
-		)
 	}
 
 	if len(mappings) > 0 {
@@ -133,7 +109,7 @@ func (h *SatellitesTilesMappingsHandler) computeTileMappings(
 }
 
 // Subscribe listens for satellite position updates and computes visibility.
-func (h *SatellitesTilesMappingsHandler) Subscribe(ctx context.Context, channel string, radiusInKm float64) error {
+func (h *SatellitesTilesMappingsHandler) Subscribe(ctx context.Context, channel string) error {
 	log.Printf("Subscribing to Redis channel: %s\n", channel)
 	err := h.redisClient.Subscribe(ctx, channel, func(message string) error {
 		// Parse the incoming message
@@ -157,7 +133,7 @@ func (h *SatellitesTilesMappingsHandler) Subscribe(ctx context.Context, channel 
 		}
 
 		log.Printf("Received update for satellite ID: %s, from %s to %s\n", update.SatelliteID, startTime, endTime)
-		return h.Exec(ctx, update.SatelliteID, startTime, endTime, radiusInKm)
+		return h.Exec(ctx, update.SatelliteID, startTime, endTime)
 	})
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to channel %s: %w", channel, err)

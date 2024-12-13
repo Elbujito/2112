@@ -94,11 +94,8 @@ type TileSatelliteMappingForm struct {
 
 // MapToModel converts a VisibilityForm to a Visibility model
 func (form *TileSatelliteMappingForm) MapToModel() *TileSatelliteMapping {
-	startTime, _ := time.Parse(time.RFC3339, form.Aos) // Assuming validation ensures correct parsing
 	return &TileSatelliteMapping{
-		NoradID:      form.NoradID,
-		TileID:       form.TileID, // Now TileID is a string
-		Aos:          startTime,
-		MaxElevation: form.MaxElevation,
+		NoradID: form.NoradID,
+		TileID:  form.TileID, // Now TileID is a string
 	}
 }

@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	"github.com/Elbujito/2112/src/app-service/internal/data/models"
@@ -47,10 +49,51 @@ func (r *TileSatelliteMappingRepository) Save(ctx context.Context, visibility do
 	return r.db.DbHandler.Create(&visibility).Error
 }
 
-// SaveBatch creates multiple Visibility records in a batch operation.
+// SaveBatch creates multiple Visibility records in a batch operation with "ON CONFLICT DO NOTHING".
 func (r *TileSatelliteMappingRepository) SaveBatch(ctx context.Context, visibilities []domain.TileSatelliteMapping) error {
-	// Use GORM batch insert
-	return r.db.DbHandler.CreateInBatches(visibilities, 100).Error
+	if len(visibilities) == 0 {
+		return nil // No records to insert
+	}
+
+	// Define batch size to avoid overly long SQL queries
+	const batchSize = 100
+
+	// Split into manageable batches
+	for i := 0; i < len(visibilities); i += batchSize {
+		end := i + batchSize
+		if end > len(visibilities) {
+			end = len(visibilities)
+		}
+		batch := visibilities[i:end]
+
+		// Construct raw SQL for batch insert with "ON CONFLICT DO NOTHING"
+		sql := `
+			INSERT INTO tile_satellite_mappings (norad_id, tile_id, created_at, updated_at)
+			VALUES %s
+			ON CONFLICT DO NOTHING
+		`
+
+		// Build the values placeholder for the current batch
+		var valueStrings []string
+		var valueArgs []interface{}
+		for _, v := range batch {
+			valueStrings = append(valueStrings, "(?, ?, ?, ?)")
+			valueArgs = append(valueArgs, v.NoradID, v.TileID, v.CreatedAt, v.UpdatedAt)
+		}
+
+		// Join value placeholders
+		values := strings.Join(valueStrings, ", ")
+
+		// Format the final SQL query for the batch
+		query := fmt.Sprintf(sql, values)
+
+		// Execute the query for the current batch
+		if err := r.db.DbHandler.Exec(query, valueArgs...).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Update modifies an existing Visibility record.
@@ -163,7 +206,6 @@ func (r *TileSatelliteMappingRepository) FindAllVisibleTilesByNoradIDSortedByAOS
 			TileZoomLevel:    modelTile.ZoomLevel,
 			SatelliteID:      mapping.NoradID,
 			SatelliteNoradID: mapping.NoradID,
-			AOS:              mapping.Aos,
 		}
 	}
 

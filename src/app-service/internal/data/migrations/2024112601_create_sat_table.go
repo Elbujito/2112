@@ -56,21 +56,34 @@ func init() {
 			// Define the TileSatelliteMapping table
 			type TileSatelliteMapping struct {
 				models.ModelBase
-				NoradID      string    `gorm:"not null;index"` // Foreign key to Satellite table
-				TileID       string    `gorm:"not null;index"` // Foreign key to Tile table
-				Tile         Tile      `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
-				Aos          time.Time `gorm:"not null"` // Visibility start time
-				MaxElevation float64   `gorm:"not null"` // Max elevation during visibility in degrees
+				NoradID string `gorm:"not null;index"` // Foreign key to Satellite table
+				TileID  string `gorm:"not null;index"` // Foreign key to Tile table
+				Tile    Tile   `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
 			}
 
 			// AutoMigrate all tables
 			if err := db.AutoMigrate(&Satellite{}, &TLE{}, &Tile{}, &TileSatelliteMapping{}); err != nil {
 				return err
 			}
+
+			// Add the unique constraint manually
+			if err := db.Exec(`
+				ALTER TABLE tile_satellite_mappings
+				ADD CONSTRAINT unique_norad_tile_mapping UNIQUE (norad_id, tile_id);
+			`).Error; err != nil {
+				return err
+			}
+
 			return nil
 		},
 		Rollback: func(db *gorm.DB) error {
 			// Drop tables in reverse order to satisfy foreign key constraints
+			if err := db.Exec(`
+				ALTER TABLE tile_satellite_mappings
+				DROP CONSTRAINT IF EXISTS unique_norad_tile_mapping;
+			`).Error; err != nil {
+				return err
+			}
 			return db.Migrator().DropTable("tile_satellite_mappings", "tiles", "tles", "satellites")
 		},
 	}

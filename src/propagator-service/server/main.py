@@ -17,16 +17,17 @@ logger = logging.getLogger(__name__)
 # Redis client setup
 redis_client = redis.StrictRedis(host="redis-service", port=6379, decode_responses=True)
 
+# Function to propagate satellite positions
 def propagate_satellite_position(
     satellite_id: str,
     tle_line1: str,
     tle_line2: str,
     start_time: str,
-    duration_minutes: int = 1440,
-    interval_seconds: int = 60
+    duration_minutes: int,
+    interval_seconds: int
 ) -> List[Dict]:
     try:
-        # Preprocess the timestamp to truncate fractional seconds to 6 digits
+        # Preprocess the timestamp
         start_time = start_time.split("+")[0]
         if "." in start_time:
             start_time = start_time.split(".")[0] + "." + start_time.split(".")[1][:6] + "+00:00"
@@ -60,12 +61,12 @@ def propagate_satellite_position(
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error in propagating satellite position: {e}")
-# Background task to propagate satellite position to Redis
+
+# Function to publish satellite positions to Redis
 def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
     try:
         for pos in positions:
             key = f"satellite_positions:{satellite_id}"
-            # Convert timestamp to a UNIX timestamp (numeric)
             timestamp = datetime.fromisoformat(pos['timestamp']).timestamp()
             redis_client.zadd(key, {json.dumps(pos): timestamp})
             redis_client.publish("satellite_positions", json.dumps(pos))
@@ -83,7 +84,8 @@ def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
 
     except Exception as e:
         logger.error(f"Error publishing satellite position to Redis: {e}")
-# Background task to handle Redis subscription for incoming TLE updates
+
+# Function to subscribe to TLE updates and compute one pass
 def subscribe_to_tle_updates():
     pubsub = redis_client.pubsub()
     pubsub.subscribe("satellite_tle_updates")
@@ -105,9 +107,29 @@ def subscribe_to_tle_updates():
                     logger.warning(f"Incomplete TLE data received: {satellite_data}")
                     continue
 
+                # Calculate altitude and orbital period
+                ts = load.timescale()
+                satellite = EarthSatellite(tle_line1, tle_line2, satellite_id, ts)
+                geocentric = satellite.at(ts.now())
+                subpoint = wgs84.subpoint(geocentric)
+                altitude_km = subpoint.elevation.km
+
+                if altitude_km < 2000:  # LEO
+                    pass_duration_minutes = 1440  # 24 hours
+                    num_points = 1440  # 1 point per minute
+                elif altitude_km < 35786:  # MEO
+                    pass_duration_minutes = 180  # 3 hours
+                    num_points = 50  # Approx. 1 point every 3.6 minutes
+                else:  # GEO
+                    pass_duration_minutes = 1440  # 24 hours
+                    num_points = 10  # 1 point every 144 minutes
+
+                interval_seconds = (pass_duration_minutes * 60) // num_points
+
                 logger.info(f"Starting propagation for satellite {satellite_id}")
                 positions = propagate_satellite_position(
-                    satellite_id, tle_line1, tle_line2, epoch, 1440, 3600
+                    satellite_id, tle_line1, tle_line2, epoch,
+                    pass_duration_minutes, interval_seconds
                 )
                 publish_satellite_positions(satellite_id, positions)
                 logger.info(f"Finished propagation and publishing for satellite {satellite_id}")
@@ -118,7 +140,6 @@ def subscribe_to_tle_updates():
 # Start the Redis subscription in a separate thread when the application starts
 @app.on_event("startup")
 def start_tle_subscription():
-    # Start subscribing to Redis in a separate thread
     threading.Thread(target=subscribe_to_tle_updates, daemon=True).start()
 
 # Root endpoint for checking service status
@@ -138,9 +159,6 @@ def health_check():
 # Endpoint to propagate satellite position based on TLE
 @app.post("/satellite/propagate")
 async def propagate_satellite(request: Request, background_tasks: BackgroundTasks):
-    """
-    Propagate satellite position based on TLE data for a specified duration and interval.
-    """
     data = await request.json()
     tle_line1 = data.get("line_1")
     tle_line2 = data.get("line_2")
@@ -153,17 +171,10 @@ async def propagate_satellite(request: Request, background_tasks: BackgroundTask
 
     satellite_id = f"satellite-{hash(tle_line1 + tle_line2)}"
 
-    # Propagate satellite position
     positions = propagate_satellite_position(
-        satellite_id,
-        tle_line1,
-        tle_line2,
-        start_time,
-        duration_minutes,
-        interval_seconds
+        satellite_id, tle_line1, tle_line2, start_time, duration_minutes, interval_seconds
     )
 
-    # Start a background task to publish positions to Redis
     background_tasks.add_task(publish_satellite_positions, satellite_id, positions)
 
     return {"message": "Satellite propagation started", "positions_count": len(positions)}

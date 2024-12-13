@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	"github.com/Elbujito/2112/src/app-service/internal/data/models"
@@ -139,29 +141,40 @@ func (r *TileRepository) FindTilesInRegion(ctx context.Context, minLat, minLon, 
 	return domainTiles, nil
 }
 
-// FindTilesVisibleFromLine retrieves tiles visible along a line (defined by two points) with a specified radius.
-func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, lat1, lon1, lat2, lon2, radius float64) ([]domain.Tile, error) {
-	var tiles []models.Tile
+func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domain.Satellite, points []domain.SatellitePosition) ([]domain.TileSatelliteMapping, error) {
+	var results []struct {
+		models.Tile
+		IntersectionGeom string `gorm:"column:intersection_geom"` // Geometry of the intersection point
+	}
 
-	// Execute the SQL query with logging
+	// Validate input points
+	if len(points) < 2 {
+		return nil, fmt.Errorf("at least two points are required to create a line")
+	}
+
+	// Construct a WKT (Well-Known Text) representation of the LINESTRING
+	wktPoints := make([]string, len(points))
+	for i, point := range points {
+		wktPoints[i] = fmt.Sprintf("%f %f", point.Longitude, point.Latitude)
+	}
+	lineString := fmt.Sprintf("LINESTRING(%s)", strings.Join(wktPoints, ", "))
+
+	// SQL query to find intersecting tiles
 	query := `
-		SELECT *
-		FROM tiles
-		WHERE ST_Intersects(
-			spatial_index,
-			ST_Buffer(
-				ST_MakeLine(
-					ST_SetSRID(ST_Point(?, ?), 4326),
-					ST_SetSRID(ST_Point(?, ?), 4326)
-				),
-				?
-			)
-		)
-	`
+        WITH line_geom AS (
+            SELECT ST_GeomFromText(?, 4326) AS geom
+        )
+        SELECT 
+            tiles.*,
+            ST_AsText(ST_Intersection(line_geom.geom, spatial_index)) AS intersection_geom
+        FROM tiles, line_geom
+        WHERE ST_Intersects(spatial_index, line_geom.geom)
+    `
 
-	log.Printf("Executing query: %s with params: lon1=%f, lat1=%f, lon2=%f, lat2=%f, radius=%f\n", query, lon1, lat1, lon2, lat2, radius)
+	log.Printf("Executing query with WKT LINESTRING: %s\n", lineString)
 
-	result := r.db.DbHandler.Raw(query, lon1, lat1, lon2, lat2, radius).Scan(&tiles)
+	// Execute the query
+	result := r.db.DbHandler.Raw(query, lineString).Scan(&results)
 
 	// Log any errors encountered during the query execution
 	if result.Error != nil {
@@ -170,15 +183,22 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, lat1, lon
 	}
 
 	// Log the number of tiles retrieved
-	log.Printf("Query succeeded: Retrieved %d tiles\n", len(tiles))
+	log.Printf("Query succeeded: Retrieved %d tiles\n", len(results))
 
-	// Map models to domain
-	var domainTiles []domain.Tile
-	for _, t := range tiles {
-		domainTiles = append(domainTiles, models.MapToDomain(t))
+	// Generate mappings
+	var mappings []domain.TileSatelliteMapping
+	for _, res := range results {
+		tile := models.MapToDomain(res.Tile)
+
+		// Create the mapping
+		mapping := domain.NewMapping(
+			sat.NoradID, // Satellite NORAD ID
+			tile.ID,     // Tile ID
+		)
+		mappings = append(mappings, mapping)
 	}
 
-	return domainTiles, nil
+	return mappings, nil
 }
 
 // SaveBatch allows batch insertion of tiles for optimized performance.

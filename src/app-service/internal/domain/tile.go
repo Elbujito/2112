@@ -19,7 +19,7 @@ type TileRepository interface {
 	Upsert(ctx context.Context, tile Tile) error                                                   // Upsert (insert or update) a tile
 	DeleteByQuadkey(ctx context.Context, key string) error                                         // Delete a tile by Quadkey
 	DeleteBySpatialLocation(ctx context.Context, lat float64, lon float64) error
-	FindTilesVisibleFromLine(ctx context.Context, lat1, lon1, lat2, lon2, radius float64) ([]Tile, error)
+	FindTilesVisibleFromLine(ctx context.Context, sat Satellite, points []SatellitePosition) ([]TileSatelliteMapping, error)
 }
 
 // Tile represents the domain entity Tile
@@ -51,4 +51,9 @@ func NewTile(polygon xpolygon.Polygon) Tile {
 		Radius:    polygon.Radius,           // Tile radius
 		Vertices:  polygon.Boundaries,       // Boundary vertices
 	}
+}
+
+type TileVisibility struct {
+	Tile
+	AosTime time.Time
 }

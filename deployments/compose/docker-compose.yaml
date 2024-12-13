@@ -51,6 +51,17 @@ services:
     restart: no
     command: ["app-service", "task", "exec", "celestrack_tle_upload", "category=active"]
 
+  satellite-upload-service:
+    build:
+      context: ../../.
+      dockerfile: deployments/docker/Dockerfile.app
+    container_name: satellite-upload-service
+    env_file: ../config/app-service.dev-env
+    depends_on:
+      app-service:
+        condition: service_healthy
+    restart: no
+    command: ["app-service", "task", "exec", "celestrack_satellite_upload"]
 
   satellite-mappings-service:
     build:
