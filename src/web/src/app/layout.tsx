@@ -7,7 +7,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="dark" id={'root'}>
-        <AppWrappers>{children}</AppWrappers>
+          <AppWrappers>{children}</AppWrappers>
       </body>
     </html>
   );

@@ -36,7 +36,7 @@ services:
       app-service:
         condition: service_healthy
     restart: no
-    command: ["app-service", "task", "exec", "generate_tiles", "radiusInMeter=100000", "faces=8"]
+    command: ["app-service", "task", "exec", "generate_tiles", "radiusInMeter=1000000", "faces=8"]
 
 
   tle-upload-service:
@@ -49,7 +49,7 @@ services:
       app-service:
         condition: service_healthy
     restart: no
-    command: ["app-service", "task", "exec", "celestrack_tle_upload", "category=active"]
+    command: ["app-service", "task", "exec", "celestrack_tle_upload", "category=active", "maxCount=10"]
 
   satellite-upload-service:
     build:
@@ -61,7 +61,7 @@ services:
       app-service:
         condition: service_healthy
     restart: no
-    command: ["app-service", "task", "exec", "celestrack_satellite_upload"]
+    command: ["app-service", "task", "exec", "celestrack_satellite_upload", "maxCount=10"]
 
   satellite-mappings-service:
     build:
@@ -169,15 +169,15 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
-  web:
-    build:
-      context: ../../.
-      dockerfile: deployments/docker/Dockerfile.web
-    image: web
-    container_name: web
-    ports:
-      - "3000:3000"
-    restart: unless-stopped
+  # web:
+  #   build:
+  #     context: ../../.
+  #     dockerfile: deployments/docker/Dockerfile.web
+  #   image: web
+  #   container_name: web
+  #   ports:
+  #     - "3000:3000"
+  #   restart: unless-stopped
 
 volumes:
   redis-data:

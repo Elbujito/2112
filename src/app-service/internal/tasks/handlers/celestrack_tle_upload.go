@@ -3,6 +3,8 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"log"
+	"strconv"
 	"strings"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
@@ -34,7 +36,7 @@ func (h *CelestrackTleUploadHandler) GetTask() Task {
 	return Task{
 		Name:         "celestrack_tle_upload",
 		Description:  "Fetch TLE from CelesTrak and upsert it in the database",
-		RequiredArgs: []string{"category"},
+		RequiredArgs: []string{"category", "maxCount"},
 	}
 }
 
@@ -45,10 +47,28 @@ func (h *CelestrackTleUploadHandler) Run(ctx context.Context, args map[string]st
 		return fmt.Errorf("missing required argument: category")
 	}
 
+	nbTles, ok := args["maxCount"]
+	if !ok || nbTles == "" {
+		return fmt.Errorf("missing required argument: maxCount")
+	}
+
+	// Convert nbTles to an integer (assuming it's a string or a similar type in args)
+	maxCount, err := strconv.Atoi(nbTles)
+	if err != nil {
+		return fmt.Errorf("invalid value for max: %v", err)
+	}
+
 	tles, err := h.tleService.FetchTLEFromSatCatByCategory(ctx, category)
 	if err != nil {
 		return fmt.Errorf("failed to fetch TLE catalog for category %s: %v", category, err)
 	}
+
+	// Retain only the maximum nbTles elements
+	if len(tles) > maxCount {
+		tles = tles[:maxCount] // Slice to keep only the first maxCount elements
+	}
+
+	log.Printf("Returning %d TLEs for category %s", len(tles), category)
 
 	for _, rawTLE := range tles {
 		err := h.upsertTLE(ctx, rawTLE, category)

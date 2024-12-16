@@ -8,6 +8,7 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	"github.com/Elbujito/2112/src/app-service/internal/data/models"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -55,10 +56,9 @@ func (r *TileSatelliteMappingRepository) SaveBatch(ctx context.Context, visibili
 		return nil // No records to insert
 	}
 
-	// Define batch size to avoid overly long SQL queries
-	const batchSize = 100
+	const batchSize = 100 // Define batch size to limit query size
 
-	// Split into manageable batches
+	// Process in batches
 	for i := 0; i < len(visibilities); i += batchSize {
 		end := i + batchSize
 		if end > len(visibilities) {
@@ -66,30 +66,28 @@ func (r *TileSatelliteMappingRepository) SaveBatch(ctx context.Context, visibili
 		}
 		batch := visibilities[i:end]
 
-		// Construct raw SQL for batch insert with "ON CONFLICT DO NOTHING"
-		sql := `
-			INSERT INTO tile_satellite_mappings (norad_id, tile_id, created_at, updated_at)
-			VALUES %s
-			ON CONFLICT DO NOTHING
-		`
+		// Construct query dynamically
+		placeholders := make([]string, len(batch))
+		valueArgs := make([]interface{}, 0, len(batch)*5) // 5 fields per record (including ID)
 
-		// Build the values placeholder for the current batch
-		var valueStrings []string
-		var valueArgs []interface{}
-		for _, v := range batch {
-			valueStrings = append(valueStrings, "(?, ?, ?, ?)")
-			valueArgs = append(valueArgs, v.NoradID, v.TileID, v.CreatedAt, v.UpdatedAt)
+		for j, v := range batch {
+			if v.ID == "" {
+				v.ID = uuid.NewString() // Generate a new UUID if ID is not set
+			}
+			placeholders[j] = "(?, ?, ?, ?, ?)"
+			valueArgs = append(valueArgs, v.ID, v.NoradID, v.TileID, v.CreatedAt, v.UpdatedAt)
 		}
 
-		// Join value placeholders
-		values := strings.Join(valueStrings, ", ")
+		query := `
+            INSERT INTO tile_satellite_mappings (id, norad_id, tile_id, created_at, updated_at)
+            VALUES %s
+            ON CONFLICT ON CONSTRAINT unique_norad_tile_mapping DO NOTHING
+        `
+		formattedQuery := fmt.Sprintf(query, strings.Join(placeholders, ", "))
 
-		// Format the final SQL query for the batch
-		query := fmt.Sprintf(sql, values)
-
-		// Execute the query for the current batch
-		if err := r.db.DbHandler.Exec(query, valueArgs...).Error; err != nil {
-			return err
+		// Execute batch insert
+		if err := r.db.DbHandler.WithContext(ctx).Exec(formattedQuery, valueArgs...).Error; err != nil {
+			return fmt.Errorf("failed to save batch: %w", err)
 		}
 	}
 

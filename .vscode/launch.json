@@ -134,7 +134,7 @@
       "host": "127.0.0.1",
     },
     {
-      "program": "${workspaceRoot}/test/graphql-gateway/internal/main.go",
+      "program": "${workspaceRoot}/src/gateway-service/internal/main.go",
       "name": "Graphql gateway",
       "type": "go",
       "mode": "debug",

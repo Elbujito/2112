@@ -79,6 +79,7 @@ def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
             "end_time": positions[-1]["timestamp"] if positions else None,
             "positions_count": len(positions),
         }
+
         redis_client.publish("event_satellite_positions_updated", json.dumps(update_event))
         logger.info(f"Published satellite update event for {satellite_id}")
 

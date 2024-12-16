@@ -1,17 +1,17 @@
 'use client';
-import React, { ReactNode } from 'react';
+
+import React, { ReactNode, useState, useEffect } from 'react';
 import 'styles/App.css';
 import 'styles/Contact.css';
-// import '@asseinfo/react-kanban/dist/styles.css';
-// import 'styles/Plugins.css';
 import 'styles/MiniCalendar.css';
 import 'styles/index.css';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
 import { ConfiguratorContext } from 'contexts/ConfiguratorContext';
+import { ApolloProvider } from '@apollo/client';
+import ApolloClientInstance from '../lib/ApolloClient';
 
-const _NoSSR = ({ children }) => <React.Fragment>{children}</React.Fragment>;
+const _NoSSR = ({ children }: { children: ReactNode }) => <React.Fragment>{children}</React.Fragment>;
 
 const NoSSR = dynamic(() => Promise.resolve(_NoSSR), {
   ssr: false,
@@ -35,30 +35,33 @@ export default function AppWrappers({ children }: { children: ReactNode }) {
     '--color-700': '#2111A5',
     '--color-800': '#190793',
     '--color-900': '#11047A',
-  }); // When the theme state changes, this effect will update the CSS variables in the document's root element
-  React.useEffect(() => {
-    let color;
-    for (color in theme) {
-      document.documentElement.style.setProperty(color, theme[color]);
-    }
-    //eslint-disable-next-line
+  });
+
+  // Update CSS variables dynamically when the theme changes
+  useEffect(() => {
+    Object.entries(theme).forEach(([key, value]) => {
+      document.documentElement.style.setProperty(key, value as string);
+    });
   }, [theme]);
+
   return (
     <NoSSR>
-      <ConfiguratorContext.Provider
-        value={{
-          mini,
-          setMini,
-          theme,
-          setTheme,
-          hovered,
-          setHovered,
-          contrast,
-          setContrast,
-        }}
-      >
-        {children}
-      </ConfiguratorContext.Provider>
+      <ApolloProvider client={ApolloClientInstance}>
+        <ConfiguratorContext.Provider
+          value={{
+            mini,
+            setMini,
+            theme,
+            setTheme,
+            hovered,
+            setHovered,
+            contrast,
+            setContrast,
+          }}
+        >
+          {children}
+        </ConfiguratorContext.Provider>
+      </ApolloProvider>
     </NoSSR>
   );
 }

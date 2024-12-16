@@ -77,7 +77,7 @@ func (s *SatelliteService) GetSatelliteByNoradID(ctx context.Context, noradID st
 func (s *SatelliteService) ListAllSatellites(ctx context.Context) ([]domain.Satellite, error) {
 	return s.repo.FindAll(ctx)
 }
-func (s *SatelliteService) FetchAndStoreAllSatellites(ctx context.Context) ([]domain.Satellite, error) {
+func (s *SatelliteService) FetchAndStoreAllSatellites(ctx context.Context, maxCount int) ([]domain.Satellite, error) {
 	// Fetch all satellite metadata from CelestrackClient
 	rawSatellites, err := s.celestrackClient.FetchSatelliteMetadata(ctx)
 	if err != nil {
@@ -113,6 +113,11 @@ func (s *SatelliteService) FetchAndStoreAllSatellites(ctx context.Context) ([]do
 		}
 		// Add the satellite to the result list
 		storedSatellites = append(storedSatellites, satellite)
+	}
+
+	// Retain only the maximum nbTles elements
+	if len(storedSatellites) > maxCount {
+		storedSatellites = storedSatellites[:maxCount] // Slice to keep only the first maxCount elements
 	}
 
 	// Save the satellite to the repository

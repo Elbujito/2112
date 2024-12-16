@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 )
 
 type SatelliteServiceClient interface {
-	FetchAndStoreAllSatellites(ctx context.Context) ([]domain.Satellite, error)
+	FetchAndStoreAllSatellites(ctx context.Context, maxCount int) ([]domain.Satellite, error)
 }
 
 type CelesTrackSatelliteUploadHandler struct {
@@ -28,13 +30,24 @@ func (h *CelesTrackSatelliteUploadHandler) GetTask() Task {
 	return Task{
 		Name:         "celestrack_satellite_upload",
 		Description:  "Fetch Satellite Metadata from CelesTrak and upsert it in the database",
-		RequiredArgs: []string{""},
+		RequiredArgs: []string{"maxCount"},
 	}
 }
 
 func (h *CelesTrackSatelliteUploadHandler) Run(ctx context.Context, args map[string]string) error {
 
-	_, err := h.satelliteService.FetchAndStoreAllSatellites(ctx)
+	nbTles, ok := args["maxCount"]
+	if !ok || nbTles == "" {
+		return fmt.Errorf("missing required argument: maxCount")
+	}
+
+	// Convert nbTles to an integer (assuming it's a string or a similar type in args)
+	maxCount, err := strconv.Atoi(nbTles)
+	if err != nil {
+		return fmt.Errorf("invalid value for max: %v", err)
+	}
+
+	_, err = h.satelliteService.FetchAndStoreAllSatellites(ctx, maxCount)
 	if err != nil {
 		return err
 	}
