@@ -13,18 +13,20 @@ type Query {
   # Retrieve positions of a satellite within a time range
   satellitePositionsInRange(id: ID!, startTime: String!, endTime: String!): [SatellitePosition!]!
 
-  # Retrieve visibility data (AOS and LOS) for satellites over a given lat/lon position
-  satelliteVisibilities(latitude: Float!, longitude: Float!): [TileVisibility!]!
-
-  # Fetch visibility data (AOS and LOS) for satellites within a time range
-  satelliteVisibilitiesInRange(latitude: Float!, longitude: Float!, startTime: String!, endTime: String!): [TileVisibility!]!
+  # Trigger the generation of visibility data (AOS and LOS) for satellites within a time range
+  requestSatelliteVisibilitiesInRange(
+    latitude: Float!, 
+    longitude: Float!, 
+    startTime: String!, 
+    endTime: String!
+  ): Boolean!
 }
 
 type SatellitePosition {
   id: ID!
   name: String!
   latitude: Float!
-  longitude: Float! 
+  longitude: Float!
   altitude: Float!
   timestamp: String! # ISO 8601 format
 }
@@ -46,8 +48,14 @@ type TileVisibility {
 }
 
 type Subscription {
+  # Real-time position updates
   satellitePositionUpdated(id: ID!): SatellitePosition
 
-  # Dynamic updates for visibilities
-  satelliteVisibilityUpdated(latitude: Float!, longitude: Float!): [TileVisibility!]!
+  # Real-time updates for visibilities after a request
+  satelliteVisibilityUpdated(
+    latitude: Float!, 
+    longitude: Float!, 
+    startTime: String!, 
+    endTime: String!
+  ): [TileVisibility!]!
 }

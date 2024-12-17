@@ -3,13 +3,14 @@ package main
 import (
 	"sync"
 
-	"github.com/Elbujito/2112/graphql-api/graph"
-	"github.com/Elbujito/2112/graphql-api/graph/model"
+	"github.com/Elbujito/2112/src/graphql-api/go/graph"
+	"github.com/Elbujito/2112/src/graphql-api/go/graph/model"
 )
 
 type Resolver struct {
-	PositionSubscribers map[string]chan *model.SatellitePosition
-	Mutex               sync.Mutex
+	PositionSubscribers   map[string]chan *model.SatellitePosition
+	VisibilitySubscribers map[string]chan []*model.TileVisibility
+	Mutex                 sync.Mutex
 }
 
 func NewResolver() *Resolver {

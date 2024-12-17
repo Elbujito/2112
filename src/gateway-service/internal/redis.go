@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/Elbujito/2112/graphql-api/graph/model"
+	"github.com/Elbujito/2112/src/graphql-api/go/graph/model"
 	"github.com/go-redis/redis/v8"
 )
 

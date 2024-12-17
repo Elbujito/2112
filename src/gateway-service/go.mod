@@ -4,7 +4,7 @@ go 1.23.4
 
 require (
 	github.com/99designs/gqlgen v0.17.57
-	github.com/Elbujito/2112/graphql-api v0.0.0-20241209164818-a3ca96b9cce5
+	github.com/Elbujito/2112/src/graphql-api/go v0.0.0-20241217165912-8e2bb7f3508a
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/rs/cors v1.11.1
 )

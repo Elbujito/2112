@@ -11,7 +11,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/Elbujito/2112/graphql-api/graph"
+	"github.com/Elbujito/2112/src/graphql-api/go/graph"
 	"github.com/rs/cors" // Add CORS middleware package
 )
 

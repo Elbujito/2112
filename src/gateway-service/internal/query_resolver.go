@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Elbujito/2112/graphql-api/graph/model"
+	"github.com/Elbujito/2112/src/graphql-api/go/graph/model"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -97,3 +97,68 @@ func (q *queryResolver) SatellitePositionsInRange(ctx context.Context, id string
 	log.Printf("SatellitePositionsInRange query completed. Found %d positions within range.", len(positions))
 	return positions, nil
 }
+
+func (q *queryResolver) SatelliteVisibilities(ctx context.Context, latitude float64, longitude float64) ([]*model.TileVisibility, error) {
+	log.Printf("SatelliteVisibilities query called with latitude: %f, longitude: %f", latitude, longitude)
+
+	// Define the Redis key for visibilities
+	key := "satellite_visibilities"
+
+	// Fetch all visibility data from Redis (or filter by geo hash/quadkey if applicable)
+	results, err := rdb.HGetAll(ctx, key).Result()
+	if err != nil {
+		log.Printf("Error fetching visibility data from Redis: %v", err)
+		return nil, fmt.Errorf("failed to fetch visibility data: %w", err)
+	}
+
+	// Parse visibility data
+	visibilities := []*model.TileVisibility{}
+	for _, raw := range results {
+		var visibility model.TileVisibility
+		if err := json.Unmarshal([]byte(raw), &visibility); err != nil {
+			log.Printf("Error unmarshalling TileVisibility: %v", err)
+			continue
+		}
+
+		// Filter by latitude and longitude if necessary
+		// For now, assuming all visibility data is returned
+		visibilities = append(visibilities, &visibility)
+	}
+
+	log.Printf("SatelliteVisibilities query completed. Found %d visibilities.", len(visibilities))
+	return visibilities, nil
+}
+
+func (q *queryResolver) SatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) (bool, error) {
+	log.Printf("SatelliteVisibilitiesInRange request initiated for latitude: %f, longitude: %f, startTime: %s, endTime: %s", latitude, longitude, startTime, endTime)
+
+	// Define a unique channel ID for response handling
+	channelID := fmt.Sprintf("visibilities:%f:%f:%s:%s", latitude, longitude, startTime, endTime)
+
+	// Prepare the request payload
+	requestPayload := map[string]string{
+		"latitude":  fmt.Sprintf("%f", latitude),
+		"longitude": fmt.Sprintf("%f", longitude),
+		"startTime": startTime,
+		"endTime":   endTime,
+		"channel":   channelID, // Clients will listen on this channel
+	}
+
+	// Serialize request payload into JSON
+	requestJSON, err := json.Marshal(requestPayload)
+	if err != nil {
+		log.Printf("Error marshalling visibility request: %v", err)
+		return false, fmt.Errorf("failed to prepare visibility request payload: %w", err)
+	}
+
+	// Publish the request to the Redis channel
+	err = rdb.Publish(ctx, "visibility_requests", requestJSON).Err()
+	if err != nil {
+		log.Printf("Error publishing visibility request to Redis: %v", err)
+		return false, fmt.Errorf("failed to publish visibility request: %w", err)
+	}
+
+	log.Printf("Visibility request published to Redis channel: visibility_requests")
+	return true, nil
+}
+
