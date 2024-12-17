@@ -129,36 +129,41 @@ func (q *queryResolver) SatelliteVisibilities(ctx context.Context, latitude floa
 	return visibilities, nil
 }
 
-func (q *queryResolver) SatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) (bool, error) {
-	log.Printf("SatelliteVisibilitiesInRange request initiated for latitude: %f, longitude: %f, startTime: %s, endTime: %s", latitude, longitude, startTime, endTime)
+func (q *queryResolver) RequestSatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) (bool, error) {
+	visibilityRequestChannel := "visibility_requests" // Redis channel for publishing visibility requests
+	log.Printf("RequestSatelliteVisibilitiesInRange request received: latitude=%f, longitude=%f, startTime=%s, endTime=%s", latitude, longitude, startTime, endTime)
 
-	// Define a unique channel ID for response handling
-	channelID := fmt.Sprintf("visibilities:%f:%f:%s:%s", latitude, longitude, startTime, endTime)
+	// Generate a unique channel ID for the response based on request parameters
+	channelID := generateVisibilityChannelID(latitude, longitude, startTime, endTime)
 
 	// Prepare the request payload
 	requestPayload := map[string]string{
-		"latitude":  fmt.Sprintf("%f", latitude),
-		"longitude": fmt.Sprintf("%f", longitude),
+		"latitude":  fmt.Sprintf("%.6f", latitude),
+		"longitude": fmt.Sprintf("%.6f", longitude),
 		"startTime": startTime,
 		"endTime":   endTime,
-		"channel":   channelID, // Clients will listen on this channel
+		"channel":   channelID, // Clients will listen to this channel
 	}
 
-	// Serialize request payload into JSON
+	// Serialize the payload into JSON
 	requestJSON, err := json.Marshal(requestPayload)
 	if err != nil {
-		log.Printf("Error marshalling visibility request: %v", err)
-		return false, fmt.Errorf("failed to prepare visibility request payload: %w", err)
+		log.Printf("Error marshalling request payload: %v", err)
+		return false, fmt.Errorf("failed to marshal request payload: %w", err)
 	}
 
-	// Publish the request to the Redis channel
-	err = rdb.Publish(ctx, "visibility_requests", requestJSON).Err()
+	// Publish the request to Redis
+	err = rdb.Publish(ctx, visibilityRequestChannel, requestJSON).Err()
 	if err != nil {
-		log.Printf("Error publishing visibility request to Redis: %v", err)
-		return false, fmt.Errorf("failed to publish visibility request: %w", err)
+		log.Printf("Error publishing visibility request to Redis channel '%s': %v", visibilityRequestChannel, err)
+		return false, fmt.Errorf("failed to publish request to channel '%s': %w", visibilityRequestChannel, err)
 	}
 
-	log.Printf("Visibility request published to Redis channel: visibility_requests")
+	log.Printf("Successfully published visibility request to Redis channel '%s'. Listening channel: %s", visibilityRequestChannel, channelID)
 	return true, nil
 }
 
+// Helper function to generate a deterministic Redis channel ID for visibility results
+func generateVisibilityChannelID(latitude float64, longitude float64, startTime string, endTime string) string {
+	return fmt.Sprintf("visibilities:lat%.6f:lon%.6f:start%s:end%s", latitude, longitude, startTime, endTime)
+}

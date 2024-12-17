@@ -26,14 +26,9 @@ func (r *queryResolver) SatellitePositionsInRange(ctx context.Context, id string
 	panic(fmt.Errorf("not implemented: SatellitePositionsInRange - satellitePositionsInRange"))
 }
 
-// SatelliteVisibilities is the resolver for the satelliteVisibilities field.
-func (r *queryResolver) SatelliteVisibilities(ctx context.Context, latitude float64, longitude float64) ([]*model.TileVisibility, error) {
-	panic(fmt.Errorf("not implemented: SatelliteVisibilities - satelliteVisibilities"))
-}
-
-// SatelliteVisibilitiesInRange is the resolver for the satelliteVisibilitiesInRange field.
-func (r *queryResolver) SatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) ([]*model.TileVisibility, error) {
-	panic(fmt.Errorf("not implemented: SatelliteVisibilitiesInRange - satelliteVisibilitiesInRange"))
+// RequestSatelliteVisibilitiesInRange is the resolver for the requestSatelliteVisibilitiesInRange field.
+func (r *queryResolver) RequestSatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) (bool, error) {
+	panic(fmt.Errorf("not implemented: RequestSatelliteVisibilitiesInRange - requestSatelliteVisibilitiesInRange"))
 }
 
 // SatellitePositionUpdated is the resolver for the satellitePositionUpdated field.
@@ -42,7 +37,7 @@ func (r *subscriptionResolver) SatellitePositionUpdated(ctx context.Context, id 
 }
 
 // SatelliteVisibilityUpdated is the resolver for the satelliteVisibilityUpdated field.
-func (r *subscriptionResolver) SatelliteVisibilityUpdated(ctx context.Context, latitude float64, longitude float64) (<-chan []*model.TileVisibility, error) {
+func (r *subscriptionResolver) SatelliteVisibilityUpdated(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) (<-chan []*model.TileVisibility, error) {
 	panic(fmt.Errorf("not implemented: SatelliteVisibilityUpdated - satelliteVisibilityUpdated"))
 }
 
@@ -54,3 +49,18 @@ func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionRes
 
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *queryResolver) SatelliteVisibilities(ctx context.Context, latitude float64, longitude float64) ([]*model.TileVisibility, error) {
+	panic(fmt.Errorf("not implemented: SatelliteVisibilities - satelliteVisibilities"))
+}
+func (r *queryResolver) SatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) ([]*model.TileVisibility, error) {
+	panic(fmt.Errorf("not implemented: SatelliteVisibilitiesInRange - satelliteVisibilitiesInRange"))
+}
+*/
