@@ -12,13 +12,19 @@ type Query {
 
   # Retrieve positions of a satellite within a time range
   satellitePositionsInRange(id: ID!, startTime: String!, endTime: String!): [SatellitePosition!]!
+
+  # Retrieve visibility data (AOS and LOS) for satellites over a given lat/lon position
+  satelliteVisibilities(latitude: Float!, longitude: Float!): [TileVisibility!]!
+
+  # Fetch visibility data (AOS and LOS) for satellites within a time range
+  satelliteVisibilitiesInRange(latitude: Float!, longitude: Float!, startTime: String!, endTime: String!): [TileVisibility!]!
 }
 
 type SatellitePosition {
   id: ID!
   name: String!
   latitude: Float!
-  longitude: Float!
+  longitude: Float! 
   altitude: Float!
   timestamp: String! # ISO 8601 format
 }
@@ -30,6 +36,18 @@ type SatelliteTle {
   tleLine2: String!
 }
 
+type TileVisibility {
+  tileId: ID!
+  quadkey: String!
+  satelliteId: ID!
+  satelliteName: String!
+  aos: String! # Acquisition of Signal (ISO 8601 format)
+  los: String! # Loss of Signal (ISO 8601 format)
+}
+
 type Subscription {
   satellitePositionUpdated(id: ID!): SatellitePosition
+
+  # Dynamic updates for visibilities
+  satelliteVisibilityUpdated(latitude: Float!, longitude: Float!): [TileVisibility!]!
 }

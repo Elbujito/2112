@@ -4,7 +4,6 @@ go 1.23.4
 
 require (
 	github.com/99designs/gqlgen v0.17.57
-	github.com/Elbujito/2112/graphql-api v0.0.0-20241209164818-a3ca96b9cce5
 	github.com/vektah/gqlparser/v2 v2.5.19
 )
 

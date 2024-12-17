@@ -48,9 +48,11 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Query struct {
-		SatellitePosition         func(childComplexity int, id string) int
-		SatellitePositionsInRange func(childComplexity int, id string, startTime string, endTime string) int
-		SatelliteTle              func(childComplexity int, id string) int
+		SatellitePosition            func(childComplexity int, id string) int
+		SatellitePositionsInRange    func(childComplexity int, id string, startTime string, endTime string) int
+		SatelliteTle                 func(childComplexity int, id string) int
+		SatelliteVisibilities        func(childComplexity int, latitude float64, longitude float64) int
+		SatelliteVisibilitiesInRange func(childComplexity int, latitude float64, longitude float64, startTime string, endTime string) int
 	}
 
 	SatellitePosition struct {
@@ -70,7 +72,17 @@ type ComplexityRoot struct {
 	}
 
 	Subscription struct {
-		SatellitePositionUpdated func(childComplexity int, id string) int
+		SatellitePositionUpdated   func(childComplexity int, id string) int
+		SatelliteVisibilityUpdated func(childComplexity int, latitude float64, longitude float64) int
+	}
+
+	TileVisibility struct {
+		Aos           func(childComplexity int) int
+		Los           func(childComplexity int) int
+		Quadkey       func(childComplexity int) int
+		SatelliteID   func(childComplexity int) int
+		SatelliteName func(childComplexity int) int
+		TileID        func(childComplexity int) int
 	}
 }
 
@@ -78,9 +90,12 @@ type QueryResolver interface {
 	SatellitePosition(ctx context.Context, id string) (*model.SatellitePosition, error)
 	SatelliteTle(ctx context.Context, id string) (*model.SatelliteTle, error)
 	SatellitePositionsInRange(ctx context.Context, id string, startTime string, endTime string) ([]*model.SatellitePosition, error)
+	SatelliteVisibilities(ctx context.Context, latitude float64, longitude float64) ([]*model.TileVisibility, error)
+	SatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) ([]*model.TileVisibility, error)
 }
 type SubscriptionResolver interface {
 	SatellitePositionUpdated(ctx context.Context, id string) (<-chan *model.SatellitePosition, error)
+	SatelliteVisibilityUpdated(ctx context.Context, latitude float64, longitude float64) (<-chan []*model.TileVisibility, error)
 }
 
 type executableSchema struct {
@@ -137,6 +152,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.SatelliteTle(childComplexity, args["id"].(string)), true
+
+	case "Query.satelliteVisibilities":
+		if e.complexity.Query.SatelliteVisibilities == nil {
+			break
+		}
+
+		args, err := ec.field_Query_satelliteVisibilities_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SatelliteVisibilities(childComplexity, args["latitude"].(float64), args["longitude"].(float64)), true
+
+	case "Query.satelliteVisibilitiesInRange":
+		if e.complexity.Query.SatelliteVisibilitiesInRange == nil {
+			break
+		}
+
+		args, err := ec.field_Query_satelliteVisibilitiesInRange_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.SatelliteVisibilitiesInRange(childComplexity, args["latitude"].(float64), args["longitude"].(float64), args["startTime"].(string), args["endTime"].(string)), true
 
 	case "SatellitePosition.altitude":
 		if e.complexity.SatellitePosition.Altitude == nil {
@@ -219,6 +258,60 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Subscription.SatellitePositionUpdated(childComplexity, args["id"].(string)), true
+
+	case "Subscription.satelliteVisibilityUpdated":
+		if e.complexity.Subscription.SatelliteVisibilityUpdated == nil {
+			break
+		}
+
+		args, err := ec.field_Subscription_satelliteVisibilityUpdated_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Subscription.SatelliteVisibilityUpdated(childComplexity, args["latitude"].(float64), args["longitude"].(float64)), true
+
+	case "TileVisibility.aos":
+		if e.complexity.TileVisibility.Aos == nil {
+			break
+		}
+
+		return e.complexity.TileVisibility.Aos(childComplexity), true
+
+	case "TileVisibility.los":
+		if e.complexity.TileVisibility.Los == nil {
+			break
+		}
+
+		return e.complexity.TileVisibility.Los(childComplexity), true
+
+	case "TileVisibility.quadkey":
+		if e.complexity.TileVisibility.Quadkey == nil {
+			break
+		}
+
+		return e.complexity.TileVisibility.Quadkey(childComplexity), true
+
+	case "TileVisibility.satelliteId":
+		if e.complexity.TileVisibility.SatelliteID == nil {
+			break
+		}
+
+		return e.complexity.TileVisibility.SatelliteID(childComplexity), true
+
+	case "TileVisibility.satelliteName":
+		if e.complexity.TileVisibility.SatelliteName == nil {
+			break
+		}
+
+		return e.complexity.TileVisibility.SatelliteName(childComplexity), true
+
+	case "TileVisibility.tileId":
+		if e.complexity.TileVisibility.TileID == nil {
+			break
+		}
+
+		return e.complexity.TileVisibility.TileID(childComplexity), true
 
 	}
 	return 0, false
@@ -326,7 +419,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../../schema/schema.graphqls", Input: `schema {
+	{Name: "../../schemas/schema.graphqls", Input: `schema {
   query: Query
   subscription: Subscription
 }
@@ -340,13 +433,19 @@ type Query {
 
   # Retrieve positions of a satellite within a time range
   satellitePositionsInRange(id: ID!, startTime: String!, endTime: String!): [SatellitePosition!]!
+
+  # Retrieve visibility data (AOS and LOS) for satellites over a given lat/lon position
+  satelliteVisibilities(latitude: Float!, longitude: Float!): [TileVisibility!]!
+
+  # Fetch visibility data (AOS and LOS) for satellites within a time range
+  satelliteVisibilitiesInRange(latitude: Float!, longitude: Float!, startTime: String!, endTime: String!): [TileVisibility!]!
 }
 
 type SatellitePosition {
   id: ID!
   name: String!
   latitude: Float!
-  longitude: Float!
+  longitude: Float! 
   altitude: Float!
   timestamp: String! # ISO 8601 format
 }
@@ -358,8 +457,20 @@ type SatelliteTle {
   tleLine2: String!
 }
 
+type TileVisibility {
+  tileId: ID!
+  quadkey: String!
+  satelliteId: ID!
+  satelliteName: String!
+  aos: String! # Acquisition of Signal (ISO 8601 format)
+  los: String! # Loss of Signal (ISO 8601 format)
+}
+
 type Subscription {
   satellitePositionUpdated(id: ID!): SatellitePosition
+
+  # Dynamic updates for visibilities
+  satelliteVisibilityUpdated(latitude: Float!, longitude: Float!): [TileVisibility!]!
 }
 `, BuiltIn: false},
 }
@@ -497,6 +608,124 @@ func (ec *executionContext) field_Query_satelliteTle_argsID(
 	return zeroVal, nil
 }
 
+func (ec *executionContext) field_Query_satelliteVisibilitiesInRange_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_satelliteVisibilitiesInRange_argsLatitude(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["latitude"] = arg0
+	arg1, err := ec.field_Query_satelliteVisibilitiesInRange_argsLongitude(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["longitude"] = arg1
+	arg2, err := ec.field_Query_satelliteVisibilitiesInRange_argsStartTime(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["startTime"] = arg2
+	arg3, err := ec.field_Query_satelliteVisibilitiesInRange_argsEndTime(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["endTime"] = arg3
+	return args, nil
+}
+func (ec *executionContext) field_Query_satelliteVisibilitiesInRange_argsLatitude(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (float64, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("latitude"))
+	if tmp, ok := rawArgs["latitude"]; ok {
+		return ec.unmarshalNFloat2float64(ctx, tmp)
+	}
+
+	var zeroVal float64
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_satelliteVisibilitiesInRange_argsLongitude(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (float64, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("longitude"))
+	if tmp, ok := rawArgs["longitude"]; ok {
+		return ec.unmarshalNFloat2float64(ctx, tmp)
+	}
+
+	var zeroVal float64
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_satelliteVisibilitiesInRange_argsStartTime(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("startTime"))
+	if tmp, ok := rawArgs["startTime"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_satelliteVisibilitiesInRange_argsEndTime(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (string, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("endTime"))
+	if tmp, ok := rawArgs["endTime"]; ok {
+		return ec.unmarshalNString2string(ctx, tmp)
+	}
+
+	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_satelliteVisibilities_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Query_satelliteVisibilities_argsLatitude(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["latitude"] = arg0
+	arg1, err := ec.field_Query_satelliteVisibilities_argsLongitude(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["longitude"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Query_satelliteVisibilities_argsLatitude(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (float64, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("latitude"))
+	if tmp, ok := rawArgs["latitude"]; ok {
+		return ec.unmarshalNFloat2float64(ctx, tmp)
+	}
+
+	var zeroVal float64
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Query_satelliteVisibilities_argsLongitude(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (float64, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("longitude"))
+	if tmp, ok := rawArgs["longitude"]; ok {
+		return ec.unmarshalNFloat2float64(ctx, tmp)
+	}
+
+	var zeroVal float64
+	return zeroVal, nil
+}
+
 func (ec *executionContext) field_Subscription_satellitePositionUpdated_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -517,6 +746,47 @@ func (ec *executionContext) field_Subscription_satellitePositionUpdated_argsID(
 	}
 
 	var zeroVal string
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Subscription_satelliteVisibilityUpdated_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	arg0, err := ec.field_Subscription_satelliteVisibilityUpdated_argsLatitude(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["latitude"] = arg0
+	arg1, err := ec.field_Subscription_satelliteVisibilityUpdated_argsLongitude(ctx, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["longitude"] = arg1
+	return args, nil
+}
+func (ec *executionContext) field_Subscription_satelliteVisibilityUpdated_argsLatitude(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (float64, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("latitude"))
+	if tmp, ok := rawArgs["latitude"]; ok {
+		return ec.unmarshalNFloat2float64(ctx, tmp)
+	}
+
+	var zeroVal float64
+	return zeroVal, nil
+}
+
+func (ec *executionContext) field_Subscription_satelliteVisibilityUpdated_argsLongitude(
+	ctx context.Context,
+	rawArgs map[string]interface{},
+) (float64, error) {
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("longitude"))
+	if tmp, ok := rawArgs["longitude"]; ok {
+		return ec.unmarshalNFloat2float64(ctx, tmp)
+	}
+
+	var zeroVal float64
 	return zeroVal, nil
 }
 
@@ -765,6 +1035,144 @@ func (ec *executionContext) fieldContext_Query_satellitePositionsInRange(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_satellitePositionsInRange_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_satelliteVisibilities(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_satelliteVisibilities(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SatelliteVisibilities(rctx, fc.Args["latitude"].(float64), fc.Args["longitude"].(float64))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TileVisibility)
+	fc.Result = res
+	return ec.marshalNTileVisibility2ᚕᚖgithubᚗcomᚋElbujitoᚋ2112ᚋsrcᚋgraphqlᚑapiᚋgoᚋgraphᚋmodelᚐTileVisibilityᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_satelliteVisibilities(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "tileId":
+				return ec.fieldContext_TileVisibility_tileId(ctx, field)
+			case "quadkey":
+				return ec.fieldContext_TileVisibility_quadkey(ctx, field)
+			case "satelliteId":
+				return ec.fieldContext_TileVisibility_satelliteId(ctx, field)
+			case "satelliteName":
+				return ec.fieldContext_TileVisibility_satelliteName(ctx, field)
+			case "aos":
+				return ec.fieldContext_TileVisibility_aos(ctx, field)
+			case "los":
+				return ec.fieldContext_TileVisibility_los(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TileVisibility", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_satelliteVisibilities_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_satelliteVisibilitiesInRange(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_satelliteVisibilitiesInRange(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().SatelliteVisibilitiesInRange(rctx, fc.Args["latitude"].(float64), fc.Args["longitude"].(float64), fc.Args["startTime"].(string), fc.Args["endTime"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.TileVisibility)
+	fc.Result = res
+	return ec.marshalNTileVisibility2ᚕᚖgithubᚗcomᚋElbujitoᚋ2112ᚋsrcᚋgraphqlᚑapiᚋgoᚋgraphᚋmodelᚐTileVisibilityᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_satelliteVisibilitiesInRange(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "tileId":
+				return ec.fieldContext_TileVisibility_tileId(ctx, field)
+			case "quadkey":
+				return ec.fieldContext_TileVisibility_quadkey(ctx, field)
+			case "satelliteId":
+				return ec.fieldContext_TileVisibility_satelliteId(ctx, field)
+			case "satelliteName":
+				return ec.fieldContext_TileVisibility_satelliteName(ctx, field)
+			case "aos":
+				return ec.fieldContext_TileVisibility_aos(ctx, field)
+			case "los":
+				return ec.fieldContext_TileVisibility_los(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TileVisibility", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_satelliteVisibilitiesInRange_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1416,6 +1824,353 @@ func (ec *executionContext) fieldContext_Subscription_satellitePositionUpdated(c
 	if fc.Args, err = ec.field_Subscription_satellitePositionUpdated_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Subscription_satelliteVisibilityUpdated(ctx context.Context, field graphql.CollectedField) (ret func(ctx context.Context) graphql.Marshaler) {
+	fc, err := ec.fieldContext_Subscription_satelliteVisibilityUpdated(ctx, field)
+	if err != nil {
+		return nil
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = nil
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Subscription().SatelliteVisibilityUpdated(rctx, fc.Args["latitude"].(float64), fc.Args["longitude"].(float64))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return nil
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return nil
+	}
+	return func(ctx context.Context) graphql.Marshaler {
+		select {
+		case res, ok := <-resTmp.(<-chan []*model.TileVisibility):
+			if !ok {
+				return nil
+			}
+			return graphql.WriterFunc(func(w io.Writer) {
+				w.Write([]byte{'{'})
+				graphql.MarshalString(field.Alias).MarshalGQL(w)
+				w.Write([]byte{':'})
+				ec.marshalNTileVisibility2ᚕᚖgithubᚗcomᚋElbujitoᚋ2112ᚋsrcᚋgraphqlᚑapiᚋgoᚋgraphᚋmodelᚐTileVisibilityᚄ(ctx, field.Selections, res).MarshalGQL(w)
+				w.Write([]byte{'}'})
+			})
+		case <-ctx.Done():
+			return nil
+		}
+	}
+}
+
+func (ec *executionContext) fieldContext_Subscription_satelliteVisibilityUpdated(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Subscription",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "tileId":
+				return ec.fieldContext_TileVisibility_tileId(ctx, field)
+			case "quadkey":
+				return ec.fieldContext_TileVisibility_quadkey(ctx, field)
+			case "satelliteId":
+				return ec.fieldContext_TileVisibility_satelliteId(ctx, field)
+			case "satelliteName":
+				return ec.fieldContext_TileVisibility_satelliteName(ctx, field)
+			case "aos":
+				return ec.fieldContext_TileVisibility_aos(ctx, field)
+			case "los":
+				return ec.fieldContext_TileVisibility_los(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type TileVisibility", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Subscription_satelliteVisibilityUpdated_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TileVisibility_tileId(ctx context.Context, field graphql.CollectedField, obj *model.TileVisibility) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TileVisibility_tileId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TileID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TileVisibility_tileId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TileVisibility",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TileVisibility_quadkey(ctx context.Context, field graphql.CollectedField, obj *model.TileVisibility) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TileVisibility_quadkey(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Quadkey, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TileVisibility_quadkey(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TileVisibility",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TileVisibility_satelliteId(ctx context.Context, field graphql.CollectedField, obj *model.TileVisibility) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TileVisibility_satelliteId(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SatelliteID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TileVisibility_satelliteId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TileVisibility",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TileVisibility_satelliteName(ctx context.Context, field graphql.CollectedField, obj *model.TileVisibility) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TileVisibility_satelliteName(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SatelliteName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TileVisibility_satelliteName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TileVisibility",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TileVisibility_aos(ctx context.Context, field graphql.CollectedField, obj *model.TileVisibility) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TileVisibility_aos(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Aos, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TileVisibility_aos(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TileVisibility",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TileVisibility_los(ctx context.Context, field graphql.CollectedField, obj *model.TileVisibility) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_TileVisibility_los(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Los, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_TileVisibility_los(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TileVisibility",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -3280,6 +4035,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "satelliteVisibilities":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_satelliteVisibilities(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "satelliteVisibilitiesInRange":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_satelliteVisibilitiesInRange(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -3444,9 +4243,75 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	switch fields[0].Name {
 	case "satellitePositionUpdated":
 		return ec._Subscription_satellitePositionUpdated(ctx, fields[0])
+	case "satelliteVisibilityUpdated":
+		return ec._Subscription_satelliteVisibilityUpdated(ctx, fields[0])
 	default:
 		panic("unknown field " + strconv.Quote(fields[0].Name))
 	}
+}
+
+var tileVisibilityImplementors = []string{"TileVisibility"}
+
+func (ec *executionContext) _TileVisibility(ctx context.Context, sel ast.SelectionSet, obj *model.TileVisibility) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tileVisibilityImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TileVisibility")
+		case "tileId":
+			out.Values[i] = ec._TileVisibility_tileId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quadkey":
+			out.Values[i] = ec._TileVisibility_quadkey(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "satelliteId":
+			out.Values[i] = ec._TileVisibility_satelliteId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "satelliteName":
+			out.Values[i] = ec._TileVisibility_satelliteName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "aos":
+			out.Values[i] = ec._TileVisibility_aos(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "los":
+			out.Values[i] = ec._TileVisibility_los(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
 }
 
 var __DirectiveImplementors = []string{"__Directive"}
@@ -3887,6 +4752,60 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNTileVisibility2ᚕᚖgithubᚗcomᚋElbujitoᚋ2112ᚋsrcᚋgraphqlᚑapiᚋgoᚋgraphᚋmodelᚐTileVisibilityᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TileVisibility) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTileVisibility2ᚖgithubᚗcomᚋElbujitoᚋ2112ᚋsrcᚋgraphqlᚑapiᚋgoᚋgraphᚋmodelᚐTileVisibility(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTileVisibility2ᚖgithubᚗcomᚋElbujitoᚋ2112ᚋsrcᚋgraphqlᚑapiᚋgoᚋgraphᚋmodelᚐTileVisibility(ctx context.Context, sel ast.SelectionSet, v *model.TileVisibility) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TileVisibility(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

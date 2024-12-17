@@ -26,9 +26,24 @@ func (r *queryResolver) SatellitePositionsInRange(ctx context.Context, id string
 	panic(fmt.Errorf("not implemented: SatellitePositionsInRange - satellitePositionsInRange"))
 }
 
+// SatelliteVisibilities is the resolver for the satelliteVisibilities field.
+func (r *queryResolver) SatelliteVisibilities(ctx context.Context, latitude float64, longitude float64) ([]*model.TileVisibility, error) {
+	panic(fmt.Errorf("not implemented: SatelliteVisibilities - satelliteVisibilities"))
+}
+
+// SatelliteVisibilitiesInRange is the resolver for the satelliteVisibilitiesInRange field.
+func (r *queryResolver) SatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) ([]*model.TileVisibility, error) {
+	panic(fmt.Errorf("not implemented: SatelliteVisibilitiesInRange - satelliteVisibilitiesInRange"))
+}
+
 // SatellitePositionUpdated is the resolver for the satellitePositionUpdated field.
 func (r *subscriptionResolver) SatellitePositionUpdated(ctx context.Context, id string) (<-chan *model.SatellitePosition, error) {
 	panic(fmt.Errorf("not implemented: SatellitePositionUpdated - satellitePositionUpdated"))
+}
+
+// SatelliteVisibilityUpdated is the resolver for the satelliteVisibilityUpdated field.
+func (r *subscriptionResolver) SatelliteVisibilityUpdated(ctx context.Context, latitude float64, longitude float64) (<-chan []*model.TileVisibility, error) {
+	panic(fmt.Errorf("not implemented: SatelliteVisibilityUpdated - satelliteVisibilityUpdated"))
 }
 
 // Query returns QueryResolver implementation.

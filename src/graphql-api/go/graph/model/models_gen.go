@@ -23,3 +23,12 @@ type SatelliteTle struct {
 
 type Subscription struct {
 }
+
+type TileVisibility struct {
+	TileID        string `json:"tileId"`
+	Quadkey       string `json:"quadkey"`
+	SatelliteID   string `json:"satelliteId"`
+	SatelliteName string `json:"satelliteName"`
+	Aos           string `json:"aos"`
+	Los           string `json:"los"`
+}
