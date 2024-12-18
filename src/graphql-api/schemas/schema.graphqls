@@ -39,15 +39,16 @@ type Subscription {
 
   # Real-time updates for satellite visibilities in a user-defined zone for a specific user
   satelliteVisibilityUpdated(
-    uid: String!,
-    userLocation: UserLocationInput!,
-    startTime: String!,
+    uid: String!
+    userLocation: UserLocationInput!
+    startTime: String!
     endTime: String!
   ): [SatelliteVisibility!]!
 }
 
 # User-defined location parameters for visibility queries
 input UserLocationInput {
+  uid: String! # User ID for identifying the request
   latitude: Float!
   longitude: Float!
   radius: Float! # Radius of visibility in kilometers
@@ -62,6 +63,7 @@ type SatellitePosition {
   longitude: Float!
   altitude: Float!
   timestamp: String! # ISO 8601 format
+  uid: String! # User ID associated with the update
 }
 
 type SatelliteTle {
@@ -69,6 +71,7 @@ type SatelliteTle {
   name: String!
   tleLine1: String!
   tleLine2: String!
+  uid: String! # User ID associated with the request
 }
 
 # Satellite visibility details
@@ -78,10 +81,12 @@ type SatelliteVisibility {
   aos: String! # Acquisition of Signal (ISO 8601 format)
   los: String! # Loss of Signal (ISO 8601 format)
   userLocation: UserLocation! # The location and parameters of the user
+  uid: String! # User ID associated with the visibility data
 }
 
 # User location and viewing parameters
 type UserLocation {
+  uid: String! # User ID for identifying the location context
   latitude: Float!
   longitude: Float!
   radius: Float! # Radius of visibility in kilometers

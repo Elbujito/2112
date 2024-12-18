@@ -28,7 +28,7 @@ func main() {
 	initRedis(redisHost, redisPort)
 
 	// Initialize Resolver
-	resolver := NewResolver()
+	resolver := NewCustomResolver(rdb)
 
 	// Start Redis subscription in a goroutine
 	go subscribeToRedisForPositionUpdates(resolver)

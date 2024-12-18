@@ -15,6 +15,7 @@ type SatellitePosition struct {
 	Longitude float64 `json:"longitude"`
 	Altitude  float64 `json:"altitude"`
 	Timestamp string  `json:"timestamp"`
+	UID       string  `json:"uid"`
 }
 
 type SatelliteTle struct {
@@ -22,6 +23,7 @@ type SatelliteTle struct {
 	Name     string `json:"name"`
 	TleLine1 string `json:"tleLine1"`
 	TleLine2 string `json:"tleLine2"`
+	UID      string `json:"uid"`
 }
 
 type SatelliteVisibility struct {
@@ -30,12 +32,14 @@ type SatelliteVisibility struct {
 	Aos           string        `json:"aos"`
 	Los           string        `json:"los"`
 	UserLocation  *UserLocation `json:"userLocation"`
+	UID           string        `json:"uid"`
 }
 
 type Subscription struct {
 }
 
 type UserLocation struct {
+	UID       string  `json:"uid"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Radius    float64 `json:"radius"`
@@ -43,6 +47,7 @@ type UserLocation struct {
 }
 
 type UserLocationInput struct {
+	UID       string  `json:"uid"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Radius    float64 `json:"radius"`

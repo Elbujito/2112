@@ -66,6 +66,7 @@ type ComplexityRoot struct {
 		Longitude func(childComplexity int) int
 		Name      func(childComplexity int) int
 		Timestamp func(childComplexity int) int
+		UID       func(childComplexity int) int
 	}
 
 	SatelliteTle struct {
@@ -73,6 +74,7 @@ type ComplexityRoot struct {
 		Name     func(childComplexity int) int
 		TleLine1 func(childComplexity int) int
 		TleLine2 func(childComplexity int) int
+		UID      func(childComplexity int) int
 	}
 
 	SatelliteVisibility struct {
@@ -80,6 +82,7 @@ type ComplexityRoot struct {
 		Los           func(childComplexity int) int
 		SatelliteID   func(childComplexity int) int
 		SatelliteName func(childComplexity int) int
+		UID           func(childComplexity int) int
 		UserLocation  func(childComplexity int) int
 	}
 
@@ -93,6 +96,7 @@ type ComplexityRoot struct {
 		Latitude  func(childComplexity int) int
 		Longitude func(childComplexity int) int
 		Radius    func(childComplexity int) int
+		UID       func(childComplexity int) int
 	}
 }
 
@@ -231,6 +235,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SatellitePosition.Timestamp(childComplexity), true
 
+	case "SatellitePosition.uid":
+		if e.complexity.SatellitePosition.UID == nil {
+			break
+		}
+
+		return e.complexity.SatellitePosition.UID(childComplexity), true
+
 	case "SatelliteTle.id":
 		if e.complexity.SatelliteTle.ID == nil {
 			break
@@ -259,6 +270,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SatelliteTle.TleLine2(childComplexity), true
 
+	case "SatelliteTle.uid":
+		if e.complexity.SatelliteTle.UID == nil {
+			break
+		}
+
+		return e.complexity.SatelliteTle.UID(childComplexity), true
+
 	case "SatelliteVisibility.aos":
 		if e.complexity.SatelliteVisibility.Aos == nil {
 			break
@@ -286,6 +304,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SatelliteVisibility.SatelliteName(childComplexity), true
+
+	case "SatelliteVisibility.uid":
+		if e.complexity.SatelliteVisibility.UID == nil {
+			break
+		}
+
+		return e.complexity.SatelliteVisibility.UID(childComplexity), true
 
 	case "SatelliteVisibility.userLocation":
 		if e.complexity.SatelliteVisibility.UserLocation == nil {
@@ -345,6 +370,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.UserLocation.Radius(childComplexity), true
+
+	case "UserLocation.uid":
+		if e.complexity.UserLocation.UID == nil {
+			break
+		}
+
+		return e.complexity.UserLocation.UID(childComplexity), true
 
 	}
 	return 0, false
@@ -510,15 +542,16 @@ type Subscription {
 
   # Real-time updates for satellite visibilities in a user-defined zone for a specific user
   satelliteVisibilityUpdated(
-    uid: String!,
-    userLocation: UserLocationInput!,
-    startTime: String!,
+    uid: String!
+    userLocation: UserLocationInput!
+    startTime: String!
     endTime: String!
   ): [SatelliteVisibility!]!
 }
 
 # User-defined location parameters for visibility queries
 input UserLocationInput {
+  uid: String! # User ID for identifying the request
   latitude: Float!
   longitude: Float!
   radius: Float! # Radius of visibility in kilometers
@@ -533,6 +566,7 @@ type SatellitePosition {
   longitude: Float!
   altitude: Float!
   timestamp: String! # ISO 8601 format
+  uid: String! # User ID associated with the update
 }
 
 type SatelliteTle {
@@ -540,6 +574,7 @@ type SatelliteTle {
   name: String!
   tleLine1: String!
   tleLine2: String!
+  uid: String! # User ID associated with the request
 }
 
 # Satellite visibility details
@@ -549,10 +584,12 @@ type SatelliteVisibility {
   aos: String! # Acquisition of Signal (ISO 8601 format)
   los: String! # Loss of Signal (ISO 8601 format)
   userLocation: UserLocation! # The location and parameters of the user
+  uid: String! # User ID associated with the visibility data
 }
 
 # User location and viewing parameters
 type UserLocation {
+  uid: String! # User ID for identifying the location context
   latitude: Float!
   longitude: Float!
   radius: Float! # Radius of visibility in kilometers
@@ -1123,6 +1160,8 @@ func (ec *executionContext) fieldContext_Query_satellitePosition(ctx context.Con
 				return ec.fieldContext_SatellitePosition_altitude(ctx, field)
 			case "timestamp":
 				return ec.fieldContext_SatellitePosition_timestamp(ctx, field)
+			case "uid":
+				return ec.fieldContext_SatellitePosition_uid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatellitePosition", field.Name)
 		},
@@ -1185,6 +1224,8 @@ func (ec *executionContext) fieldContext_Query_satelliteTle(ctx context.Context,
 				return ec.fieldContext_SatelliteTle_tleLine1(ctx, field)
 			case "tleLine2":
 				return ec.fieldContext_SatelliteTle_tleLine2(ctx, field)
+			case "uid":
+				return ec.fieldContext_SatelliteTle_uid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatelliteTle", field.Name)
 		},
@@ -1254,6 +1295,8 @@ func (ec *executionContext) fieldContext_Query_satellitePositionsInRange(ctx con
 				return ec.fieldContext_SatellitePosition_altitude(ctx, field)
 			case "timestamp":
 				return ec.fieldContext_SatellitePosition_timestamp(ctx, field)
+			case "uid":
+				return ec.fieldContext_SatellitePosition_uid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatellitePosition", field.Name)
 		},
@@ -1321,6 +1364,8 @@ func (ec *executionContext) fieldContext_Query_cachedSatelliteVisibilities(ctx c
 				return ec.fieldContext_SatelliteVisibility_los(ctx, field)
 			case "userLocation":
 				return ec.fieldContext_SatelliteVisibility_userLocation(ctx, field)
+			case "uid":
+				return ec.fieldContext_SatelliteVisibility_uid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatelliteVisibility", field.Name)
 		},
@@ -1732,6 +1777,50 @@ func (ec *executionContext) fieldContext_SatellitePosition_timestamp(_ context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _SatellitePosition_uid(ctx context.Context, field graphql.CollectedField, obj *model.SatellitePosition) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SatellitePosition_uid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SatellitePosition_uid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SatellitePosition",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _SatelliteTle_id(ctx context.Context, field graphql.CollectedField, obj *model.SatelliteTle) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_SatelliteTle_id(ctx, field)
 	if err != nil {
@@ -1896,6 +1985,50 @@ func (ec *executionContext) _SatelliteTle_tleLine2(ctx context.Context, field gr
 }
 
 func (ec *executionContext) fieldContext_SatelliteTle_tleLine2(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SatelliteTle",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SatelliteTle_uid(ctx context.Context, field graphql.CollectedField, obj *model.SatelliteTle) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SatelliteTle_uid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SatelliteTle_uid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "SatelliteTle",
 		Field:      field,
@@ -2123,6 +2256,8 @@ func (ec *executionContext) fieldContext_SatelliteVisibility_userLocation(_ cont
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
+			case "uid":
+				return ec.fieldContext_UserLocation_uid(ctx, field)
 			case "latitude":
 				return ec.fieldContext_UserLocation_latitude(ctx, field)
 			case "longitude":
@@ -2133,6 +2268,50 @@ func (ec *executionContext) fieldContext_SatelliteVisibility_userLocation(_ cont
 				return ec.fieldContext_UserLocation_horizon(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type UserLocation", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _SatelliteVisibility_uid(ctx context.Context, field graphql.CollectedField, obj *model.SatelliteVisibility) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_SatelliteVisibility_uid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_SatelliteVisibility_uid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "SatelliteVisibility",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -2200,6 +2379,8 @@ func (ec *executionContext) fieldContext_Subscription_satellitePositionUpdated(c
 				return ec.fieldContext_SatellitePosition_altitude(ctx, field)
 			case "timestamp":
 				return ec.fieldContext_SatellitePosition_timestamp(ctx, field)
+			case "uid":
+				return ec.fieldContext_SatellitePosition_uid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatellitePosition", field.Name)
 		},
@@ -2281,6 +2462,8 @@ func (ec *executionContext) fieldContext_Subscription_satelliteVisibilityUpdated
 				return ec.fieldContext_SatelliteVisibility_los(ctx, field)
 			case "userLocation":
 				return ec.fieldContext_SatelliteVisibility_userLocation(ctx, field)
+			case "uid":
+				return ec.fieldContext_SatelliteVisibility_uid(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type SatelliteVisibility", field.Name)
 		},
@@ -2295,6 +2478,50 @@ func (ec *executionContext) fieldContext_Subscription_satelliteVisibilityUpdated
 	if fc.Args, err = ec.field_Subscription_satelliteVisibilityUpdated_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserLocation_uid(ctx context.Context, field graphql.CollectedField, obj *model.UserLocation) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_UserLocation_uid(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.UID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_UserLocation_uid(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UserLocation",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
 	}
 	return fc, nil
 }
@@ -4255,13 +4482,20 @@ func (ec *executionContext) unmarshalInputUserLocationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"latitude", "longitude", "radius", "horizon"}
+	fieldsInOrder := [...]string{"uid", "latitude", "longitude", "radius", "horizon"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "uid":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("uid"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.UID = data
 		case "latitude":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("latitude"))
 			data, err := ec.unmarshalNFloat2float64(ctx, v)
@@ -4526,6 +4760,11 @@ func (ec *executionContext) _SatellitePosition(ctx context.Context, sel ast.Sele
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "uid":
+			out.Values[i] = ec._SatellitePosition_uid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4577,6 +4816,11 @@ func (ec *executionContext) _SatelliteTle(ctx context.Context, sel ast.Selection
 			}
 		case "tleLine2":
 			out.Values[i] = ec._SatelliteTle_tleLine2(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "uid":
+			out.Values[i] = ec._SatelliteTle_uid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4639,6 +4883,11 @@ func (ec *executionContext) _SatelliteVisibility(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "uid":
+			out.Values[i] = ec._SatelliteVisibility_uid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4695,6 +4944,11 @@ func (ec *executionContext) _UserLocation(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("UserLocation")
+		case "uid":
+			out.Values[i] = ec._UserLocation_uid(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "latitude":
 			out.Values[i] = ec._UserLocation_latitude(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
