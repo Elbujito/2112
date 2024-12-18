@@ -93,7 +93,7 @@ func (q *queryResolver) SatellitePositionsInRange(ctx context.Context, id string
 
 func (q *queryResolver) CachedSatelliteVisibilities(ctx context.Context, uid string, userLocation model.UserLocationInput, startTime string, endTime string) ([]*model.SatelliteVisibility, error) {
 	// Prepare Redis key for cached visibilities
-	key := fmt.Sprintf("cached_visibilities:%s", uid)
+	key := fmt.Sprintf("satellite_visibilities:%s", uid)
 
 	// Fetch cached visibility data from Redis
 	data, err := q.CustomResolver.rdb.Get(ctx, key).Result()
