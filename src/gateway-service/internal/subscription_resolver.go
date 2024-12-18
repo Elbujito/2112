@@ -31,7 +31,7 @@ func (s *subscriptionResolver) SatellitePositionUpdated(ctx context.Context, id 
 }
 
 // SatelliteVisibilityUpdated resolves the subscription for real-time visibility updates
-func (s *subscriptionResolver) SatelliteVisibilityUpdated(ctx context.Context, latitude float64, longitude float64) (<-chan []*model.TileVisibility, error) {
+func (s *subscriptionResolver) SatelliteVisibilityUpdated(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) (<-chan []*model.TileVisibility, error) {
 	s.Mutex.Lock()
 	key := createVisibilityKey(latitude, longitude)
 	ch := make(chan []*model.TileVisibility, 1)

@@ -1,5 +1,6 @@
 schema {
   query: Query
+  mutation: Mutation
   subscription: Subscription
 }
 
@@ -13,15 +14,47 @@ type Query {
   # Retrieve positions of a satellite within a time range
   satellitePositionsInRange(id: ID!, startTime: String!, endTime: String!): [SatellitePosition!]!
 
-  # Trigger the generation of visibility data (AOS and LOS) for satellites within a time range
-  requestSatelliteVisibilitiesInRange(
-    latitude: Float!, 
-    longitude: Float!, 
-    startTime: String!, 
+  # Fetch cached visibilities for satellites in view based on user location and parameters
+  cachedSatelliteVisibilities(
+    uid: String!
+    userLocation: UserLocationInput!
+    startTime: String!
+    endTime: String!
+  ): [SatelliteVisibility!]!
+}
+
+type Mutation {
+  # Request visibilities for satellites within a specific user location and time range
+  requestSatelliteVisibilities(
+    uid: String!
+    userLocation: UserLocationInput!
+    startTime: String!
     endTime: String!
   ): Boolean!
 }
 
+type Subscription {
+  # Real-time position updates for a specific user
+  satellitePositionUpdated(uid: String!, id: ID!): SatellitePosition
+
+  # Real-time updates for satellite visibilities in a user-defined zone for a specific user
+  satelliteVisibilityUpdated(
+    uid: String!,
+    userLocation: UserLocationInput!,
+    startTime: String!,
+    endTime: String!
+  ): [SatelliteVisibility!]!
+}
+
+# User-defined location parameters for visibility queries
+input UserLocationInput {
+  latitude: Float!
+  longitude: Float!
+  radius: Float! # Radius of visibility in kilometers
+  horizon: Float! # Horizon angle in degrees
+}
+
+# Satellite position and visibility information
 type SatellitePosition {
   id: ID!
   name: String!
@@ -38,24 +71,19 @@ type SatelliteTle {
   tleLine2: String!
 }
 
-type TileVisibility {
-  tileId: ID!
-  quadkey: String!
+# Satellite visibility details
+type SatelliteVisibility {
   satelliteId: ID!
   satelliteName: String!
   aos: String! # Acquisition of Signal (ISO 8601 format)
   los: String! # Loss of Signal (ISO 8601 format)
+  userLocation: UserLocation! # The location and parameters of the user
 }
 
-type Subscription {
-  # Real-time position updates
-  satellitePositionUpdated(id: ID!): SatellitePosition
-
-  # Real-time updates for visibilities after a request
-  satelliteVisibilityUpdated(
-    latitude: Float!, 
-    longitude: Float!, 
-    startTime: String!, 
-    endTime: String!
-  ): [TileVisibility!]!
+# User location and viewing parameters
+type UserLocation {
+  latitude: Float!
+  longitude: Float!
+  radius: Float! # Radius of visibility in kilometers
+  horizon: Float! # Horizon angle in degrees
 }

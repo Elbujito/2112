@@ -2,6 +2,9 @@
 
 package model
 
+type Mutation struct {
+}
+
 type Query struct {
 }
 
@@ -21,14 +24,27 @@ type SatelliteTle struct {
 	TleLine2 string `json:"tleLine2"`
 }
 
+type SatelliteVisibility struct {
+	SatelliteID   string        `json:"satelliteId"`
+	SatelliteName string        `json:"satelliteName"`
+	Aos           string        `json:"aos"`
+	Los           string        `json:"los"`
+	UserLocation  *UserLocation `json:"userLocation"`
+}
+
 type Subscription struct {
 }
 
-type TileVisibility struct {
-	TileID        string `json:"tileId"`
-	Quadkey       string `json:"quadkey"`
-	SatelliteID   string `json:"satelliteId"`
-	SatelliteName string `json:"satelliteName"`
-	Aos           string `json:"aos"`
-	Los           string `json:"los"`
+type UserLocation struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Radius    float64 `json:"radius"`
+	Horizon   float64 `json:"horizon"`
+}
+
+type UserLocationInput struct {
+	Latitude  float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Radius    float64 `json:"radius"`
+	Horizon   float64 `json:"horizon"`
 }

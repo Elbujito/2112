@@ -15,7 +15,8 @@ type Resolver struct {
 
 func NewResolver() *Resolver {
 	return &Resolver{
-		PositionSubscribers: make(map[string]chan *model.SatellitePosition),
+		PositionSubscribers:   make(map[string]chan *model.SatellitePosition),
+		VisibilitySubscribers: make(map[string]chan []*model.TileVisibility),
 	}
 }
 
@@ -36,4 +37,15 @@ func (r *Resolver) NotifySubscribers(position *model.SatellitePosition) {
 			ch <- position
 		}
 	}
+}
+
+func (r *Resolver) NotifyVisibilitiesSubscribers(visbilities []*model.TileVisibility) {
+	r.Mutex.Lock()
+	defer r.Mutex.Unlock()
+
+	// for id, ch := range r.VisibilitySubscribers {
+	// 	if id == visbilities.ID {
+	// 		ch <- visbilities
+	// 	}
+	// }
 }

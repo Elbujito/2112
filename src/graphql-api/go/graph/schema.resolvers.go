@@ -11,6 +11,11 @@ import (
 	"github.com/Elbujito/2112/src/graphql-api/go/graph/model"
 )
 
+// RequestSatelliteVisibilities is the resolver for the requestSatelliteVisibilities field.
+func (r *mutationResolver) RequestSatelliteVisibilities(ctx context.Context, uid string, userLocation model.UserLocationInput, startTime string, endTime string) (bool, error) {
+	panic(fmt.Errorf("not implemented: RequestSatelliteVisibilities - requestSatelliteVisibilities"))
+}
+
 // SatellitePosition is the resolver for the satellitePosition field.
 func (r *queryResolver) SatellitePosition(ctx context.Context, id string) (*model.SatellitePosition, error) {
 	panic(fmt.Errorf("not implemented: SatellitePosition - satellitePosition"))
@@ -26,20 +31,23 @@ func (r *queryResolver) SatellitePositionsInRange(ctx context.Context, id string
 	panic(fmt.Errorf("not implemented: SatellitePositionsInRange - satellitePositionsInRange"))
 }
 
-// RequestSatelliteVisibilitiesInRange is the resolver for the requestSatelliteVisibilitiesInRange field.
-func (r *queryResolver) RequestSatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) (bool, error) {
-	panic(fmt.Errorf("not implemented: RequestSatelliteVisibilitiesInRange - requestSatelliteVisibilitiesInRange"))
+// CachedSatelliteVisibilities is the resolver for the cachedSatelliteVisibilities field.
+func (r *queryResolver) CachedSatelliteVisibilities(ctx context.Context, uid string, userLocation model.UserLocationInput, startTime string, endTime string) ([]*model.SatelliteVisibility, error) {
+	panic(fmt.Errorf("not implemented: CachedSatelliteVisibilities - cachedSatelliteVisibilities"))
 }
 
 // SatellitePositionUpdated is the resolver for the satellitePositionUpdated field.
-func (r *subscriptionResolver) SatellitePositionUpdated(ctx context.Context, id string) (<-chan *model.SatellitePosition, error) {
+func (r *subscriptionResolver) SatellitePositionUpdated(ctx context.Context, uid string, id string) (<-chan *model.SatellitePosition, error) {
 	panic(fmt.Errorf("not implemented: SatellitePositionUpdated - satellitePositionUpdated"))
 }
 
 // SatelliteVisibilityUpdated is the resolver for the satelliteVisibilityUpdated field.
-func (r *subscriptionResolver) SatelliteVisibilityUpdated(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) (<-chan []*model.TileVisibility, error) {
+func (r *subscriptionResolver) SatelliteVisibilityUpdated(ctx context.Context, uid string, userLocation model.UserLocationInput, startTime string, endTime string) (<-chan []*model.SatelliteVisibility, error) {
 	panic(fmt.Errorf("not implemented: SatelliteVisibilityUpdated - satelliteVisibilityUpdated"))
 }
+
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
@@ -47,5 +55,18 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Subscription returns SubscriptionResolver implementation.
 func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
 
+type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *queryResolver) RequestSatelliteVisibilitiesInRange(ctx context.Context, latitude float64, longitude float64, startTime string, endTime string) (bool, error) {
+	panic(fmt.Errorf("not implemented: RequestSatelliteVisibilitiesInRange - requestSatelliteVisibilitiesInRange"))
+}
+*/

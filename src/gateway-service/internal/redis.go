@@ -36,3 +36,18 @@ func subscribeToRedisForPositionUpdates(resolver *Resolver) {
 		resolver.NotifySubscribers(&position)
 	}
 }
+
+func subscribeToRedisForVisibilityUpdates(resolver *Resolver) {
+	pubsub := rdb.Subscribe(ctx, "satellite_visibilities")
+	defer pubsub.Close()
+
+	for msg := range pubsub.Channel() {
+		var position model.SatellitePosition
+		if err := json.Unmarshal([]byte(msg.Payload), &position); err != nil {
+			log.Printf("Error unmarshalling SatellitePosition: %v", err)
+			continue
+		}
+
+		resolver.NotifySubscribers(&position)
+	}
+}
