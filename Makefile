@@ -114,10 +114,15 @@ gqlgen-run: ## Run the GraphQL API project
 	cd $(GRAPHQL_API)/go && go run .
 
 .PHONY: gqlgen-publish
-gqlgen-publish: ## Publish the GraphQL API to GitHub
-	cd $(GRAPHQL_API)/go && git add -A && git commit -m "Release version $(VERSION_GRAPHQL_API)" && \
-	git tag -a v$(VERSION_GRAPHQL_API) -m "Version $(VERSION_GRAPHQL_API)" && git push origin main && git push origin v$(VERSION_GRAPHQL_API)
-	@echo "GraphQL API published successfully with version $(VERSION_GRAPHQL_API)"
+gqlgen-publish: ## Publish the GraphQL API module
+	cd src/graphql-api/go && \
+	git add -A && \
+	git commit -m "Release version $(VERSION_GRAPHQL_API)" && \
+	git tag -a src/graphql-api/go/v$(VERSION_GRAPHQL_API) -m "Version $(VERSION_GRAPHQL_API)" && \
+	git push origin main && \
+	git push origin src/graphql-api/go/v$(VERSION_GRAPHQL_API)
+	@echo "GraphQL API module published successfully with version $(VERSION_GRAPHQL_API)"
+
 
 
 .PHONY: create-venv
