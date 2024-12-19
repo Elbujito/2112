@@ -4,7 +4,7 @@ import { IoMdTime } from "react-icons/io";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { Tooltip } from "@chakra-ui/react"; // Assuming Chakra UI for tooltips
 
-const VisibilityTimeline = (props: { data: any[] }) => {
+const VisibilityTimeline = (props: { location: { latitude: number; longitude: number }, data: any[] }) => {
   const { data } = props;
   const [selectedItem, setSelectedItem] = useState<number | null>(0); // First item is preselected
 
@@ -95,20 +95,18 @@ const VisibilityTimelineItem = (props: {
     <Tooltip label={`NORAD ID: ${noradID}`} aria-label="NORAD Tooltip">
       <div
         onClick={onClick}
-        className={`cursor-pointer flex-shrink-0 flex w-[300px] items-end justify-between gap-4 rounded-xl p-1.5 ${
-          isSelected
+        className={`cursor-pointer flex-shrink-0 flex w-[300px] items-end justify-between gap-4 rounded-xl p-1.5 ${isSelected
             ? "bg-brand-900 text-white dark:bg-brand-400 dark:text-white"
             : "bg-white text-navy-700 dark:bg-navy-700 dark:text-white"
-        }`}
+          }`}
       >
         {/* Left Side */}
         <div className="flex items-center gap-3">
           <div
-            className={`flex h-20 w-20 flex-col items-center justify-center rounded-xl ${
-              isSelected
+            className={`flex h-20 w-20 flex-col items-center justify-center rounded-xl ${isSelected
                 ? "bg-brand-900 text-white dark:bg-brand-400"
                 : "bg-lightPrimary text-gray-600 dark:bg-navy-900 dark:text-white"
-            }`}
+              }`}
           >
             <p className="text-sm font-bold">{weekday}</p>
             <h5 className="text-[34px] font-bold">{day}</h5>

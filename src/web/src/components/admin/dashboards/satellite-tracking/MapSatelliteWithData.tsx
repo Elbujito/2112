@@ -41,8 +41,6 @@ const MapSatelliteWithData: React.FC<MapSatelliteWithDataProps> = ({
     skip: !noradID,
   });
 
-  // Debug log for GraphQL response
-  console.log("GraphQL Query Data:", data);
 
   let orbitData: OrbitDataItem[] = [];
   if (data && Array.isArray(data.satellitePositionsInRange)) {

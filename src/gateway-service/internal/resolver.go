@@ -8,18 +8,15 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+// CustomResolver implements the root resolver for the GraphQL server.
 type CustomResolver struct {
-	graph.Resolver
-	// Redis client instance
-	rdb *redis.Client
-	// Map for position subscriptions, keyed by uid and satellite ID
-	PositionSubscribers map[string]map[string]chan *model.SatellitePosition
-	// Map for visibility subscriptions, keyed by uid
+	rdb                   *redis.Client
+	PositionSubscribers   map[string]map[string]chan *model.SatellitePosition
 	VisibilitySubscribers map[string]chan []*model.SatelliteVisibility
-	Mutex                 sync.Mutex
+	mu                    sync.Mutex
 }
 
-// NewCustomResolver initializes a new CustomResolver instance with a Redis client
+// NewCustomResolver initializes and returns a new CustomResolver.
 func NewCustomResolver(redisClient *redis.Client) *CustomResolver {
 	return &CustomResolver{
 		rdb:                   redisClient,
@@ -28,64 +25,37 @@ func NewCustomResolver(redisClient *redis.Client) *CustomResolver {
 	}
 }
 
-// NotifyPositionSubscribers sends a position update to the relevant subscribers
-func (r *CustomResolver) NotifyPositionSubscribers(uid string, position *model.SatellitePosition) {
-	r.Mutex.Lock()
-	defer r.Mutex.Unlock()
+// Mutation returns the mutation resolver.
+func (r *CustomResolver) Mutation() graph.MutationResolver {
+	return &mutationResolver{CustomResolver: r}
+}
 
-	if userSubs, ok := r.PositionSubscribers[uid]; ok {
-		if ch, ok := userSubs[position.ID]; ok {
+// Query returns the query resolver.
+func (r *CustomResolver) Query() graph.QueryResolver {
+	return &queryResolver{CustomResolver: r}
+}
+
+// Subscription returns the subscription resolver.
+func (r *CustomResolver) Subscription() graph.SubscriptionResolver {
+	return &subscriptionResolver{CustomResolver: r}
+}
+
+// NotifyPositionSubscribers sends updates to position subscribers.
+func (r *CustomResolver) NotifyPositionSubscribers(uid string, position *model.SatellitePosition) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if userChannels, ok := r.PositionSubscribers[uid]; ok {
+		if ch, ok := userChannels[position.ID]; ok {
 			ch <- position
 		}
 	}
 }
 
-// NotifyVisibilitySubscribers sends a visibility update to the relevant subscribers
+// NotifyVisibilitySubscribers sends updates to visibility subscribers.
 func (r *CustomResolver) NotifyVisibilitySubscribers(uid string, visibilities []*model.SatelliteVisibility) {
-	r.Mutex.Lock()
-	defer r.Mutex.Unlock()
-
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	if ch, ok := r.VisibilitySubscribers[uid]; ok {
 		ch <- visibilities
 	}
-}
-
-// AddPositionSubscriber adds a subscriber for satellite position updates
-func (r *CustomResolver) AddPositionSubscriber(uid string, satelliteID string, ch chan *model.SatellitePosition) {
-	r.Mutex.Lock()
-	defer r.Mutex.Unlock()
-
-	if _, ok := r.PositionSubscribers[uid]; !ok {
-		r.PositionSubscribers[uid] = make(map[string]chan *model.SatellitePosition)
-	}
-	r.PositionSubscribers[uid][satelliteID] = ch
-}
-
-// RemovePositionSubscriber removes a subscriber for satellite position updates
-func (r *CustomResolver) RemovePositionSubscriber(uid string, satelliteID string) {
-	r.Mutex.Lock()
-	defer r.Mutex.Unlock()
-
-	if userSubs, ok := r.PositionSubscribers[uid]; ok {
-		delete(userSubs, satelliteID)
-		if len(userSubs) == 0 {
-			delete(r.PositionSubscribers, uid)
-		}
-	}
-}
-
-// AddVisibilitySubscriber adds a subscriber for satellite visibility updates
-func (r *CustomResolver) AddVisibilitySubscriber(uid string, ch chan []*model.SatelliteVisibility) {
-	r.Mutex.Lock()
-	defer r.Mutex.Unlock()
-
-	r.VisibilitySubscribers[uid] = ch
-}
-
-// RemoveVisibilitySubscriber removes a subscriber for satellite visibility updates
-func (r *CustomResolver) RemoveVisibilitySubscriber(uid string) {
-	r.Mutex.Lock()
-	defer r.Mutex.Unlock()
-
-	delete(r.VisibilitySubscribers, uid)
 }

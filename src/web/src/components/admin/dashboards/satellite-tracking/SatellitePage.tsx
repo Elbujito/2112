@@ -1,105 +1,40 @@
 import React, { useState } from "react";
-import SatelliteTableWithData from "./SatelliteTableWithData"; // Assume this is the table component
-import MapSatelliteWithData from "./MapSatelliteWithData"; // Assume this is the map component
-import MapCard from "./MapCard";
-import VisibilityTimeline from "./VisibilityTimeline"; // Assume this is the timeline component
-import { CustomScrollbar } from "components/scrollbar/CustomScrollbar";
+import SatelliteTableWithData from "./SatelliteTableWithData"; // Table Component
+import MapSatelliteWithData from "./MapSatelliteWithData"; // Map Component
+import MapCard from "./MapCard"; // Map with Location Selector
+import { CustomScrollbar } from "components/scrollbar/CustomScrollbar"; // Custom Scrollbar Component
+import VisibilityTimelineWithData from "./VisibilityTimelineWithData"; // Timeline Component
 
 const SatellitePage: React.FC = () => {
+  // State for selected NORAD ID
   const [selectedNoradID, setSelectedNoradID] = useState<string | null>(null);
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(
-    null
-  );
 
-  // Handler to update NORAD ID
+  // State for user location
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number }>({
+    latitude: 37.7749, // Default to San Francisco
+    longitude: -122.4194,
+  });
+
+  // Handle NORAD ID selection from the Satellite Table
   const handleNoradIDChange = (noradID: string) => {
     setSelectedNoradID(noradID);
   };
 
-  // Handler to update user location
+  // Handle user location change from the MapCard
   const handleLocationChange = (location: { latitude: number; longitude: number }) => {
     setUserLocation(location);
   };
 
-  // Mock visibility data for the timeline
-  const mockVisibilityData = [
-    {
-      satellite: "Hubble Space Telescope",
-      noradID: "20580",
-      day: "03",
-      month: "12",
-      weekday: "Wed",
-      hours: "10:30 - 12:00",
-      current: true,
-    },
-    {
-      satellite: "ISS",
-      noradID: "25544",
-      day: "04",
-      month: "12",
-      weekday: "Thu",
-      hours: "09:00 - 09:15",
-    },
-    {
-      satellite: "Starlink-1234",
-      noradID: "44238",
-      day: "05",
-      month: "12",
-      weekday: "Fri",
-      hours: "21:30 - 22:00",
-    },
-    {
-      satellite: "Sentinel-2A",
-      noradID: "40697",
-      day: "06",
-      month: "12",
-      weekday: "Sat",
-      hours: "15:00 - 15:30",
-    },
-    {
-      satellite: "Landsat 9",
-      noradID: "50294",
-      day: "07",
-      month: "12",
-      weekday: "Sun",
-      hours: "17:45 - 18:15",
-    },
-    {
-      satellite: "TerraSAR-X",
-      noradID: "31698",
-      day: "08",
-      month: "12",
-      weekday: "Mon",
-      hours: "14:20 - 14:50",
-    },
-    {
-      satellite: "NOAA-20",
-      noradID: "43013",
-      day: "09",
-      month: "12",
-      weekday: "Tue",
-      hours: "13:30 - 13:50",
-    },
-    {
-      satellite: "Gaofen-4",
-      noradID: "41019",
-      day: "10",
-      month: "12",
-      weekday: "Wed",
-      hours: "22:00 - 22:30",
-    },
-  ];
-
   return (
     <div className="mt-3 grid h-full w-full grid-rows-[70vh_auto] grid-cols-12 gap-5">
-      {/* Left side: MapCard (spans 7 columns) */}
+      {/* Left Side: MapCard (spans 7 columns) */}
       <div className="row-span-1 col-span-12 lg:col-span-7">
         <div className="h-full">
           <MapCard onLocationChange={handleLocationChange} />
         </div>
       </div>
 
-      {/* Right side: Satellite Table and Map (spans 5 columns) */}
+      {/* Right Side: Satellite Table and Satellite Map (spans 5 columns) */}
       <div className="row-span-1 col-span-12 lg:col-span-5 grid grid-rows-2 gap-5">
         {/* Satellite Table */}
         <div className="row-span-1 overflow-auto">
@@ -108,18 +43,18 @@ const SatellitePage: React.FC = () => {
           </CustomScrollbar>
         </div>
 
-        {/* Satellite View */}
+        {/* Satellite Map */}
         <div className="row-span-1">
           <MapSatelliteWithData
             noradID={selectedNoradID}
-            userLocation={userLocation} // Pass user location as a prop
+            userLocation={userLocation}
           />
         </div>
       </div>
 
-      {/* Bottom row: Visibility Timeline (spans all 12 columns) */}
+      {/* Bottom Row: Visibility Timeline (spans all 12 columns) */}
       <div className="row-span-1 col-span-12">
-        <VisibilityTimeline data={mockVisibilityData} />
+        <VisibilityTimelineWithData userLocation={userLocation} uid={"adrien-test"} />
       </div>
     </div>
   );
