@@ -119,7 +119,7 @@ const VisibilityTimelineWithData: React.FC<VisibilityTimelineWithDataProps> = ({
                 console.error("Error requesting satellite visibilities:", err);
             });
         }
-    }, [uid, userLocationInput, startTime, endTime, requestVisibilities]);
+    }, [uid]);
 
     // Combine query and subscription data
     const visibilities = useMemo(() => {

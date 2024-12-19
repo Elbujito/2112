@@ -14,6 +14,7 @@ type MappingRepository interface {
 	Update(ctx context.Context, visibility TileSatelliteMapping) error
 	Delete(ctx context.Context, id string) error
 	SaveBatch(ctx context.Context, visibilities []TileSatelliteMapping) error
+	FindSatellitesForTiles(ctx context.Context, tileIDs []string) ([]Satellite, error)
 	FindAllVisibleTilesByNoradIDSortedByAOSTime(
 		ctx context.Context,
 		noradID string,

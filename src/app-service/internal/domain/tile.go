@@ -20,6 +20,7 @@ type TileRepository interface {
 	DeleteByQuadkey(ctx context.Context, key string) error                                         // Delete a tile by Quadkey
 	DeleteBySpatialLocation(ctx context.Context, lat float64, lon float64) error
 	FindTilesVisibleFromLine(ctx context.Context, sat Satellite, points []SatellitePosition) ([]TileSatelliteMapping, error)
+	FindTilesIntersectingLocation(ctx context.Context, lat, lon, radius float64) ([]Tile, error)
 }
 
 // Tile represents the domain entity Tile

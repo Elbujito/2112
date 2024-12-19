@@ -201,6 +201,38 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domai
 	return mappings, nil
 }
 
+// FindTilesIntersectingLocation retrieves all tiles that intersect the user's location.
+func (r *TileRepository) FindTilesIntersectingLocation(ctx context.Context, lat, lon, radius float64) ([]domain.Tile, error) {
+	var tiles []models.Tile
+
+	// Query tiles that intersect the user's location with the given radius
+	result := r.db.DbHandler.Raw(`
+		SELECT *
+		FROM tiles
+		WHERE ST_DWithin(
+			spatial_index,
+			ST_MakePoint(?, ?)::geography,
+			?
+		)
+	`, lon, lat, radius).Scan(&tiles)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	if len(tiles) == 0 {
+		return nil, errors.New("no tiles intersecting the user's location")
+	}
+
+	// Map tiles to domain objects
+	var domainTiles []domain.Tile
+	for _, tile := range tiles {
+		domainTiles = append(domainTiles, models.MapToDomain(tile))
+	}
+
+	return domainTiles, nil
+}
+
 // SaveBatch allows batch insertion of tiles for optimized performance.
 func (r *TileRepository) SaveBatch(ctx context.Context, tiles []domain.Tile) error {
 	modelTiles := make([]models.Tile, len(tiles))

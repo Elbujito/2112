@@ -45,11 +45,18 @@ func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository
 		&satelliteService,
 	)
 
+	satelliteVisibilities := handlers.NewComputeVisibilitiessHandler(
+		tileRepo,
+		visibilityRepo,
+		redisClient,
+	)
+
 	tasks := map[handlers.TaskName]TaskHandler{
 		celestrackTleUpload.GetTask().Name:       &celestrackTleUpload,
 		generateTilesHandler.GetTask().Name:      &generateTilesHandler,
 		mappingHandler.GetTask().Name:            &mappingHandler,
 		celestrackSatelliteUpload.GetTask().Name: &celestrackSatelliteUpload,
+		satelliteVisibilities.GetTask().Name:     &satelliteVisibilities,
 	}
 	return TaskMonitor{
 		Tasks: tasks,

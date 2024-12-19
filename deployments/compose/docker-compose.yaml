@@ -75,6 +75,20 @@ services:
     restart: no
     command: ["app-service", "task", "exec", "satellites_tiles_mappings", "visibilityRadiusKm=78"]
 
+
+
+  satellite-visibilities-service:
+    build:
+      context: ../../.
+      dockerfile: deployments/docker/Dockerfile.app
+    container_name: satellite-visibilities-service
+    env_file: ../config/app-service.dev-env
+    depends_on:
+      app-service:
+        condition: service_healthy
+    restart: no
+    command: ["app-service", "task", "exec", "compute_visibilities"]
+
   propagator-service:
     build:
       context: ../../.

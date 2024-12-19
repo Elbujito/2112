@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -151,6 +152,34 @@ func (r *TileSatelliteMappingRepository) FindByTileID(ctx context.Context, tileI
 		return nil, result.Error
 	}
 	return visibilities, nil
+}
+
+// FindSatellitesForTiles retrieves all satellites associated with a list of tile IDs.
+func (r *TileSatelliteMappingRepository) FindSatellitesForTiles(ctx context.Context, tileIDs []string) ([]domain.Satellite, error) {
+	if len(tileIDs) == 0 {
+		return nil, errors.New("no tiles provided")
+	}
+
+	var satellites []models.Satellite
+
+	// Query satellites associated with the provided tiles using JOIN
+	err := r.db.DbHandler.Table("tile_satellite_mappings").
+		Select("satellites.*").
+		Joins("JOIN satellites ON tile_satellite_mappings.norad_id = satellites.norad_id").
+		Where("tile_satellite_mappings.tile_id IN ?", tileIDs).
+		Find(&satellites).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to find satellites for tiles: %w", err)
+	}
+
+	// Map satellites from models to domain objects
+	var domainSatellites []domain.Satellite
+	for _, satellite := range satellites {
+		domainSatellites = append(domainSatellites, models.MapToSatelliteDomain(satellite))
+	}
+
+	return domainSatellites, nil
 }
 
 // FindAllVisibleTilesByNoradIDSortedByAOSTime retrieves all tiles visible for a given NORAD ID,

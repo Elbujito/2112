@@ -2,6 +2,8 @@ package models
 
 import (
 	"time"
+
+	"github.com/Elbujito/2112/src/app-service/internal/domain"
 )
 
 // Satellite Model
@@ -45,5 +47,28 @@ func (model *Satellite) MapToForm() *SatelliteForm {
 		Perigee:        model.Perigee,
 		RCS:            model.RCS,
 		Altitude:       model.Altitude,
+	}
+}
+
+// MapToDomain converts a Satellite database model to a Satellite domain model.
+func MapToSatelliteDomain(s Satellite) domain.Satellite {
+	return domain.Satellite{
+		ID:             s.ID,
+		CreatedAt:      s.CreatedAt,
+		UpdatedAt:      s.UpdatedAt,
+		Name:           s.Name,
+		NoradID:        s.NoradID,
+		Type:           domain.SatelliteType(s.Type),
+		LaunchDate:     s.LaunchDate,
+		DecayDate:      s.DecayDate,
+		IntlDesignator: s.IntlDesignator,
+		Owner:          s.Owner,
+		ObjectType:     s.ObjectType,
+		Period:         s.Period,
+		Inclination:    s.Inclination,
+		Apogee:         s.Apogee,
+		Perigee:        s.Perigee,
+		RCS:            s.RCS,
+		Altitude:       s.Altitude,
 	}
 }
