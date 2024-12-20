@@ -151,13 +151,6 @@ func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid
 		}
 
 		visibilities = append(visibilities, visibility)
-
-		// Publish the visibility message to the broker
-		if err := h.redisClient.Publish(ctx, key, visibility); err != nil {
-			log.Printf("Failed to publish visibility for satellite %s: %v\n", satellite.NoradID, err)
-		} else {
-			log.Printf("Published visibility for satellite %s (UID: %s)\n", satellite.Name, uid)
-		}
 	}
 
 	// Cache all visibilities for the user in Redis
