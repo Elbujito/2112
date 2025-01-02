@@ -16,11 +16,11 @@ interface Tile {
 }
 
 interface MapTileCardWithDataProps {
-  selectedMappingID?: string;
+  selectedTileID?: string;
 }
 
 export default function MapTileCardWithData({
-  selectedMappingID,
+  selectedTileID,
 }: MapTileCardWithDataProps) {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -65,6 +65,10 @@ export default function MapTileCardWithData({
     }
   };
 
+  useEffect(() => {
+    fetchTilesForLocation({ latitude: 0, longitude: 0 });
+  }, []);
+
   if (loading) {
     return (
       <Center
@@ -104,7 +108,7 @@ export default function MapTileCardWithData({
       tiles={tiles}
       darkmode={darkmode}
       onLocationChange={fetchTilesForLocation}
-      selectedMappingID={selectedMappingID}
+      selectedTileID={selectedTileID}
     />
   );
 };

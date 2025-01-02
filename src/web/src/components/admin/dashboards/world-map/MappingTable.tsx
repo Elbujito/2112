@@ -9,21 +9,7 @@ import {
   getCoreRowModel,
   flexRender,
 } from "@tanstack/react-table";
-
-type TileSatelliteMapping = {
-  ID: string;
-  NoradID: string;
-  TileID: string;
-  TileCenterLat: string;
-  TileCenterLon: string;
-  TileZoomLevel: number;
-  IntersectionLongitude: number;
-  IntersectionLatitude: number;
-  Intersection: {
-    Longitude: number;
-    Latitude: number;
-  };
-};
+import { TileSatelliteMapping } from "./MappingTableWithData";
 
 const columnHelper = createColumnHelper<TileSatelliteMapping>();
 
@@ -88,7 +74,7 @@ function TableBody({
   selectedRowId,
 }: {
   rows: any[];
-  onRowClick: (id: string) => void;
+  onRowClick: (mapping: TileSatelliteMapping) => void;
   selectedRowId: string | null;
 }) {
   return (
@@ -96,7 +82,7 @@ function TableBody({
       {rows.map((row) => (
         <tr
           key={row.MappingID}
-          onClick={() => onRowClick(row.original.MappingID)}
+          onClick={() => onRowClick(row.original)}
           className={`cursor-pointer ${selectedRowId === row.original.MappingID
             ? "bg-blue-100 dark:bg-blue-900"
             : "hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -164,7 +150,7 @@ export default function MappingTableComponent(props: {
   searchValue: string;
   onSearchChange: (search: string) => void;
   onSearchSubmit: () => void;
-  onRowClick: (id: string) => void;
+  onRowClick: (mapping: TileSatelliteMapping) => void;
 }) {
   const {
     tableData,
@@ -180,9 +166,9 @@ export default function MappingTableComponent(props: {
 
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
 
-  const handleRowClick = (id: string) => {
-    setSelectedRowId(id);
-    onRowClick(id);
+  const handleRowClick = (mapping: TileSatelliteMapping) => {
+    setSelectedRowId(mapping.MappingID);
+    onRowClick(mapping);
   };
 
   const columns = [

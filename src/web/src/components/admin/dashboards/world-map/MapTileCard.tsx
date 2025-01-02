@@ -22,7 +22,7 @@ interface MapTileCardProps {
   tiles: Tile[];
   darkmode: string;
   onLocationChange: (location: { latitude: number; longitude: number }) => void; // Callback for location change
-  selectedMappingID?: string;
+  selectedTileID?: string;
 }
 
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
@@ -66,22 +66,22 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
   tiles,
   darkmode,
   onLocationChange,
-  selectedMappingID,
+  selectedTileID,
 }) => {
   const mapRef = useRef(null);
   const [hoveredTile, setHoveredTile] = useState<Tile | null>(null);
 
   useEffect(() => {
-    if (selectedMappingID) {
-      const selectedTile = tiles.find((tile) => tile.ID === selectedMappingID);
+    if (selectedTileID) {
+      const selectedTile = tiles.find((tile) => tile.ID === selectedTileID);
       if (selectedTile && mapRef.current) {
         mapRef.current.flyTo({
           center: [selectedTile.CenterLon, selectedTile.CenterLat],
-          zoom: 8,
+          zoom: 3,
         });
       }
     }
-  }, [selectedMappingID, tiles]);
+  }, [selectedTileID, tiles]);
 
   const handleTileHover = (event: any) => {
     const features = event.features;
@@ -90,7 +90,6 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
       const properties = hoveredFeature.properties;
 
       if (properties?.quadkey) {
-        // Match the hovered feature to the tile in the tiles array
         const tile = tiles.find((t) => t.Quadkey === properties.quadkey);
         if (tile) {
           setHoveredTile(tile);
@@ -129,7 +128,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
           style={{
             borderRadius: "20px",
             width: "100%",
-            height: "100%", 
+            height: "100%",
           }}
           mapStyle={darkmode}
           mapboxAccessToken={MAPBOX_TOKEN}
@@ -143,8 +142,8 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
               paint={{
                 "fill-color": [
                   "case",
-                  ["==", ["get", "id"], selectedMappingID],
-                  "#FF5733", // Highlight color for selected tile
+                  ["==", ["get", "id"], selectedTileID],
+                  "#0D47A1",
                   "#888888", // Default fill color
                 ],
                 "fill-opacity": 0.4,
@@ -168,7 +167,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
             trackUserLocation={true}
           />
           <NavigationControl position="top-right" />
-          {hoveredTile && (
+          {/* {hoveredTile && (
             <Popup
               longitude={hoveredTile.CenterLon} // Use center coordinates for the popup
               latitude={hoveredTile.CenterLat}
@@ -198,7 +197,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
                 Radius: {hoveredTile.Radius}
               </Text>
             </Popup>
-          )}
+          )} */}
         </Map>
       </Box>
     </Card>

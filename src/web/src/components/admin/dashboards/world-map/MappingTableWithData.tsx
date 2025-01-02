@@ -4,11 +4,26 @@ import MappingTableComponent from "./MappingTable"; // Your table component
 import axios from "axios";
 
 interface TileMappingTableWithDataProps {
-    onSelectMappingID: (mappingID: string) => void; // Callback for selected mapping ID
+    onSelectTileID: (tileID: string) => void; // Callback for selected mapping ID
 }
 
+export type TileSatelliteMapping = {
+    MappingID: string;
+    NoradID: string;
+    TileID: string;
+    TileCenterLat: string;
+    TileCenterLon: string;
+    TileZoomLevel: number;
+    IntersectionLongitude: number;
+    IntersectionLatitude: number;
+    Intersection: {
+        Longitude: number;
+        Latitude: number;
+    };
+};
+
 export default function TileMappingTableWithData({
-    onSelectMappingID,
+    onSelectTileID,
 }: TileMappingTableWithDataProps) {
     const [mappings, setMappings] = useState([]); // Tile mapping data
     const [loading, setLoading] = useState(true); // Loading state
@@ -60,8 +75,8 @@ export default function TileMappingTableWithData({
         setSubmit(true);
     };
 
-    const handleMappingSelection = (mappingID: string) => {
-        onSelectMappingID(mappingID);
+    const handleMappingSelection = (mapping: TileSatelliteMapping) => {
+        onSelectTileID(mapping.TileID);
     };
 
     if (loading) {
