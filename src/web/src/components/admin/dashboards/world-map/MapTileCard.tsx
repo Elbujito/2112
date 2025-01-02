@@ -1,6 +1,6 @@
-import React, { useRef } from "react";
-import { Box } from "@chakra-ui/react";
-import Map, { Source, Layer, NavigationControl, GeolocateControl } from "react-map-gl";
+import React, { useRef, useState } from "react";
+import { Box, Text } from "@chakra-ui/react";
+import Map, { Source, Layer, NavigationControl, GeolocateControl, Popup } from "react-map-gl";
 import { FeatureCollection, Polygon, Position } from "geojson";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Card from "components/card";
@@ -9,14 +9,13 @@ const MAPBOX_TOKEN =
   "pk.eyJ1Ijoic2ltbW1wbGUiLCJhIjoiY2wxeG1hd24xMDEzYzNrbWs5emFkdm16ZiJ9.q9s0sSKQFFaT9fyrC-7--g"; // Replace with your Mapbox token
 
 interface Tile {
+  ID: string;
   Quadkey: string;
   ZoomLevel: number;
   CenterLat: number;
   CenterLon: number;
-  SpatialIndex?: string;
   NbFaces: number;
   Radius: number;
-  BoundariesJSON?: string;
 }
 
 interface MapTileCardProps {
@@ -26,54 +25,69 @@ interface MapTileCardProps {
 }
 
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
-    const earthRadius = 6378137; // Earth's radius in meters for Mercator projection
+  const earthRadius = 6378137; // Earth's radius in meters for Mercator projection
 
-    const halfSize = size;
+  const halfSize = size;
 
-    // Convert latitude and longitude to Mercator x and y
-    const mercatorX = (lon * Math.PI * earthRadius) / 180;
-    const mercatorY =
-      earthRadius *
-      Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+  // Convert latitude and longitude to Mercator x and y
+  const mercatorX = (lon * Math.PI * earthRadius) / 180;
+  const mercatorY =
+    earthRadius *
+    Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
 
-    // Create square in Mercator coordinates
-    const cornersMercator = [
-      [mercatorX - halfSize, mercatorY - halfSize], // Bottom-left
-      [mercatorX + halfSize, mercatorY - halfSize], // Bottom-right
-      [mercatorX + halfSize, mercatorY + halfSize], // Top-right
-      [mercatorX - halfSize, mercatorY + halfSize], // Top-left
-      [mercatorX - halfSize, mercatorY - halfSize], // Close the polygon
-    ];
+  // Create square in Mercator coordinates
+  const cornersMercator = [
+    [mercatorX - halfSize, mercatorY - halfSize], // Bottom-left
+    [mercatorX + halfSize, mercatorY - halfSize], // Bottom-right
+    [mercatorX + halfSize, mercatorY + halfSize], // Top-right
+    [mercatorX - halfSize, mercatorY + halfSize], // Top-left
+    [mercatorX - halfSize, mercatorY - halfSize], // Close the polygon
+  ];
 
-    // Convert Mercator coordinates back to latitude and longitude
-    const cornersLatLon = cornersMercator.map(([x, y]) => {
-      const lonDeg = (x * 180) / (Math.PI * earthRadius);
-      const latRad = (2 * Math.atan(Math.exp(y / earthRadius))) - Math.PI / 2;
-      const latDeg = (latRad * 180) / Math.PI;
-      return [lonDeg, latDeg] as [number, number];
-    });
+  // Convert Mercator coordinates back to latitude and longitude
+  const cornersLatLon = cornersMercator.map(([x, y]) => {
+    const lonDeg = (x * 180) / (Math.PI * earthRadius);
+    const latRad = (2 * Math.atan(Math.exp(y / earthRadius))) - Math.PI / 2;
+    const latDeg = (latRad * 180) / Math.PI;
+    return [lonDeg, latDeg] as [number, number];
+  });
 
-    // Create GeoJSON Polygon
-    const coordinates: Position[][] = [cornersLatLon];
+  // Create GeoJSON Polygon
+  const coordinates: Position[][] = [cornersLatLon];
 
-    return {
-      type: "Polygon",
-      coordinates,
-    };
+  return {
+    type: "Polygon",
+    coordinates,
   };
+};
 
 const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationChange }) => {
   const mapRef = useRef(null);
+  const [hoveredTile, setHoveredTile] = useState<Tile | null>(null);
 
-  const handleGeolocate = (position: GeolocationPosition) => {
-    const { latitude, longitude } = position.coords;
-    onLocationChange({ latitude, longitude }); // Pass location to parent
+  const handleTileHover = (event: any) => {
+    const features = event.features;
+    if (features && features.length > 0) {
+      const hoveredFeature = features[0];
+      const properties = hoveredFeature.properties;
+
+      if (properties?.quadkey) {
+        // Match the hovered feature to the tile in the tiles array
+        const tile = tiles.find((t) => t.Quadkey === properties.quadkey);
+        if (tile) {
+          setHoveredTile(tile);
+        }
+      }
+    } else {
+      setHoveredTile(null); // Clear hover state if no feature is hovered
+    }
   };
+
   const geoJsonSource: FeatureCollection = {
     type: "FeatureCollection",
     features: tiles.map((tile) => ({
       type: "Feature",
-      geometry: generateSquare(tile.CenterLat, tile.CenterLon, tile.Radius), // Generate circle geometry
+      geometry: generateSquare(tile.CenterLat, tile.CenterLon, tile.Radius),
       properties: {
         quadkey: tile.Quadkey,
         zoomLevel: tile.ZoomLevel,
@@ -85,14 +99,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
 
   return (
     <Card extra={"relative w-full h-full bg-white px-3 py-[18px]"}>
-      <Box
-        position="relative"
-        w="100%"
-        h="60vh"
-        overflow="hidden"
-        bg="gray.50"
-        borderRadius="md"
-      >
+      <Box position="relative" w="100%" h="60vh" overflow="hidden" bg="gray.50" borderRadius="md">
         <Map
           ref={mapRef}
           initialViewState={{
@@ -107,15 +114,17 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
           }}
           mapStyle={darkmode}
           mapboxAccessToken={MAPBOX_TOKEN}
+          interactiveLayerIds={["tile-boundaries"]} // Make this layer interactable
+          onMouseMove={handleTileHover} // Handle hover events
         >
           <Source id="tiles" type="geojson" data={geoJsonSource}>
             <Layer
               id="tile-boundaries"
               type="fill"
               paint={{
-                "fill-color": "#888888", // Fill color for the tile
-                "fill-opacity": 0.2,
-              }}    
+                "fill-color": "#888888", // Default fill color
+                "fill-opacity": 0.4,
+              }}
             />
             <Layer
               id="tile-borders"
@@ -126,13 +135,46 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
               }}
             />
           </Source>
-          {/* Geolocation and Navigation Controls */}
           <GeolocateControl
             position="top-right"
-            onGeolocate={handleGeolocate} // Pass user's location to parent component
+            onGeolocate={(position) => {
+              const { latitude, longitude } = position.coords;
+              onLocationChange({ latitude, longitude });
+            }}
             trackUserLocation={true}
           />
           <NavigationControl position="top-right" />
+          {hoveredTile && (
+            <Popup
+              longitude={hoveredTile.CenterLon} // Use center coordinates for the popup
+              latitude={hoveredTile.CenterLat}
+              closeButton={false}
+              closeOnClick={false}
+              anchor="bottom"
+              style={{
+                zIndex: 1000,
+                backgroundColor: "white",
+                padding: "5px",
+                borderRadius: "5px",
+              }}
+            >
+              <Text fontSize="sm" fontWeight="bold" color="black">
+                Tile ID: {hoveredTile.ID}
+              </Text>
+              <Text fontSize="xs" color="gray">
+                Quadkey: {hoveredTile.Quadkey}
+              </Text>
+              <Text fontSize="xs" color="gray">
+                Zoom Level: {hoveredTile.ZoomLevel}
+              </Text>
+              <Text fontSize="xs" color="gray">
+                NbFaces: {hoveredTile.NbFaces}
+              </Text>
+              <Text fontSize="xs" color="gray">
+                Radius: {hoveredTile.Radius}
+              </Text>
+            </Popup>
+          )}
         </Map>
       </Box>
     </Card>

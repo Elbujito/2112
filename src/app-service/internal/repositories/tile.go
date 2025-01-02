@@ -159,7 +159,7 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domai
 	}
 	lineString := fmt.Sprintf("LINESTRING(%s)", strings.Join(wktPoints, ", "))
 
-	// SQL query to find intersecting tiles
+	// SQL query to find intersecting tiles and calculate interest points
 	query := `
         WITH line_geom AS (
             SELECT ST_GeomFromText(?, 4326) AS geom
@@ -171,34 +171,55 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domai
         WHERE ST_Intersects(spatial_index, line_geom.geom)
     `
 
-	// log.Printf("Executing query with WKT LINESTRING: %s\n", lineString)
-
 	// Execute the query
 	result := r.db.DbHandler.Raw(query, lineString).Scan(&results)
-
-	// Log any errors encountered during the query execution
 	if result.Error != nil {
 		log.Printf("Error executing query: %v\n", result.Error)
 		return nil, result.Error
 	}
 
-	// Log the number of tiles retrieved
-	// log.Printf("Query succeeded: Retrieved %d tiles\n", len(results))
-
-	// Generate mappings
+	// Generate mappings with interest points
 	var mappings []domain.TileSatelliteMapping
 	for _, res := range results {
 		tile := models.MapToDomain(res.Tile)
 
-		// Create the mapping
-		mapping := domain.NewMapping(
-			sat.NoradID, // Satellite NORAD ID
-			tile.ID,     // Tile ID
-		)
+		// Parse the intersection geometry (interest point)
+		interestPoint, err := parseIntersectionGeometry(res.IntersectionGeom)
+		if err != nil {
+			continue // Skip if no valid interest point
+		}
+
+		// Create the mapping with interest
+		mapping := domain.TileSatelliteMapping{
+			NoradID:               sat.NoradID,
+			TileID:                tile.ID,
+			IntersectionLongitude: interestPoint.Longitude,
+			IntersectionLatitude:  interestPoint.Latitude,
+		}
 		mappings = append(mappings, mapping)
 	}
 
 	return mappings, nil
+}
+
+// parseIntersectionGeometry parses the WKT intersection geometry into a domain.Point
+func parseIntersectionGeometry(wkt string) (domain.Point, error) {
+	if wkt == "" {
+		return domain.Point{}, fmt.Errorf("invalid wkt point")
+	}
+
+	// Example: POINT(30.5 50.3)
+	var longitude, latitude float64
+	_, err := fmt.Sscanf(wkt, "POINT(%f %f)", &longitude, &latitude)
+	if err != nil {
+		log.Printf("Error parsing intersection geometry: %v\n", err)
+		return domain.Point{}, err
+	}
+
+	return domain.Point{
+		Longitude: longitude,
+		Latitude:  latitude,
+	}, nil
 }
 
 // FindTilesIntersectingLocation retrieves all tiles that intersect the user's location.

@@ -8,12 +8,13 @@ import (
 )
 
 type TileService struct {
-	repo domain.TileRepository // Interface for Tile repository
+	repo        domain.TileRepository
+	mappingRepo domain.MappingRepository
 }
 
 // NewTileService creates a new instance of TileService.
-func NewTileService(repo domain.TileRepository) TileService {
-	return TileService{repo: repo}
+func NewTileService(repo domain.TileRepository, mappingRepo domain.MappingRepository) TileService {
+	return TileService{repo: repo, mappingRepo: mappingRepo}
 }
 
 // FindAllTiles retrieves all tiles from the repository.
@@ -44,4 +45,23 @@ func (s *TileService) GetTilesInRegion(ctx context.Context, minLat, minLon, maxL
 	}
 
 	return tiles, nil
+}
+
+// ListSatellitesMappingWithPagination retrieves satellites with pagination and includes a flag indicating if a TLE is present.
+func (s *TileService) ListSatellitesMappingWithPagination(ctx context.Context, page int, pageSize int, search *domain.SearchRequest) ([]domain.TileSatelliteInfo, int64, error) {
+	// Validate inputs
+	if page <= 0 {
+		return nil, 0, fmt.Errorf("page must be greater than 0")
+	}
+	if pageSize <= 0 {
+		return nil, 0, fmt.Errorf("pageSize must be greater than 0")
+	}
+
+	// Fetch satellites with pagination and TLE flag
+	mappings, totalRecords, err := s.mappingRepo.ListSatellitesMappingWithPagination(ctx, page, pageSize, search)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to retrieve satellites mapping with paginations: %w", err)
+	}
+
+	return mappings, totalRecords, nil
 }

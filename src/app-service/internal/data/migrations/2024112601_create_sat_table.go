@@ -56,9 +56,11 @@ func init() {
 			// Define the TileSatelliteMapping table
 			type TileSatelliteMapping struct {
 				models.ModelBase
-				NoradID string `gorm:"not null;index"` // Foreign key to Satellite table
-				TileID  string `gorm:"not null;index"` // Foreign key to Tile table
-				Tile    Tile   `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
+				NoradID               string `gorm:"not null;index"` // Foreign key to Satellite table
+				TileID                string `gorm:"not null;index"` // Foreign key to Tile table
+				Tile                  Tile   `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
+				IntersectionLatitude  string `gorm:"type:char(36);not null;"` // Foreign key to Tile table
+				IntersectionLongitude string `gorm:"type:char(36);not null;"` // Foreign key to Tile table
 			}
 
 			// AutoMigrate all tables

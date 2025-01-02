@@ -151,5 +151,5 @@ func (r *PublicRouter) registerPublicAPIRoutes() {
 	tile := r.Echo.Group("/tiles")
 	tile.GET("/all", tileHandler.GetAllTiles)
 	tile.GET("/region", tileHandler.GetTilesInRegionHandler)
-	// tile.GET("/mapping", tilesHandlers.GetTilesByNoradID)
+	tile.GET("/mappings", tileHandler.GetPaginatedSatelliteMappings)
 }

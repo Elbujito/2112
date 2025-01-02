@@ -12,6 +12,7 @@ interface Tile {
   NbFaces: number;
   Radius: number;
   BoundariesJSON?: string;
+  ID: string;
 }
 
 const MapTileCardWithData: React.FC = () => {

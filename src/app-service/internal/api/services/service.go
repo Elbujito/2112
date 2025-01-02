@@ -34,6 +34,7 @@ func NewServiceComponent(env *config.SEnv) *ServiceComponent {
 	tleRepo := repository.NewTLERepository(&database, redisClient, 24*7*time.Hour)
 	satelliteRepo := repository.NewSatelliteRepository(&database)
 	tileRepo := repository.NewTileRepository(&database)
+	mappingRepo := repository.NewTileSatelliteMappingRepository(&database)
 
 	// Initialize external clients
 	propagteClient := propagator.NewPropagatorClient(env)
@@ -41,7 +42,7 @@ func NewServiceComponent(env *config.SEnv) *ServiceComponent {
 
 	// Create services
 	satelliteService := services.NewSatelliteService(tleRepo, propagteClient, celestrackClient, satelliteRepo)
-	tileService := services.NewTileService(tileRepo)
+	tileService := services.NewTileService(tileRepo, mappingRepo)
 
 	return &ServiceComponent{
 		SatelliteService: satelliteService,

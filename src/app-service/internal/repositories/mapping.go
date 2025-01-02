@@ -239,6 +239,86 @@ func (r *TileSatelliteMappingRepository) FindAllVisibleTilesByNoradIDSortedByAOS
 	return tileSatelliteInfos, nil
 }
 
+// ListSatellitesMappingWithPagination retrieves tiles and satellites mapping with pagination and sorting.
+func (r *TileSatelliteMappingRepository) ListSatellitesMappingWithPagination(ctx context.Context, page int, pageSize int, search *domain.SearchRequest) ([]domain.TileSatelliteInfo, int64, error) {
+	var (
+		tileMappings       []domain.TileSatelliteMapping
+		modelTiles         []models.Tile
+		tileSatelliteInfos []domain.TileSatelliteInfo
+		totalRecords       int64
+	)
+
+	// Calculate offset for pagination
+	offset := (page - 1) * pageSize
+
+	// Base query for tile mappings with optional search filters
+	query := r.db.DbHandler.Table("tile_satellite_mappings")
+
+	// Apply search filters if provided
+	if search != nil {
+		if search.Wildcard != "" {
+			wildcard := "%" + search.Wildcard + "%"
+			query = query.Where("norad_id LIKE ? OR tile_id LIKE ?", wildcard, wildcard)
+		}
+	}
+
+	// Count total records for pagination
+	if err := query.Count(&totalRecords).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Fetch tile mappings with pagination and sorting by AOS
+	if err := query.Limit(pageSize).Offset(offset).Find(&tileMappings).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, 0, nil // No records found
+		}
+		return nil, 0, err
+	}
+
+	// Collect the tile IDs from the tileMappings
+	tileIDs := make([]string, len(tileMappings))
+	for i, mapping := range tileMappings {
+		tileIDs[i] = mapping.TileID
+	}
+
+	// Fetch the corresponding tiles by their IDs
+	if err := r.db.DbHandler.
+		Where("id IN ?", tileIDs).
+		Find(&modelTiles).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Create a map of Tile ID to Tile for fast lookup
+	tileMap := make(map[string]models.Tile)
+	for _, tile := range modelTiles {
+		tileMap[tile.ID] = tile
+	}
+
+	// Aggregate data into TileSatelliteInfo
+	for _, mapping := range tileMappings {
+		modelTile, exists := tileMap[mapping.TileID]
+		if !exists {
+			continue // Skip if tile not found (inconsistent data)
+		}
+
+		tileSatelliteInfos = append(tileSatelliteInfos, domain.TileSatelliteInfo{
+			TileID:           modelTile.ID,
+			TileQuadkey:      modelTile.Quadkey,
+			TileCenterLat:    modelTile.CenterLat,
+			TileCenterLon:    modelTile.CenterLon,
+			TileZoomLevel:    modelTile.ZoomLevel,
+			SatelliteID:      mapping.NoradID,
+			SatelliteNoradID: mapping.NoradID,
+			Intersection: domain.Point{
+				Latitude:  mapping.IntersectionLatitude,
+				Longitude: mapping.IntersectionLongitude,
+			},
+		})
+	}
+
+	return tileSatelliteInfos, totalRecords, nil
+}
+
 // Helper function to find the tile by ID in the fetched model tiles
 func findTileByID(modelTiles []models.Tile, tileID string) models.Tile {
 	for _, tile := range modelTiles {
