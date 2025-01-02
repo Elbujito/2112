@@ -49,8 +49,8 @@ func mapToModelTLE(domainTLE domain.TLE) models.TLE {
 }
 
 // Cache-Aside Get: Check cache first, fallback to database, and update cache.
-func (r *TleRepository) GetTle(ctx context.Context, id string) (domain.TLE, error) {
-	key := fmt.Sprintf("satellite:tle:%s", id)
+func (r *TleRepository) GetTle(ctx context.Context, noradID string) (domain.TLE, error) {
+	key := fmt.Sprintf("satellite:tle:%s", noradID)
 
 	// Check Redis cache
 	data, err := r.redisClient.HGetAll(ctx, key)
@@ -58,7 +58,7 @@ func (r *TleRepository) GetTle(ctx context.Context, id string) (domain.TLE, erro
 		epoch, parseErr := xtime.ParseEpoch(data["epoch"])
 		if parseErr == nil {
 			return domain.TLE{
-				ID:    id,
+				ID:    noradID,
 				Line1: data["line_1"],
 				Line2: data["line_2"],
 				Epoch: epoch,
@@ -68,7 +68,7 @@ func (r *TleRepository) GetTle(ctx context.Context, id string) (domain.TLE, erro
 
 	// Fallback to database
 	var modelTLE models.TLE
-	result := r.db.DbHandler.First(&modelTLE, "id = ?", id)
+	result := r.db.DbHandler.First(&modelTLE, "norad_id = ?", noradID)
 	if result.Error != nil {
 		return domain.TLE{}, result.Error
 	}

@@ -87,7 +87,7 @@ services:
       app-service:
         condition: service_healthy
     restart: no
-    command: ["app-service", "task", "exec", "compute_visibilities"]
+    command: ["app-service", "task", "exec", "compute_visibilities", "defaultHorizon=30"]
 
   propagator-service:
     build:

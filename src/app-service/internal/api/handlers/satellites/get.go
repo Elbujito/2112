@@ -28,7 +28,7 @@ func (h *SatelliteHandler) GetSatellitePositionsByNoradID(c echo.Context) error 
 		return xconstants.ERROR_ID_NOT_FOUND
 	}
 
-	positions, err := h.Service.Propagate(c.Request().Context(), noradID, 24*time.Hour, 10*time.Minute)
+	positions, err := h.Service.Propagate(c.Request().Context(), noradID, 48*time.Hour, 10*time.Minute)
 	if err != nil {
 		c.Echo().Logger.Error("Failed to propagate positions: ", err)
 		return err

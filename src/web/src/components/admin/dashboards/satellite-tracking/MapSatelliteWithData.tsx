@@ -33,7 +33,7 @@ const MapSatelliteWithData: React.FC<MapSatelliteWithDataProps> = ({
   userLocation,
 }) => {
   // Set up query parameters
-  const startTime = useMemo(() => new Date(Date.now() - 60 * 60 * 1000 * 24).toISOString(), []); // 24 hours before
+  const startTime = useMemo(() => new Date(Date.now()).toISOString(), []);
   const endTime = useMemo(() => new Date(Date.now() + 60 * 60 * 1000 * 24).toISOString(), []); // 24 hours ahead
 
   const { data, loading, error } = useQuery(GET_SATELLITE_POSITIONS, {

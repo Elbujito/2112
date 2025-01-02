@@ -31,7 +31,7 @@ func NewServiceComponent(env *config.SEnv) *ServiceComponent {
 	}
 
 	// Initialize repositories
-	tleRepo := repository.NewTLERepository(&database, redisClient, 24*time.Hour)
+	tleRepo := repository.NewTLERepository(&database, redisClient, 24*7*time.Hour)
 	satelliteRepo := repository.NewSatelliteRepository(&database)
 	tileRepo := repository.NewTileRepository(&database)
 

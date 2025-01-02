@@ -5,27 +5,33 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/clients/redis"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
 )
 
 // ComputeVisibilitiessHandler handles visibility computation for satellites based on user locations.
 type ComputeVisibilitiessHandler struct {
-	tileRepo    domain.TileRepository
-	mappingRepo domain.MappingRepository
-	redisClient *redis.RedisClient
+	tileRepo       domain.TileRepository
+	mappingRepo    domain.MappingRepository
+	tleRepo        repository.TleRepository
+	redisClient    *redis.RedisClient
+	defaultHorizon int
 }
 
 // NewComputeVisibilitiessHandler initializes a new handler instance.
 func NewComputeVisibilitiessHandler(
 	tileRepo domain.TileRepository,
 	mappingRepo domain.MappingRepository,
+	tleRepo repository.TleRepository,
 	redisClient *redis.RedisClient,
 ) ComputeVisibilitiessHandler {
 	return ComputeVisibilitiessHandler{
 		tileRepo:    tileRepo,
+		tleRepo:     tleRepo,
 		mappingRepo: mappingRepo,
 		redisClient: redisClient,
 	}
@@ -35,7 +41,7 @@ func (h *ComputeVisibilitiessHandler) GetTask() Task {
 	return Task{
 		Name:         "compute_visibilities",
 		Description:  "Computes satellite visibilities for all tiles by satellite path",
-		RequiredArgs: []string{},
+		RequiredArgs: []string{"defaultHorizon"},
 	}
 }
 
@@ -43,6 +49,18 @@ func (h *ComputeVisibilitiessHandler) GetTask() Task {
 func (h *ComputeVisibilitiessHandler) Run(ctx context.Context, args map[string]string) error {
 	log.Println("Starting Run method")
 	log.Println("Subscribing to visibility_requests channel")
+
+	defaultUserHorizon, ok := args["defaultHorizon"]
+	if !ok || defaultUserHorizon == "" {
+		return fmt.Errorf("missing required argument: defaultUserHorizon")
+	}
+
+	horizon, err := strconv.Atoi(defaultUserHorizon)
+	if err != nil {
+		return fmt.Errorf("invalid value for horizon: %v", err)
+	}
+	h.defaultHorizon = horizon
+
 	return h.Subscribe(ctx, "visibility_requests")
 }
 
@@ -51,7 +69,6 @@ func (h *ComputeVisibilitiessHandler) Subscribe(ctx context.Context, channel str
 	log.Printf("Subscribing to Redis channel: %s\n", channel)
 
 	err := h.redisClient.Subscribe(ctx, channel, func(message string) error {
-		// Parse the incoming message
 		var request struct {
 			UID       string  `json:"uid"`
 			Latitude  float64 `json:"latitude"`
@@ -66,7 +83,6 @@ func (h *ComputeVisibilitiessHandler) Subscribe(ctx context.Context, channel str
 			return fmt.Errorf("failed to parse update message: %w", err)
 		}
 
-		// Convert StartTime and EndTime to time.Time
 		startTime, err := time.Parse(time.RFC3339, request.StartTime)
 		if err != nil {
 			return fmt.Errorf("failed to parse start time: %w", err)
@@ -79,7 +95,6 @@ func (h *ComputeVisibilitiessHandler) Subscribe(ctx context.Context, channel str
 		log.Printf("Received visibility request for UID: %s at location (%.6f, %.6f) with radius %.2f, horizon %.2f, from %s to %s\n",
 			request.UID, request.Latitude, request.Longitude, request.Radius, request.Horizon, startTime, endTime)
 
-		// Compute visibility for the received request
 		return h.computeVisibility(ctx, request.UID, request.Latitude, request.Longitude, request.Radius, startTime, endTime)
 	})
 
@@ -93,7 +108,6 @@ func (h *ComputeVisibilitiessHandler) Subscribe(ctx context.Context, channel str
 
 // computeVisibility computes visibilities for a given user location and time range.
 func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid string, latitude, longitude, radius float64, startTime, endTime time.Time) error {
-	// Validate location bounds
 	if latitude < -90 || latitude > 90 {
 		return fmt.Errorf("latitude out of bounds: %f", latitude)
 	}
@@ -104,7 +118,6 @@ func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid
 		return fmt.Errorf("radius must be greater than 0")
 	}
 
-	// Step 1: Find tiles intersecting the user location
 	tiles, err := h.tileRepo.FindTilesIntersectingLocation(ctx, latitude, longitude, radius)
 	if err != nil {
 		return fmt.Errorf("failed to find tiles intersecting location: %w", err)
@@ -114,13 +127,11 @@ func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid
 		return nil
 	}
 
-	// Step 2: Extract tile IDs
 	var tileIDs []string
 	for _, tile := range tiles {
 		tileIDs = append(tileIDs, tile.ID)
 	}
 
-	// Step 3: Find satellites associated with the identified tiles
 	satellites, err := h.mappingRepo.FindSatellitesForTiles(ctx, tileIDs)
 	if err != nil {
 		return fmt.Errorf("failed to find satellites for tiles: %w", err)
@@ -130,39 +141,45 @@ func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid
 		return nil
 	}
 
-	// Prepare Redis key for cached visibilities
-	key := fmt.Sprintf("satellite_visibilities:%s", uid)
-
-	// Step 4: Publish visibility results
+	key := fmt.Sprintf("user_visibilities_event:%s", uid)
 	var visibilities []map[string]interface{}
 	for _, satellite := range satellites {
+
+		// Get the TLE data for the satellite by NORAD ID
+		tle, err := h.tleRepo.GetTle(ctx, satellite.NoradID)
+		if err != nil {
+			return fmt.Errorf("failed to fetch TLE data for NORAD ID %s: %w", satellite.NoradID, err)
+		}
+
 		visibility := map[string]interface{}{
-			"satelliteId":   satellite.NoradID,
+			"satelliteID":   satellite.NoradID,
 			"satelliteName": satellite.Name,
-			"aos":           startTime.Format(time.RFC3339), // Acquisition of Signal time
-			"los":           endTime.Format(time.RFC3339),   // Loss of Signal time
+			"startTime":     startTime.Format(time.RFC3339), // start propgated period
+			"endTime":       endTime.Format(time.RFC3339),   // end propgated period
+			"tleLine1":      tle.Line1,
+			"tleLine2":      tle.Line2,
 			"userLocation": map[string]interface{}{
 				"latitude":  latitude,
 				"longitude": longitude,
 				"radius":    radius,
-				"horizon":   30, // Example horizon value
+				"horizon":   h.defaultHorizon,
+				"uid":       uid,
 			},
-			"uid": uid,
+			"userUID": uid,
 		}
-
 		visibilities = append(visibilities, visibility)
+
+		log.Printf("Published visibility for UID: %s\n", uid)
 	}
 
-	// Cache all visibilities for the user in Redis
 	cachedData, err := json.Marshal(visibilities)
 	if err != nil {
 		return fmt.Errorf("failed to serialize visibilities: %w", err)
 	}
 
-	if err := h.redisClient.Set(ctx, key, cachedData); err != nil {
-		return fmt.Errorf("failed to cache visibilities: %w", err)
+	if err := h.redisClient.Publish(ctx, key, cachedData); err != nil {
+		return fmt.Errorf("failed to publish visibility event: %w", err)
 	}
 
-	log.Printf("Cached visibilities for UID: %s\n", uid)
 	return nil
 }

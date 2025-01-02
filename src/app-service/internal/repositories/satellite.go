@@ -79,6 +79,7 @@ func (r *SatelliteRepository) SaveBatch(ctx context.Context, satellites []domain
 		}).
 		CreateInBatches(satellites, 100).Error // Batch size: 100
 }
+
 func (r *SatelliteRepository) FindAllWithPagination(ctx context.Context, page int, pageSize int, searchRequest *domain.SearchRequest) ([]domain.Satellite, int64, error) {
 	var results []SatelliteWithTLE
 	var totalRecords int64
@@ -86,13 +87,21 @@ func (r *SatelliteRepository) FindAllWithPagination(ctx context.Context, page in
 	// Calculate the offset
 	offset := (page - 1) * pageSize
 
-	// Build the base query with LEFT JOIN to include optional TLE data
+	// Build the base query with LEFT JOIN to include only the latest TLE data
 	query := r.db.DbHandler.Table("satellites").
 		Select(`
-			satellites.id, satellites.name, satellites.norad_id, satellites.owner, 
-			satellites.launch_date, satellites.apogee, satellites.perigee, 
-			tles.line1, tles.line2, tles.updated_at`).
-		Joins("LEFT JOIN tles ON satellites.norad_id = tles.norad_id")
+		satellites.id, satellites.name, satellites.norad_id, satellites.owner, 
+		satellites.launch_date, satellites.apogee, satellites.perigee, 
+		latest_tles.line1, latest_tles.line2, latest_tles.updated_at`).
+		Joins(`LEFT JOIN (
+		SELECT t1.norad_id, t1.line1, t1.line2, t1.updated_at
+		FROM tles t1
+		WHERE t1.updated_at = (
+			SELECT MAX(t2.updated_at)
+			FROM tles t2
+			WHERE t2.norad_id = t1.norad_id
+		)
+	) AS latest_tles ON satellites.norad_id = latest_tles.norad_id`)
 
 	// Apply case-insensitive wildcard filter if provided
 	if searchRequest != nil && searchRequest.Wildcard != "" {

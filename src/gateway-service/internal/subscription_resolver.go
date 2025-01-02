@@ -46,7 +46,8 @@ func (s *subscriptionResolver) SatelliteVisibilityUpdated(ctx context.Context, u
 
 	// Check if a subscription for visibility already exists to prevent overwriting
 	if _, exists := s.VisibilitySubscribers[uid]; exists {
-		return nil, fmt.Errorf("visibility subscription already exists for user %s", uid)
+		// fmt.Errorf("visibility subscription already exists for user %s", uid)
+		return nil, nil
 	}
 
 	// Create a new channel for visibility updates

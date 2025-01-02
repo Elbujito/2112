@@ -48,6 +48,7 @@ func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository
 	satelliteVisibilities := handlers.NewComputeVisibilitiessHandler(
 		tileRepo,
 		visibilityRepo,
+		tleRepo,
 		redisClient,
 	)
 

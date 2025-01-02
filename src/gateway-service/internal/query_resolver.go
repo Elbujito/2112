@@ -112,6 +112,7 @@ func (q *queryResolver) CachedSatelliteVisibilities(ctx context.Context, uid str
 	var visibilities []*model.SatelliteVisibility
 	if err := json.Unmarshal([]byte(data), &visibilities); err != nil {
 		log.Printf("Error unmarshalling CachedSatelliteVisibilities for UID %s: %v", uid, err)
+		log.Printf("Payload causing the error: %s", data) // Log the raw payload
 		return nil, fmt.Errorf("failed to parse cached satellite visibilities for UID %s: %w", uid, err)
 	}
 

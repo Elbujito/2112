@@ -30,7 +30,7 @@ type TileSatelliteMapping struct {
 	TileID    string
 }
 
-// NewMapping constructor
+// NewMapping constructor	
 func NewMapping(noradID string,
 	tileID string) TileSatelliteMapping {
 	return TileSatelliteMapping{

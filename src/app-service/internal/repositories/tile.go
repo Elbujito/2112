@@ -171,7 +171,7 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domai
         WHERE ST_Intersects(spatial_index, line_geom.geom)
     `
 
-	log.Printf("Executing query with WKT LINESTRING: %s\n", lineString)
+	// log.Printf("Executing query with WKT LINESTRING: %s\n", lineString)
 
 	// Execute the query
 	result := r.db.DbHandler.Raw(query, lineString).Scan(&results)
@@ -183,7 +183,7 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domai
 	}
 
 	// Log the number of tiles retrieved
-	log.Printf("Query succeeded: Retrieved %d tiles\n", len(results))
+	// log.Printf("Query succeeded: Retrieved %d tiles\n", len(results))
 
 	// Generate mappings
 	var mappings []domain.TileSatelliteMapping
