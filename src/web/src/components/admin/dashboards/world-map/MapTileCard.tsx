@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Box, Text } from "@chakra-ui/react";
 import Map, { Source, Layer, NavigationControl, GeolocateControl, Popup } from "react-map-gl";
 import { FeatureCollection, Polygon, Position } from "geojson";
@@ -22,6 +22,7 @@ interface MapTileCardProps {
   tiles: Tile[];
   darkmode: string;
   onLocationChange: (location: { latitude: number; longitude: number }) => void; // Callback for location change
+  selectedMappingID?: string;
 }
 
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
@@ -61,9 +62,26 @@ const generateSquare = (lat: number, lon: number, size: number): Polygon => {
   };
 };
 
-const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationChange }) => {
+const MapTileCard: React.FC<MapTileCardProps> = ({
+  tiles,
+  darkmode,
+  onLocationChange,
+  selectedMappingID,
+}) => {
   const mapRef = useRef(null);
   const [hoveredTile, setHoveredTile] = useState<Tile | null>(null);
+
+  useEffect(() => {
+    if (selectedMappingID) {
+      const selectedTile = tiles.find((tile) => tile.ID === selectedMappingID);
+      if (selectedTile && mapRef.current) {
+        mapRef.current.flyTo({
+          center: [selectedTile.CenterLon, selectedTile.CenterLat],
+          zoom: 8,
+        });
+      }
+    }
+  }, [selectedMappingID, tiles]);
 
   const handleTileHover = (event: any) => {
     const features = event.features;
@@ -89,6 +107,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
       type: "Feature",
       geometry: generateSquare(tile.CenterLat, tile.CenterLon, tile.Radius),
       properties: {
+        id: tile.ID,
         quadkey: tile.Quadkey,
         zoomLevel: tile.ZoomLevel,
         nbFaces: tile.NbFaces,
@@ -99,7 +118,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
 
   return (
     <Card extra={"relative w-full h-full bg-white px-3 py-[18px]"}>
-      <Box position="relative" w="100%" h="60vh" overflow="hidden" bg="gray.50" borderRadius="md">
+      <Box position="relative" w="100%" h="100%" overflow="hidden" bg="gray.50" borderRadius="md">
         <Map
           ref={mapRef}
           initialViewState={{
@@ -110,7 +129,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
           style={{
             borderRadius: "20px",
             width: "100%",
-            height: "100%",
+            height: "100%", 
           }}
           mapStyle={darkmode}
           mapboxAccessToken={MAPBOX_TOKEN}
@@ -122,7 +141,12 @@ const MapTileCard: React.FC<MapTileCardProps> = ({ tiles, darkmode, onLocationCh
               id="tile-boundaries"
               type="fill"
               paint={{
-                "fill-color": "#888888", // Default fill color
+                "fill-color": [
+                  "case",
+                  ["==", ["get", "id"], selectedMappingID],
+                  "#FF5733", // Highlight color for selected tile
+                  "#888888", // Default fill color
+                ],
                 "fill-opacity": 0.4,
               }}
             />

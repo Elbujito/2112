@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Card from "components/card";
 import { MdChevronRight, MdChevronLeft } from "react-icons/md";
 import { FiSearch } from "react-icons/fi";
@@ -14,8 +14,15 @@ type TileSatelliteMapping = {
   ID: string;
   NoradID: string;
   TileID: string;
+  TileCenterLat: string;
+  TileCenterLon: string;
+  TileZoomLevel: number;
   IntersectionLongitude: number;
   IntersectionLatitude: number;
+  Intersection: {
+    Longitude: number;
+    Latitude: number;
+  };
 };
 
 const columnHelper = createColumnHelper<TileSatelliteMapping>();
@@ -78,17 +85,22 @@ function TableHeader({ headers }: { headers: any[] }) {
 function TableBody({
   rows,
   onRowClick,
+  selectedRowId,
 }: {
   rows: any[];
   onRowClick: (id: string) => void;
+  selectedRowId: string | null;
 }) {
   return (
     <tbody>
       {rows.map((row) => (
         <tr
-          key={row.id}
-          onClick={() => onRowClick(row.original.ID)}
-          className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700"
+          key={row.MappingID}
+          onClick={() => onRowClick(row.original.MappingID)}
+          className={`cursor-pointer ${selectedRowId === row.original.MappingID
+            ? "bg-blue-100 dark:bg-blue-900"
+            : "hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
         >
           {row.getVisibleCells().map((cell) => (
             <td key={cell.id} className="py-2 px-4 text-sm">
@@ -166,11 +178,14 @@ export default function MappingTableComponent(props: {
     onRowClick,
   } = props;
 
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+
+  const handleRowClick = (id: string) => {
+    setSelectedRowId(id);
+    onRowClick(id);
+  };
+
   const columns = [
-    columnHelper.accessor("ID", {
-      header: "ID",
-      cell: (info) => <p className="text-sm">{info.getValue()}</p>,
-    }),
     columnHelper.accessor("NoradID", {
       header: "NORAD ID",
       cell: (info) => <p className="text-sm">{info.getValue()}</p>,
@@ -179,12 +194,24 @@ export default function MappingTableComponent(props: {
       header: "Tile ID",
       cell: (info) => <p className="text-sm">{info.getValue()}</p>,
     }),
-    columnHelper.accessor("IntersectionLongitude", {
-      header: "Longitude",
+    columnHelper.accessor((row) => row.TileCenterLat, {
+      header: "T. Center Lat.",
       cell: (info) => <p className="text-sm">{info.getValue()}</p>,
     }),
-    columnHelper.accessor("IntersectionLatitude", {
-      header: "Latitude",
+    columnHelper.accessor((row) => row.TileCenterLon, {
+      header: "T. Center Lon.",
+      cell: (info) => <p className="text-sm">{info.getValue()}</p>,
+    }),
+    columnHelper.accessor((row) => row.TileZoomLevel, {
+      header: "T. Zoom Level",
+      cell: (info) => <p className="text-sm">{info.getValue()}</p>,
+    }),
+    columnHelper.accessor((row) => row.Intersection.Longitude, {
+      header: "Inter. Longitude",
+      cell: (info) => <p className="text-sm">{info.getValue()}</p>,
+    }),
+    columnHelper.accessor((row) => row.Intersection.Latitude, {
+      header: "Inter. Latitude",
       cell: (info) => <p className="text-sm">{info.getValue()}</p>,
     }),
   ];
@@ -206,7 +233,11 @@ export default function MappingTableComponent(props: {
       <div className="mt-4 overflow-auto">
         <table className="w-full">
           <TableHeader headers={table.getHeaderGroups()} />
-          <TableBody rows={table.getRowModel().rows} onRowClick={onRowClick} />
+          <TableBody
+            rows={table.getRowModel().rows}
+            onRowClick={handleRowClick}
+            selectedRowId={selectedRowId}
+          />
         </table>
       </div>
       <Pagination

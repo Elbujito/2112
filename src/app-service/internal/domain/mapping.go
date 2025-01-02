@@ -50,14 +50,14 @@ func NewMapping(noradID string,
 
 // TileSatelliteInfo represents the aggregated data of a tile and satellite, sorted by AOS time.
 type TileSatelliteInfo struct {
-	TileID           string  // The ID of the tile
-	TileQuadkey      string  // The Quadkey of the tile
-	TileCenterLat    float64 // Latitude of the tile center
-	TileCenterLon    float64 // Longitude of the tile center
-	TileZoomLevel    int     // Zoom level of the tile
-	SatelliteID      string  // The ID of the satellite
-	SatelliteNoradID string  // The NORAD ID of the satellite
-	Intersection     Point
+	MappingID     string
+	TileID        string  // The ID of the tile
+	TileQuadkey   string  // The Quadkey of the tile
+	TileCenterLat float64 // Latitude of the tile center
+	TileCenterLon float64 // Longitude of the tile center
+	TileZoomLevel int     // Zoom level of the tile
+	NoradID       string  // The NORAD ID of the satellite
+	Intersection  Point
 }
 
 type Point struct {

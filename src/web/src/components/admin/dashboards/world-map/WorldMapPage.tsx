@@ -12,22 +12,27 @@ const WorldMapPage: React.FC = () => {
     };
 
     return (
-        <Box p={4} w="100%">
+        <Box p={4} w="100%" h="100%">
             <Grid
-                templateRows="repeat(2, 1fr)" // Two vertical rows
+                templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} // 1 column for small screens, 2 columns for large screens
                 gap={4}
                 w="100%"
                 h="100%"
-                templateColumns={{ base: "1fr", lg: "repeat(2, 1fr)" }} // Adjust for responsiveness
             >
-                <GridItem w="100%">
-                    <MapTileCardWithData />
+                <GridItem w="100%" h="100%" minHeight="50vh">
+                    <Box w="100%" h="100%">
+                        <MapTileCardWithData selectedMappingID={selectedMappingID} />
+                    </Box>
                 </GridItem>
-                <GridItem w="100%">
-                    <TileMappingTableWithData onSelectMappingID={handleMappingSelection} />
+
+                <GridItem w="100%" h="100%">
+                    <Box w="100%" h="100%">
+                        <TileMappingTableWithData onSelectMappingID={handleMappingSelection} />
+                    </Box>
                 </GridItem>
             </Grid>
         </Box>
+
     );
 };
 

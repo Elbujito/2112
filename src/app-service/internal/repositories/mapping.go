@@ -226,13 +226,13 @@ func (r *TileSatelliteMappingRepository) FindAllVisibleTilesByNoradIDSortedByAOS
 		modelTile := findTileByID(modelTiles, mapping.TileID)
 
 		tileSatelliteInfos[i] = domain.TileSatelliteInfo{
-			TileID:           modelTile.ID,
-			TileQuadkey:      modelTile.Quadkey,
-			TileCenterLat:    modelTile.CenterLat,
-			TileCenterLon:    modelTile.CenterLon,
-			TileZoomLevel:    modelTile.ZoomLevel,
-			SatelliteID:      mapping.NoradID,
-			SatelliteNoradID: mapping.NoradID,
+			TileID:        modelTile.ID,
+			TileQuadkey:   modelTile.Quadkey,
+			TileCenterLat: modelTile.CenterLat,
+			TileCenterLon: modelTile.CenterLon,
+			TileZoomLevel: modelTile.ZoomLevel,
+			NoradID:       mapping.NoradID,
+			MappingID:     mapping.ID,
 		}
 	}
 
@@ -302,13 +302,13 @@ func (r *TileSatelliteMappingRepository) ListSatellitesMappingWithPagination(ctx
 		}
 
 		tileSatelliteInfos = append(tileSatelliteInfos, domain.TileSatelliteInfo{
-			TileID:           modelTile.ID,
-			TileQuadkey:      modelTile.Quadkey,
-			TileCenterLat:    modelTile.CenterLat,
-			TileCenterLon:    modelTile.CenterLon,
-			TileZoomLevel:    modelTile.ZoomLevel,
-			SatelliteID:      mapping.NoradID,
-			SatelliteNoradID: mapping.NoradID,
+			MappingID:     mapping.ID,
+			TileID:        modelTile.ID,
+			TileQuadkey:   modelTile.Quadkey,
+			TileCenterLat: modelTile.CenterLat,
+			TileCenterLon: modelTile.CenterLon,
+			TileZoomLevel: modelTile.ZoomLevel,
+			NoradID:       mapping.NoradID,
 			Intersection: domain.Point{
 				Latitude:  mapping.IntersectionLatitude,
 				Longitude: mapping.IntersectionLongitude,

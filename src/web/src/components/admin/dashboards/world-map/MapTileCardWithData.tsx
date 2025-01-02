@@ -15,7 +15,13 @@ interface Tile {
   ID: string;
 }
 
-const MapTileCardWithData: React.FC = () => {
+interface MapTileCardWithDataProps {
+  selectedMappingID?: string;
+}
+
+export default function MapTileCardWithData({
+  selectedMappingID,
+}: MapTileCardWithDataProps) {
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,9 +103,9 @@ const MapTileCardWithData: React.FC = () => {
     <MapTileCard
       tiles={tiles}
       darkmode={darkmode}
-      onLocationChange={fetchTilesForLocation} // Pass location change handler
+      onLocationChange={fetchTilesForLocation}
+      selectedMappingID={selectedMappingID}
     />
   );
 };
 
-export default MapTileCardWithData;
