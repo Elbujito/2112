@@ -54,13 +54,14 @@ func init() {
 			}
 
 			// Define the TileSatelliteMapping table
+			// TileSatelliteMapping defines the mapping of satellite visibility to tiles.
 			type TileSatelliteMapping struct {
 				models.ModelBase
-				NoradID               string `gorm:"not null;index"` // Foreign key to Satellite table
-				TileID                string `gorm:"not null;index"` // Foreign key to Tile table
-				Tile                  Tile   `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
-				IntersectionLatitude  string `gorm:"type:char(36);not null;"` // Foreign key to Tile table
-				IntersectionLongitude string `gorm:"type:char(36);not null;"` // Foreign key to Tile table
+				NoradID               string  `gorm:"not null;index"` // Foreign key to Satellite table
+				TileID                string  `gorm:"not null;index"` // Foreign key to Tile table
+				Tile                  Tile    `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
+				IntersectionLatitude  float64 `gorm:"type:double precision;not null;"` // Latitude of the intersection point
+				IntersectionLongitude float64 `gorm:"type:double precision;not null;"` // Longitude of the intersection point
 			}
 
 			// AutoMigrate all tables

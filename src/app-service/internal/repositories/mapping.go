@@ -52,6 +52,7 @@ func (r *TileSatelliteMappingRepository) Save(ctx context.Context, visibility do
 }
 
 // SaveBatch creates multiple Visibility records in a batch operation with "ON CONFLICT DO NOTHING".
+// SaveBatch creates multiple Visibility records in a batch operation with "ON CONFLICT DO NOTHING".
 func (r *TileSatelliteMappingRepository) SaveBatch(ctx context.Context, visibilities []domain.TileSatelliteMapping) error {
 	if len(visibilities) == 0 {
 		return nil // No records to insert
@@ -68,25 +69,32 @@ func (r *TileSatelliteMappingRepository) SaveBatch(ctx context.Context, visibili
 		batch := visibilities[i:end]
 
 		// Construct query dynamically
-		placeholders := make([]string, len(batch))
-		valueArgs := make([]interface{}, 0, len(batch)*5) // 5 fields per record (including ID)
+		var placeholders []string
+		var valueArgs []interface{}
 
-		for j, v := range batch {
+		for _, v := range batch {
+			// Ensure ID is set
 			if v.ID == "" {
 				v.ID = uuid.NewString() // Generate a new UUID if ID is not set
 			}
-			placeholders[j] = "(?, ?, ?, ?, ?)"
-			valueArgs = append(valueArgs, v.ID, v.NoradID, v.TileID, v.CreatedAt, v.UpdatedAt)
+			placeholders = append(placeholders, "(?, ?, ?, ?, ?, ?, ?)")
+			valueArgs = append(valueArgs, v.ID, v.NoradID, v.TileID,
+				 v.IntersectionLongitude, // Convert longitude to string
+				 v.IntersectionLatitude,  // Convert latitude to string
+				v.CreatedAt, v.UpdatedAt)
 		}
 
+		// Query string
 		query := `
-            INSERT INTO tile_satellite_mappings (id, norad_id, tile_id, created_at, updated_at)
+            INSERT INTO tile_satellite_mappings (
+                id, norad_id, tile_id, intersection_longitude, intersection_latitude, created_at, updated_at
+            )
             VALUES %s
             ON CONFLICT ON CONSTRAINT unique_norad_tile_mapping DO NOTHING
         `
 		formattedQuery := fmt.Sprintf(query, strings.Join(placeholders, ", "))
 
-		// Execute batch insert
+		// Execute the query
 		if err := r.db.DbHandler.WithContext(ctx).Exec(formattedQuery, valueArgs...).Error; err != nil {
 			return fmt.Errorf("failed to save batch: %w", err)
 		}

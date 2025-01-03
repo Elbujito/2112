@@ -17,6 +17,11 @@ const WorldMapPage: React.FC = () => {
         setSelectedTileIDs(tileIDs);
     };
 
+    const handleSatelliteTileSelection = (tileIDs: string[]) => {
+        setSelectedTileIDs(tileIDs);
+        console.log(tileIDs.length)
+    };
+
     const handleSatelliteSelection = (noradID: string, positionData: Record<string, OrbitDataItem[]>) => {
         console.log("Selected Satellite NORAD ID:", noradID);
         setSatellitePositionData(positionData);
@@ -76,7 +81,7 @@ const WorldMapPage: React.FC = () => {
                         <SatelliteTableView
                             searchQuery={appliedSearchQuery}
                             onSelectSatelliteID={(noradID) => console.log("Satellite Selected:", noradID)}
-                            onTilesSelected={(tileIDs) => handleTileSelection(tileIDs)}
+                            onTilesSelected={(tileIDs) => handleSatelliteTileSelection(tileIDs)}
                             onPropagateSatellite={null}
                             onTargetSatellite={handleSatelliteSelection} // Pass the handler to SatelliteTableView
                         />

@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	"github.com/Elbujito/2112/src/app-service/internal/data/models"
@@ -142,12 +144,6 @@ func (r *TileRepository) FindTilesInRegion(ctx context.Context, minLat, minLon, 
 }
 
 func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domain.Satellite, points []domain.SatellitePosition) ([]domain.TileSatelliteMapping, error) {
-	var results []struct {
-		models.Tile
-		IntersectionGeom string `gorm:"column:intersection_geom"` // Geometry of the intersection point
-	}
-
-	// Validate input points
 	if len(points) < 2 {
 		return nil, fmt.Errorf("at least two points are required to create a line")
 	}
@@ -159,42 +155,54 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domai
 	}
 	lineString := fmt.Sprintf("LINESTRING(%s)", strings.Join(wktPoints, ", "))
 
-	// SQL query to find intersecting tiles and calculate interest points
+	// Query to find intersecting tiles and calculate interest points
 	query := `
         WITH line_geom AS (
             SELECT ST_GeomFromText(?, 4326) AS geom
         )
         SELECT 
             tiles.*,
-            ST_AsText(ST_Intersection(line_geom.geom, spatial_index)) AS intersection_geom
+            ST_AsText(ST_PointOnSurface(ST_Intersection(line_geom.geom, spatial_index))) AS intersection_geom
         FROM tiles, line_geom
         WHERE ST_Intersects(spatial_index, line_geom.geom)
     `
 
 	// Execute the query
+	var results []struct {
+		models.Tile
+		IntersectionGeom string `gorm:"column:intersection_geom"`
+	}
 	result := r.db.DbHandler.Raw(query, lineString).Scan(&results)
 	if result.Error != nil {
 		log.Printf("Error executing query: %v\n", result.Error)
 		return nil, result.Error
 	}
 
-	// Generate mappings with interest points
+	if len(results) == 0 {
+		log.Printf("No tiles intersect the line for satellite %s\n", sat.NoradID)
+		return nil, nil
+	}
+
+	// Map results to domain with interest points
 	var mappings []domain.TileSatelliteMapping
 	for _, res := range results {
 		tile := models.MapToDomain(res.Tile)
 
-		// Parse the intersection geometry (interest point)
+		// Parse intersection geometry
+		log.Printf("Processing Tile ID: %s, Raw IntersectionGeom: %s", tile.ID, res.IntersectionGeom)
 		interestPoint, err := parseIntersectionGeometry(res.IntersectionGeom)
 		if err != nil {
-			continue // Skip if no valid interest point
+			log.Printf("Failed to parse intersection geometry for TileID %s: %v\n", tile.ID, err)
+			continue // Skip invalid intersections
 		}
 
-		// Create the mapping with interest
 		mapping := domain.TileSatelliteMapping{
 			NoradID:               sat.NoradID,
 			TileID:                tile.ID,
 			IntersectionLongitude: interestPoint.Longitude,
 			IntersectionLatitude:  interestPoint.Latitude,
+			CreatedAt:             time.Now(),
+			UpdatedAt:             time.Now(),
 		}
 		mappings = append(mappings, mapping)
 	}
@@ -202,18 +210,25 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domai
 	return mappings, nil
 }
 
-// parseIntersectionGeometry parses the WKT intersection geometry into a domain.Point
 func parseIntersectionGeometry(wkt string) (domain.Point, error) {
-	if wkt == "" {
-		return domain.Point{}, fmt.Errorf("invalid wkt point")
+	if wkt == "" || !strings.HasPrefix(wkt, "POINT(") || !strings.HasSuffix(wkt, ")") {
+		return domain.Point{}, fmt.Errorf("invalid WKT format: %s", wkt)
 	}
 
-	// Example: POINT(30.5 50.3)
-	var longitude, latitude float64
-	_, err := fmt.Sscanf(wkt, "POINT(%f %f)", &longitude, &latitude)
+	coordinates := strings.TrimPrefix(strings.TrimSuffix(wkt, ")"), "POINT(")
+	parts := strings.Fields(coordinates)
+	if len(parts) != 2 {
+		return domain.Point{}, fmt.Errorf("invalid WKT coordinates: %s", coordinates)
+	}
+
+	longitude, err := strconv.ParseFloat(parts[0], 64)
 	if err != nil {
-		log.Printf("Error parsing intersection geometry: %v\n", err)
-		return domain.Point{}, err
+		return domain.Point{}, fmt.Errorf("error parsing longitude: %w", err)
+	}
+
+	latitude, err := strconv.ParseFloat(parts[1], 64)
+	if err != nil {
+		return domain.Point{}, fmt.Errorf("error parsing latitude: %w", err)
 	}
 
 	return domain.Point{

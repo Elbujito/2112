@@ -1,12 +1,31 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Box } from "@chakra-ui/react";
-import Map, { Source, Layer, NavigationControl, GeolocateControl, Marker, MapRef } from "react-map-gl";
-import { FeatureCollection, Point, Polygon, Position } from "geojson";
+import Map, { Source, Layer, NavigationControl, GeolocateControl, MapRef } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Card from "components/card";
 import { Tile } from "types/tiles";
 import { OrbitDataItem } from "types/satellites";
-import supercluster from "supercluster";
+import { Feature, FeatureCollection, LineString, Polygon, Position } from "geojson";
+
+// Utility function for calculating distance between two points (Haversine formula)
+const haversineDistance = (p1: Position, p2: Position): number => {
+  const R = 6371; // Earth radius in kilometers
+  const lat1 = p1[1] * (Math.PI / 180);
+  const lat2 = p2[1] * (Math.PI / 180);
+  const lon1 = p1[0] * (Math.PI / 180);
+  const lon2 = p2[0] * (Math.PI / 180);
+
+  const dlat = lat2 - lat1;
+  const dlon = lon2 - lon1;
+
+  const a = Math.sin(dlat / 2) * Math.sin(dlat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) *
+    Math.sin(dlon / 2) * Math.sin(dlon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in kilometers
+  return distance;
+};
 
 const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN;
 
@@ -48,6 +67,30 @@ const generateSquare = (lat: number, lon: number, size: number): Polygon => {
   };
 };
 
+const generateSatellitePoints = (satellitePositionData: Record<string, OrbitDataItem[]>) => {
+  const points: FeatureCollection = {
+    type: "FeatureCollection",
+    features: Object.keys(satellitePositionData || {}).flatMap((satelliteID) => {
+      const positions = satellitePositionData[satelliteID];
+
+      // Map each position to a Point feature
+      return positions.map((pos) => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [pos.longitude, pos.latitude],
+        },
+        properties: {
+          satelliteID,
+        },
+      }));
+    }),
+  };
+
+  return points;
+};
+
+
 const MapTileCard: React.FC<MapTileCardProps> = ({
   tiles,
   darkmode,
@@ -57,7 +100,6 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
 }) => {
   const mapRef = useRef<MapRef | null>(null);
   const [hoveredTile, setHoveredTile] = useState<Tile | null>(null);
-  const [clusters, setClusters] = useState<any[]>([]);
   const [clusterZoom, setClusterZoom] = useState<number>(5);
 
   useEffect(() => {
@@ -71,47 +113,6 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
       }
     }
   }, [selectedTileIDs, tiles]);
-
-  // Prepare data for supercluster
-  const getClusteredData = useCallback(() => {
-    const points = [];
-
-    // Flatten satellite position data into a point array
-    satellitePositionData &&
-      Object.keys(satellitePositionData).forEach((satelliteID) => {
-        const positions = satellitePositionData[satelliteID];
-        positions.forEach((position) => {
-          points.push({
-            type: "Feature",
-            properties: { satelliteID },
-            geometry: {
-              type: "Point",
-              coordinates: [position.longitude, position.latitude],
-            },
-          });
-        });
-      });
-
-    const index = new supercluster({
-      radius: 40,
-      maxZoom: 16,
-    });
-
-    index.load(points);
-
-    const bounds = mapRef.current?.getMap()?.getBounds().toArray();
-
-    if (bounds) {
-      const clusters = index.getClusters(bounds[0].concat(bounds[1]), clusterZoom);
-      setClusters(clusters);
-    }
-  }, [satellitePositionData, clusterZoom]);
-
-  // Update clusters when zoom level or satellite positions change
-  useEffect(() => {
-    getClusteredData();
-  }, [satellitePositionData, clusterZoom, getClusteredData]);
-
   const handleZoomChange = () => {
     const currentZoom = mapRef.current?.getMap()?.getZoom();
     if (currentZoom) {
@@ -135,7 +136,6 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
       setHoveredTile(null);
     }
   };
-
   const geoJsonSource: FeatureCollection = {
     type: "FeatureCollection",
     features: tiles.map((tile) => ({
@@ -157,9 +157,9 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
         <Map
           ref={mapRef}
           initialViewState={{
-            latitude: 49.6117,
-            longitude: 6.1319,
-            zoom: 5,
+            longitude: 0, // Center of the Earth
+            latitude: 0,  // Center of the Earth
+            zoom: 1,      // Global zoom to show the entire Earth
           }}
           style={{
             borderRadius: "20px",
@@ -171,6 +171,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
           interactiveLayerIds={["tile-boundaries"]}
           onMouseMove={handleTileHover}
           onZoomEnd={handleZoomChange} // Track zoom level changes
+        // maxBounds={[-180, -85, 180, 85]} // Longitude range between -180 to 180 and latitude range between -85 to 85
         >
           <Source id="tiles" type="geojson" data={geoJsonSource}>
             <Layer
@@ -196,29 +197,18 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
             />
           </Source>
 
-          {/* Render clustered satellite position markers */}
-          {clusters &&
-            clusters.map((cluster: any, index: number) => {
-              const [longitude, latitude] = cluster.geometry.coordinates;
-              const count = cluster.properties?.point_count_abbreviated;
-
-              return (
-                <Marker key={index} latitude={latitude} longitude={longitude}>
-                  <div
-                    style={{
-                      backgroundColor: "red",
-                      padding: "10px",
-                      borderRadius: "50%",
-                      color: "white",
-                      fontSize: "12px",
-                      textAlign: "center",
-                    }}
-                  >
-                    {count}
-                  </div>
-                </Marker>
-              );
-            })}
+          {/* Render the satellite paths as straight lines */}
+          <Source id="satellite-points" type="geojson" data={generateSatellitePoints(satellitePositionData || {})}>
+            <Layer
+              id="satellite-points-layer"
+              type="circle"
+              paint={{
+                "circle-radius": 5, // Size of the points
+                "circle-color": "#FF0000", // Red color for the points
+                "circle-opacity": 0.8, // Slightly transparent
+              }}
+            />
+          </Source>
 
           <GeolocateControl
             position="top-right"
