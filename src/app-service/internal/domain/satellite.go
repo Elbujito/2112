@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"errors"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -113,6 +114,7 @@ type SatelliteRepository interface {
 	DeleteByNoradID(ctx context.Context, noradID string) error
 	SaveBatch(ctx context.Context, satellites []Satellite) error
 	FindAllWithPagination(ctx context.Context, page int, pageSize int, searchRequest *SearchRequest) ([]Satellite, int64, error)
+	FindSatelliteInfoWithPagination(ctx context.Context, page int, pageSize int, searchRequest *SearchRequest) ([]SatelliteInfo, int64, error)
 }
 
 type SatellitePosition struct {
@@ -120,4 +122,39 @@ type SatellitePosition struct {
 	Longitude float64   `json:"longitude"`
 	Altitude  float64   `json:"altitude"`
 	Time      time.Time `json:"time"`
+}
+
+type SatelliteInfo struct {
+	Satellite Satellite // The associated Satellite
+	TLEs      []TLE     // List of TLEs ordered by most recent
+}
+
+// NewSatelliteInfo creates a new SatelliteInfo instance.
+func NewSatelliteInfo(satellite Satellite, tles []TLE) SatelliteInfo {
+	// Sort the TLEs by Epoch in descending order (most recent first)
+	sort.Slice(tles, func(i, j int) bool {
+		return tles[i].Epoch.After(tles[j].Epoch)
+	})
+
+	return SatelliteInfo{
+		Satellite: satellite,
+		TLEs:      tles,
+	}
+}
+
+// GetMostRecentTLE returns the most recent TLE from the SatelliteInfo.
+func (info *SatelliteInfo) GetMostRecentTLE() *TLE {
+	if len(info.TLEs) == 0 {
+		return nil
+	}
+	return &info.TLEs[0]
+}
+
+// AddTLE adds a new TLE to the SatelliteInfo and keeps the list sorted by most recent.
+func (info *SatelliteInfo) AddTLE(tle TLE) {
+	info.TLEs = append(info.TLEs, tle)
+	// Re-sort to ensure the TLEs are still ordered by most recent
+	sort.Slice(info.TLEs, func(i, j int) bool {
+		return info.TLEs[i].Epoch.After(info.TLEs[j].Epoch)
+	})
 }

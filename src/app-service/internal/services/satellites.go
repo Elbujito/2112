@@ -146,3 +146,22 @@ func (s *SatelliteService) ListSatellitesWithPagination(ctx context.Context, pag
 
 	return satellites, totalRecords, nil
 }
+
+// ListSatelliteInfoWithPagination retrieves SatelliteInfo objects with pagination.
+func (s *SatelliteService) ListSatelliteInfoWithPagination(ctx context.Context, page int, pageSize int, search *domain.SearchRequest) ([]domain.SatelliteInfo, int64, error) {
+	// Validate inputs
+	if page <= 0 {
+		return nil, 0, fmt.Errorf("page must be greater than 0")
+	}
+	if pageSize <= 0 {
+		return nil, 0, fmt.Errorf("pageSize must be greater than 0")
+	}
+
+	// Fetch SatelliteInfo with pagination
+	satelliteInfos, totalRecords, err := s.repo.FindSatelliteInfoWithPagination(ctx, page, pageSize, search)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to retrieve satellite info with pagination: %w", err)
+	}
+
+	return satelliteInfos, totalRecords, nil
+}

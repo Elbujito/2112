@@ -6,12 +6,12 @@ import { Tile } from "types/tiles";
 
 interface TileTableViewProps {
     onSelectTile: (tile: string) => void;
+    searchQuery: string;
 }
 
-export default function TileTableView({ onSelectTile }: TileTableViewProps) {
+export default function TileTableView({ onSelectTile, searchQuery }: TileTableViewProps) {
     const { tiles, loading, error, fetchTilesForLocation } = useTileServiceStore();
 
-    const [search, setSearch] = useState<string>("");
     const [pageIndex, setPageIndex] = useState<number>(0);
     const [pageSize, setPageSize] = useState<number>(20);
     const [paginatedTiles, setPaginatedTiles] = useState<Tile[]>([]);
@@ -27,10 +27,6 @@ export default function TileTableView({ onSelectTile }: TileTableViewProps) {
         const end = start + pageSize;
         setPaginatedTiles(tiles.slice(start, end));
     }, [tiles, pageIndex, pageSize]);
-
-    const handleSearchChange = (value: string) => {
-        setSearch(value);
-    };
 
     const handleSearchSubmit = () => {
         setPageIndex(0);
@@ -74,8 +70,8 @@ export default function TileTableView({ onSelectTile }: TileTableViewProps) {
         },
         {
             accessorKey: "Radius",
-            header: "Radius",
-            cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
+            header: "Radius (km)",
+            cell: (info: any) => <p className="text-sm">{Math.ceil(info.getValue() / 1000)}</p>,
         },
     ];
 
@@ -107,9 +103,6 @@ export default function TileTableView({ onSelectTile }: TileTableViewProps) {
                 pageSize={pageSize}
                 pageIndex={pageIndex}
                 onPageChange={handleOnPaginationChange}
-                searchValue={search}
-                onSearchChange={handleSearchChange}
-                onSearchSubmit={handleSearchSubmit}
                 onRowClick={handleTileSelection}
             />
         </Box>

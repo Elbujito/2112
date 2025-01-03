@@ -6,29 +6,21 @@ import { TileSatelliteMapping } from "types/tiles";
 
 interface MappingTableViewProps {
     onSelectTileID: (tileID: string) => void;
+    searchQuery: string;
 }
 
 export default function MappingTableView({
     onSelectTileID,
+    searchQuery,
 }: MappingTableViewProps) {
     const { tileMappings, totalTileMappings, loading, error, fetchTileMappings } = useTileServiceStore();
 
-    const [search, setSearch] = useState<string>("");
     const [pageIndex, setPageIndex] = useState<number>(0);
     const [pageSize, setPageSize] = useState<number>(20);
 
     useEffect(() => {
-        fetchTileMappings(pageIndex, pageSize, search);
-    }, [pageIndex, pageSize]);
-
-    const handleSearchChange = (value: string) => {
-        setSearch(value);
-    };
-
-    const handleSearchSubmit = () => {
-        setPageIndex(0);
-        fetchTileMappings(pageIndex, pageSize, search);
-    };
+        fetchTileMappings(pageIndex, pageSize, searchQuery);
+    }, [pageIndex, pageSize, searchQuery]);
 
     const handleOnPaginationChange = (index: number) => {
         setPageIndex(index);
@@ -104,9 +96,6 @@ export default function MappingTableView({
                 pageSize={pageSize}
                 pageIndex={pageIndex}
                 onPageChange={handleOnPaginationChange}
-                searchValue={search}
-                onSearchChange={handleSearchChange}
-                onSearchSubmit={handleSearchSubmit}
                 onRowClick={handleMappingSelection}
             />
         </Box>

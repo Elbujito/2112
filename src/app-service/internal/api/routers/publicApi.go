@@ -146,6 +146,7 @@ func (r *PublicRouter) registerPublicAPIRoutes() {
 	satellite := r.Echo.Group("/satellites")
 	satellite.GET("/orbit", satelliteHandler.GetSatellitePositionsByNoradID)
 	satellite.GET("/paginated", satelliteHandler.GetPaginatedSatellites)
+	satellite.GET("/paginated/tles", satelliteHandler.GetPaginatedSatelliteInfo)
 
 	// Initialize the SatelliteHandler with the SatelliteService from ServiceComponent
 	tile := r.Echo.Group("/tiles")
