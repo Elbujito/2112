@@ -1,10 +1,12 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { Box } from "@chakra-ui/react";
-import Map, { Source, Layer, NavigationControl, GeolocateControl, Popup, MapRef } from "react-map-gl";
-import { FeatureCollection, Polygon, Position } from "geojson";
+import Map, { Source, Layer, NavigationControl, GeolocateControl, Marker, MapRef } from "react-map-gl";
+import { FeatureCollection, Point, Polygon, Position } from "geojson";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Card from "components/card";
 import { Tile } from "types/tiles";
+import { OrbitDataItem } from "types/satellites";
+import supercluster from "supercluster";
 
 const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN;
 
@@ -13,6 +15,7 @@ interface MapTileCardProps {
   darkmode: string;
   onLocationChange: (location: { latitude: number; longitude: number }) => void;
   selectedTileIDs?: string[]; // Updated to accept an array of selected tile IDs
+  satellitePositionData?: Record<string, OrbitDataItem[]>; // Added satellite position data
 }
 
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
@@ -50,9 +53,12 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
   darkmode,
   onLocationChange,
   selectedTileIDs = [], // Default to an empty array
+  satellitePositionData,
 }) => {
   const mapRef = useRef<MapRef | null>(null);
   const [hoveredTile, setHoveredTile] = useState<Tile | null>(null);
+  const [clusters, setClusters] = useState<any[]>([]);
+  const [clusterZoom, setClusterZoom] = useState<number>(5);
 
   useEffect(() => {
     if (selectedTileIDs.length > 0) {
@@ -65,6 +71,53 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
       }
     }
   }, [selectedTileIDs, tiles]);
+
+  // Prepare data for supercluster
+  const getClusteredData = useCallback(() => {
+    const points = [];
+
+    // Flatten satellite position data into a point array
+    satellitePositionData &&
+      Object.keys(satellitePositionData).forEach((satelliteID) => {
+        const positions = satellitePositionData[satelliteID];
+        positions.forEach((position) => {
+          points.push({
+            type: "Feature",
+            properties: { satelliteID },
+            geometry: {
+              type: "Point",
+              coordinates: [position.longitude, position.latitude],
+            },
+          });
+        });
+      });
+
+    const index = new supercluster({
+      radius: 40,
+      maxZoom: 16,
+    });
+
+    index.load(points);
+
+    const bounds = mapRef.current?.getMap()?.getBounds().toArray();
+
+    if (bounds) {
+      const clusters = index.getClusters(bounds[0].concat(bounds[1]), clusterZoom);
+      setClusters(clusters);
+    }
+  }, [satellitePositionData, clusterZoom]);
+
+  // Update clusters when zoom level or satellite positions change
+  useEffect(() => {
+    getClusteredData();
+  }, [satellitePositionData, clusterZoom, getClusteredData]);
+
+  const handleZoomChange = () => {
+    const currentZoom = mapRef.current?.getMap()?.getZoom();
+    if (currentZoom) {
+      setClusterZoom(Math.floor(currentZoom));
+    }
+  };
 
   const handleTileHover = (event: any) => {
     const features = event.features;
@@ -117,6 +170,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
           mapboxAccessToken={MAPBOX_TOKEN}
           interactiveLayerIds={["tile-boundaries"]}
           onMouseMove={handleTileHover}
+          onZoomEnd={handleZoomChange} // Track zoom level changes
         >
           <Source id="tiles" type="geojson" data={geoJsonSource}>
             <Layer
@@ -141,6 +195,31 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
               }}
             />
           </Source>
+
+          {/* Render clustered satellite position markers */}
+          {clusters &&
+            clusters.map((cluster: any, index: number) => {
+              const [longitude, latitude] = cluster.geometry.coordinates;
+              const count = cluster.properties?.point_count_abbreviated;
+
+              return (
+                <Marker key={index} latitude={latitude} longitude={longitude}>
+                  <div
+                    style={{
+                      backgroundColor: "red",
+                      padding: "10px",
+                      borderRadius: "50%",
+                      color: "white",
+                      fontSize: "12px",
+                      textAlign: "center",
+                    }}
+                  >
+                    {count}
+                  </div>
+                </Marker>
+              );
+            })}
+
           <GeolocateControl
             position="top-right"
             onGeolocate={(position) => {

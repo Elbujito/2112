@@ -2,13 +2,16 @@ import React, { useEffect } from "react";
 import { Spinner, Center, Text } from "@chakra-ui/react";
 import useTileServiceStore from "services/tileService"; // Import your tile service store
 import MapTileCard from "./MapTileCard";
+import { OrbitDataItem } from "types/satellites";
 
 interface MapTileViewProps {
   selectedTileIDs?: string[];
+  satellitePositionData?: Record<string, OrbitDataItem[]>; // New prop for satellite position data
 }
 
 export default function MapTileView({
   selectedTileIDs,
+  satellitePositionData,
 }: MapTileViewProps) {
   const {
     tiles,
@@ -21,6 +24,7 @@ export default function MapTileView({
     fetchTilesForLocation({ latitude: 0, longitude: 0 });
   }, [fetchTilesForLocation]);
 
+  // If data is still loading, show a loading spinner
   if (loading) {
     return (
       <Center
@@ -39,6 +43,7 @@ export default function MapTileView({
     );
   }
 
+  // If there is an error, show the error message
   if (error) {
     return (
       <Center
@@ -55,6 +60,7 @@ export default function MapTileView({
     );
   }
 
+  // Pass the satellite position data to the map for visualization
   return (
     <MapTileCard
       tiles={tiles}
@@ -65,6 +71,7 @@ export default function MapTileView({
       }
       onLocationChange={fetchTilesForLocation}
       selectedTileIDs={selectedTileIDs}
+      satellitePositionData={satellitePositionData} // Pass position data to MapTileCard
     />
   );
 }

@@ -42,6 +42,16 @@ export default function MappingTableView({
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
         },
         {
+            accessorKey: "Intersection.Longitude",
+            header: "I. Longitude",
+            cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
+        },
+        {
+            accessorKey: "Intersection.Latitude",
+            header: "I. Latitude",
+            cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
+        },
+        {
             accessorKey: "TileCenterLat",
             header: "T. Center Lat.",
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
@@ -54,16 +64,6 @@ export default function MappingTableView({
         {
             accessorKey: "TileZoomLevel",
             header: "T. Zoom Level",
-            cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
-        },
-        {
-            accessorKey: "Intersection.Longitude",
-            header: "Inter. Longitude",
-            cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
-        },
-        {
-            accessorKey: "Intersection.Latitude",
-            header: "Inter. Latitude",
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
         },
     ];

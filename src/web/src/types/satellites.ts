@@ -31,3 +31,10 @@ export interface SatelliteInfo {
     Satellite: Satellite;
     TLEs: TLE[];
 }
+
+export interface OrbitDataItem {
+    latitude: number;
+    longitude: number;
+    altitude: number;
+    time: string;
+}

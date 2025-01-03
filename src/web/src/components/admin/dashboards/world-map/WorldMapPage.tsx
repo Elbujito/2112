@@ -5,20 +5,21 @@ import TileTableView from "./TileTableView";
 import SatelliteTableView from "./SatelliteTableView";
 import SearchBar from "components/search/SearchBar";
 import { Box, Grid, GridItem } from "@chakra-ui/react";
+import { OrbitDataItem } from "types/satellites";
 
 const WorldMapPage: React.FC = () => {
-    const [selectedTileIDs, setSelectedTileIDs] = useState<string[]>([]); // Array for multiple tile IDs
-    const [searchQuery, setSearchQuery] = useState<string>(""); // For input field
-    const [appliedSearchQuery, setAppliedSearchQuery] = useState<string>(""); // For filtering
+    const [selectedTileIDs, setSelectedTileIDs] = useState<string[]>([]);
+    const [searchQuery, setSearchQuery] = useState<string>("");
+    const [appliedSearchQuery, setAppliedSearchQuery] = useState<string>("");
+    const [satellitePositionData, setSatellitePositionData] = useState<Record<string, OrbitDataItem[]> | null>(null); // State to hold position data
 
     const handleTileSelection = (tileIDs: string[]) => {
         setSelectedTileIDs(tileIDs);
-        console.log("Selected Tile IDs:", tileIDs);
     };
 
-    const handleSatelliteSelection = (noradID: string, tileIDs: string[]) => {
+    const handleSatelliteSelection = (noradID: string, positionData: Record<string, OrbitDataItem[]>) => {
         console.log("Selected Satellite NORAD ID:", noradID);
-        handleTileSelection(tileIDs); // Update selected tiles based on satellite selection
+        setSatellitePositionData(positionData);
     };
 
     const handleSearchChange = (value: string) => {
@@ -26,7 +27,7 @@ const WorldMapPage: React.FC = () => {
     };
 
     const handleSearchSubmit = () => {
-        setAppliedSearchQuery(searchQuery.toLowerCase()); // Apply the search
+        setAppliedSearchQuery(searchQuery.toLowerCase());
         console.log("Search submitted with query:", searchQuery.toLowerCase());
     };
 
@@ -49,30 +50,35 @@ const WorldMapPage: React.FC = () => {
             >
                 <GridItem w="100%" h="100%" minHeight="50vh" display="flex">
                     <Box flex="1" h="100%">
-                        <MapTileView selectedTileIDs={selectedTileIDs} />
+                        <MapTileView
+                            selectedTileIDs={selectedTileIDs}
+                            satellitePositionData={satellitePositionData} // Pass position data to the map
+                        />
                     </Box>
                 </GridItem>
 
                 <GridItem w="100%" h="100%" minHeight="50vh" maxHeight="50vh" display="flex" gap={4}>
                     <Box flex="1" h="100%" overflow="hidden">
                         <MappingTableView
-                            searchQuery={appliedSearchQuery} // Use applied query
-                            onSelectTileID={(tileID) => handleTileSelection([tileID])} // Wrap single tile ID in array
+                            searchQuery={appliedSearchQuery}
+                            onSelectTileID={(tileID) => handleTileSelection([tileID])}
                         />
                     </Box>
 
                     <Box flex="1" h="100%" overflow="hidden">
                         <TileTableView
-                            searchQuery={appliedSearchQuery} // Use applied query
-                            onSelectTile={(tileID) => handleTileSelection([tileID])} // Wrap single tile ID in array
+                            searchQuery={appliedSearchQuery}
+                            onSelectTile={(tileID) => handleTileSelection([tileID])}
                         />
                     </Box>
 
                     <Box flex="1" h="100%" overflow="hidden">
                         <SatelliteTableView
-                            searchQuery={appliedSearchQuery} // Use applied query
+                            searchQuery={appliedSearchQuery}
                             onSelectSatelliteID={(noradID) => console.log("Satellite Selected:", noradID)}
-                            onTilesSelected={(tileIDs) => handleTileSelection(tileIDs)} // Update tiles from satellite
+                            onTilesSelected={(tileIDs) => handleTileSelection(tileIDs)}
+                            onPropagateSatellite={null}
+                            onTargetSatellite={handleSatelliteSelection} // Pass the handler to SatelliteTableView
                         />
                     </Box>
                 </GridItem>

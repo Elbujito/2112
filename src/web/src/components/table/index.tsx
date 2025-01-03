@@ -8,8 +8,9 @@ import {
     flexRender,
     ColumnDef,
 } from "@tanstack/react-table";
-import { Menu, MenuItem, MenuButton } from "@chakra-ui/react";
+import { Menu, MenuItem, MenuButton, MenuList } from "@chakra-ui/react";
 import { CustomScrollbar } from "components/scrollbar/CustomScrollbar";
+import { FaEdit, FaTrashAlt } from "react-icons/fa";  // Example icons for actions
 
 function TableContainer<T>({
     columns,
@@ -29,7 +30,7 @@ function TableContainer<T>({
     totalItems: number;
     onPageChange: (pageIndex: number) => void;
     getRowId: (row: T) => string;
-    actions?: (row: T) => { label: string; onClick: () => void }[] | null;
+    actions?: (row: T) => { label: string; onClick: () => void; icon?: JSX.Element }[] | null;
     onRowClick?: (row: T) => void;
 }) {
     const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
@@ -57,13 +58,18 @@ function TableContainer<T>({
                     <thead className="sticky top-0 bg-navy-700 z-10 text-white">
                         {headerGroups.map((headerGroup) => (
                             <tr key={headerGroup.id}>
+                                {actions && (
+                                    <th className="py-2 px-3 text-left text-xs font-bold" style={{ minWidth: '100px' }}>
+                                        Actions {/* Set minWidth for Actions column */}
+                                    </th>
+                                )}
                                 {headerGroup.headers.map((header) => (
                                     <th
                                         key={header.id}
                                         className="py-2 px-3 text-left text-xs font-bold relative group"
                                         style={{
                                             width: header.getSize(),
-                                            minWidth: header.column.columnDef.minSize,
+                                            minWidth: header.column.id === 'ID' ? '100px' : header.column.columnDef.minSize, // Set minWidth for ID column
                                             maxWidth: header.column.columnDef.maxSize,
                                         }}
                                     >
@@ -73,11 +79,6 @@ function TableContainer<T>({
                                         )}
                                     </th>
                                 ))}
-                                {actions && (
-                                    <th className="py-2 px-3 text-left text-xs font-bold">
-                                        Actions
-                                    </th>
-                                )}
                             </tr>
                         ))}
                     </thead>
@@ -93,10 +94,43 @@ function TableContainer<T>({
                                         onRowClick?.(row.original);
                                     }}
                                     className={`cursor-pointer ${selectedRowId === getRowId(row.original)
-                                            ? "bg-blue-600 text-white"
-                                            : "hover:bg-gray-200"
+                                        ? "bg-blue-600 text-white"
+                                        : "hover:bg-gray-200"
                                         }`}
                                 >
+                                    {actions && (
+                                        <td className="py-2 px-3 text-xs" style={{ minWidth: '100px' }}>
+                                            <Menu>
+                                                <MenuButton>
+                                                    <MdMoreVert className="cursor-pointer" />
+                                                </MenuButton>
+                                                <MenuList
+                                                    bg="white" // White background for the menu
+                                                    border="none"
+                                                    boxShadow="lg"
+                                                >
+                                                    {(actions(row.original) || []).map(
+                                                        (action, index) => (
+                                                            <MenuItem
+                                                                key={index}
+                                                                onClick={() => {
+                                                                    action.onClick();
+                                                                    // Chakra UI closes the menu automatically on item click
+                                                                }}
+                                                                icon={action.icon || <MdMoreVert />}
+                                                                bg="white" // Menu item white background
+                                                                color="black" // Text color set to black for better contrast
+                                                                _hover={{ bg: "lightblue", color: "black" }} // Hover effect: light blue background
+                                                                _focus={{ bg: "lightblue", color: "black" }} // Focus effect: light blue background
+                                                            >
+                                                                {action.label}
+                                                            </MenuItem>
+                                                        )
+                                                    )}
+                                                </MenuList>
+                                            </Menu>
+                                        </td>
+                                    )}
                                     {row.getVisibleCells().map((cell) => (
                                         <td
                                             key={cell.id}
@@ -109,31 +143,12 @@ function TableContainer<T>({
                                             )}
                                         </td>
                                     ))}
-                                    {actions && (
-                                        <td className="py-2 px-3 text-xs">
-                                            <Menu>
-                                                <MenuButton>
-                                                    <MdMoreVert className="cursor-pointer" />
-                                                </MenuButton>
-                                                {(actions(row.original) || []).map(
-                                                    (action, index) => (
-                                                        <MenuItem
-                                                            key={index}
-                                                            onClick={action.onClick}
-                                                        >
-                                                            {action.label}
-                                                        </MenuItem>
-                                                    )
-                                                )}
-                                            </Menu>
-                                        </td>
-                                    )}
                                 </tr>
                             ))
                         ) : (
                             <tr>
                                 <td
-                                    colSpan={columns.length + 1}
+                                    colSpan={columns.length + (actions ? 1 : 0)}
                                     className="text-center py-4 text-xs"
                                 >
                                     No data available
@@ -159,7 +174,11 @@ function TableContainer<T>({
                         Page {pageIndex + 1} of {Math.ceil(totalItems / pageSize)}
                     </p>
                     <button
-                        onClick={() => onPageChange(Math.min(pageIndex + 1, Math.ceil(totalItems / pageSize) - 1))}
+                        onClick={() =>
+                            onPageChange(
+                                Math.min(pageIndex + 1, Math.ceil(totalItems / pageSize) - 1)
+                            )
+                        }
                         disabled={pageIndex + 1 >= Math.ceil(totalItems / pageSize)}
                         className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded-lg ml-2 disabled:bg-gray-400 disabled:text-gray-200"
                     >
