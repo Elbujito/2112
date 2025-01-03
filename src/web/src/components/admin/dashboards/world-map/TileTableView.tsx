@@ -2,24 +2,31 @@ import React, { useEffect, useState } from "react";
 import { Spinner, Box, Text, Center } from "@chakra-ui/react";
 import useTileServiceStore from "services/tileService";
 import GenericTableComponent from "components/table";
-import { TileSatelliteMapping } from "types/tiles";
+import { Tile } from "types/tiles";
 
-interface MappingTableViewProps {
-    onSelectTileID: (tileID: string) => void;
+interface TileTableViewProps {
+    onSelectTile: (tile: string) => void;
 }
 
-export default function MappingTableView({
-    onSelectTileID,
-}: MappingTableViewProps) {
-    const { tileMappings, totalTileMappings, loading, error, fetchTileMappings } = useTileServiceStore();
+export default function TileTableView({ onSelectTile }: TileTableViewProps) {
+    const { tiles, loading, error, fetchTilesForLocation } = useTileServiceStore();
 
     const [search, setSearch] = useState<string>("");
     const [pageIndex, setPageIndex] = useState<number>(0);
     const [pageSize, setPageSize] = useState<number>(20);
+    const [paginatedTiles, setPaginatedTiles] = useState<Tile[]>([]);
+
+    const defaultLocation = { latitude: 0, longitude: 0 };
 
     useEffect(() => {
-        fetchTileMappings(pageIndex, pageSize, search);
-    }, [pageIndex, pageSize]);
+        fetchTilesForLocation(defaultLocation);
+    }, []);
+
+    useEffect(() => {
+        const start = pageIndex * pageSize;
+        const end = start + pageSize;
+        setPaginatedTiles(tiles.slice(start, end));
+    }, [tiles, pageIndex, pageSize]);
 
     const handleSearchChange = (value: string) => {
         setSearch(value);
@@ -27,51 +34,47 @@ export default function MappingTableView({
 
     const handleSearchSubmit = () => {
         setPageIndex(0);
-        fetchTileMappings(pageIndex, pageSize, search);
+        fetchTilesForLocation(defaultLocation);
     };
 
     const handleOnPaginationChange = (index: number) => {
+        console.log(index)
         setPageIndex(index);
     };
 
-    const handleMappingSelection = (tile: TileSatelliteMapping) => {
-        onSelectTileID(tile.TileID);
+    const handleTileSelection = (tile: Tile) => {
+        onSelectTile(tile.ID);
     };
 
     const columns = [
         {
-            accessorKey: "NoradID",
-            header: "NORAD ID",
-            cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
-        },
-        {
-            accessorKey: "TileID",
+            accessorKey: "ID",
             header: "Tile ID",
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
         },
         {
-            accessorKey: "TileCenterLat",
-            header: "T. Center Lat.",
+            accessorKey: "CenterLat",
+            header: "Center Lat",
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
         },
         {
-            accessorKey: "TileCenterLon",
-            header: "T. Center Lon.",
+            accessorKey: "CenterLon",
+            header: "Center Lon",
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
         },
         {
-            accessorKey: "TileZoomLevel",
-            header: "T. Zoom Level",
+            accessorKey: "ZoomLevel",
+            header: "Zoom Level",
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
         },
         {
-            accessorKey: "Intersection.Longitude",
-            header: "Inter. Longitude",
+            accessorKey: "NbFaces",
+            header: "Nb Faces",
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
         },
         {
-            accessorKey: "Intersection.Latitude",
-            header: "Inter. Latitude",
+            accessorKey: "Radius",
+            header: "Radius",
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
         },
     ];
@@ -97,17 +100,17 @@ export default function MappingTableView({
     return (
         <Box className="grid w-full gap-4 rounded-lg shadow-md">
             <GenericTableComponent
-                getRowId={(row: TileSatelliteMapping) => row.MappingID}
+                getRowId={(row: Tile) => row.ID}
                 columns={columns}
-                data={tileMappings}
-                totalItems={totalTileMappings}
+                data={paginatedTiles}
+                totalItems={tiles.length}
                 pageSize={pageSize}
                 pageIndex={pageIndex}
                 onPageChange={handleOnPaginationChange}
                 searchValue={search}
                 onSearchChange={handleSearchChange}
                 onSearchSubmit={handleSearchSubmit}
-                onRowClick={handleMappingSelection}
+                onRowClick={handleTileSelection}
             />
         </Box>
     );

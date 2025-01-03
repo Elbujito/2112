@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import MapTileView from "./MapTileView"
+import MapTileView from "./MapTileView";
 import MappingTableView from "./MappingTableView";
-import { Box, Grid, GridItem } from "@chakra-ui/react";
+import TileTableView from "./TileTableView"; // Import the TileTableView component
+import { Box, Grid, GridItem, Divider, Flex } from "@chakra-ui/react";
 
 const WorldMapPage: React.FC = () => {
     const [selectedTileID, setSelectedTileID] = useState<string | null>(null);
 
-    const handleMappingSelection = (tileID: string) => {
+    const handleTileSelection = (tileID: string) => {
         setSelectedTileID(tileID);
         console.log("Selected Tile ID:", tileID);
     };
@@ -18,17 +19,27 @@ const WorldMapPage: React.FC = () => {
                 gap={4}
                 w="100%"
                 h="100%"
+                alignItems="stretch"
             >
-                <GridItem w="100%" h="100%" minHeight="50vh">
-                    <MapTileView selectedTileID={selectedTileID} />
+                <GridItem w="100%" h="100%" minHeight="50vh" display="flex">
+                    <Box flex="1" h="100%">
+                        <MapTileView selectedTileID={selectedTileID} />
+                    </Box>
                 </GridItem>
 
-                <GridItem w="100%" h="100%">
-                    <MappingTableView onSelectTileID={handleMappingSelection} />
+                <GridItem w="100%" h="100%" minHeight="50vh" maxHeight="50vh"  display="flex">
+                    <Flex w="100%" h="100%" gap={4}>
+                        <Box flex="1" h="100%" overflow="hidden">
+                            <MappingTableView onSelectTileID={handleTileSelection} />
+                        </Box>
+
+                        <Box flex="1" h="100%" overflow="hidden">
+                            <TileTableView onSelectTile={handleTileSelection} />
+                        </Box>
+                    </Flex>
                 </GridItem>
             </Grid>
         </Box>
-
     );
 };
 
