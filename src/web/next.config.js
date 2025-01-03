@@ -25,6 +25,9 @@ const nextConfig = withBundleAnalyzer({
     ],
     unoptimized: true,
   },
+  env: {
+    MAPBOX_TOKEN: "pk.eyJ1Ijoic2ltbW1wbGUiLCJhIjoiY2wxeG1hd24xMDEzYzNrbWs5emFkdm16ZiJ9.q9s0sSKQFFaT9fyrC-7--g",
+  },
   webpack: (config, { webpack, isServer }) => {
     if (!isServer) {
       // Add Cesium-specific configurations

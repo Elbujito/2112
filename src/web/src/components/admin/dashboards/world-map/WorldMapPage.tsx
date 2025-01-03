@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import MapTileCardWithData from "./MapTileCardWithData"
-import TileMappingTableWithData from "./MappingTableWithData";
+import MapTileView from "./MapTileView"
+import MappingTableView from "./MappingTableView";
 import { Box, Grid, GridItem } from "@chakra-ui/react";
 
 const WorldMapPage: React.FC = () => {
@@ -20,15 +20,11 @@ const WorldMapPage: React.FC = () => {
                 h="100%"
             >
                 <GridItem w="100%" h="100%" minHeight="50vh">
-                    <Box w="100%" h="100%">
-                        <MapTileCardWithData selectedTileID={selectedTileID} />
-                    </Box>
+                    <MapTileView selectedTileID={selectedTileID} />
                 </GridItem>
 
                 <GridItem w="100%" h="100%">
-                    <Box w="100%" h="100%">
-                        <TileMappingTableWithData onSelectTileID={handleMappingSelection} />
-                    </Box>
+                    <MappingTableView onSelectTileID={handleMappingSelection} />
                 </GridItem>
             </Grid>
         </Box>

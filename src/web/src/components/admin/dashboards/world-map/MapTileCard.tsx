@@ -1,61 +1,44 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Box, Text } from "@chakra-ui/react";
-import Map, { Source, Layer, NavigationControl, GeolocateControl, Popup } from "react-map-gl";
+import { Box } from "@chakra-ui/react";
+import Map, { Source, Layer, NavigationControl, GeolocateControl, Popup, MapRef } from "react-map-gl";
 import { FeatureCollection, Polygon, Position } from "geojson";
 import "mapbox-gl/dist/mapbox-gl.css";
 import Card from "components/card";
+import { Tile } from "types/tiles";
 
-const MAPBOX_TOKEN =
-  "pk.eyJ1Ijoic2ltbW1wbGUiLCJhIjoiY2wxeG1hd24xMDEzYzNrbWs5emFkdm16ZiJ9.q9s0sSKQFFaT9fyrC-7--g"; // Replace with your Mapbox token
-
-interface Tile {
-  ID: string;
-  Quadkey: string;
-  ZoomLevel: number;
-  CenterLat: number;
-  CenterLon: number;
-  NbFaces: number;
-  Radius: number;
-}
+const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN;
 
 interface MapTileCardProps {
   tiles: Tile[];
   darkmode: string;
-  onLocationChange: (location: { latitude: number; longitude: number }) => void; // Callback for location change
+  onLocationChange: (location: { latitude: number; longitude: number }) => void;
   selectedTileID?: string;
 }
 
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
   const earthRadius = 6378137; // Earth's radius in meters for Mercator projection
-
   const halfSize = size;
 
-  // Convert latitude and longitude to Mercator x and y
   const mercatorX = (lon * Math.PI * earthRadius) / 180;
   const mercatorY =
-    earthRadius *
-    Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
+    earthRadius * Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360));
 
-  // Create square in Mercator coordinates
   const cornersMercator = [
-    [mercatorX - halfSize, mercatorY - halfSize], // Bottom-left
-    [mercatorX + halfSize, mercatorY - halfSize], // Bottom-right
-    [mercatorX + halfSize, mercatorY + halfSize], // Top-right
-    [mercatorX - halfSize, mercatorY + halfSize], // Top-left
-    [mercatorX - halfSize, mercatorY - halfSize], // Close the polygon
+    [mercatorX - halfSize, mercatorY - halfSize],
+    [mercatorX + halfSize, mercatorY - halfSize],
+    [mercatorX + halfSize, mercatorY + halfSize],
+    [mercatorX - halfSize, mercatorY + halfSize],
+    [mercatorX - halfSize, mercatorY - halfSize],
   ];
 
-  // Convert Mercator coordinates back to latitude and longitude
   const cornersLatLon = cornersMercator.map(([x, y]) => {
     const lonDeg = (x * 180) / (Math.PI * earthRadius);
     const latRad = (2 * Math.atan(Math.exp(y / earthRadius))) - Math.PI / 2;
     const latDeg = (latRad * 180) / Math.PI;
     return [lonDeg, latDeg] as [number, number];
   });
-
   // Create GeoJSON Polygon
   const coordinates: Position[][] = [cornersLatLon];
-
   return {
     type: "Polygon",
     coordinates,
@@ -68,7 +51,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
   onLocationChange,
   selectedTileID,
 }) => {
-  const mapRef = useRef(null);
+  const mapRef = useRef<MapRef | null>(null);
   const [hoveredTile, setHoveredTile] = useState<Tile | null>(null);
 
   useEffect(() => {
@@ -89,14 +72,14 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
       const hoveredFeature = features[0];
       const properties = hoveredFeature.properties;
 
-      if (properties?.quadkey) {
-        const tile = tiles.find((t) => t.Quadkey === properties.quadkey);
+      if (properties?.id) {
+        const tile = tiles.find((t) => t.ID === properties.id);
         if (tile) {
           setHoveredTile(tile);
         }
       }
     } else {
-      setHoveredTile(null); // Clear hover state if no feature is hovered
+      setHoveredTile(null);
     }
   };
 
@@ -121,9 +104,9 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
         <Map
           ref={mapRef}
           initialViewState={{
-            latitude: 49.6117, // Default latitude
-            longitude: 6.1319, // Default longitude
-            zoom: 5, // Adjust initial zoom level
+            latitude: 49.6117,
+            longitude: 6.1319,
+            zoom: 5,
           }}
           style={{
             borderRadius: "20px",
@@ -132,8 +115,8 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
           }}
           mapStyle={darkmode}
           mapboxAccessToken={MAPBOX_TOKEN}
-          interactiveLayerIds={["tile-boundaries"]} // Make this layer interactable
-          onMouseMove={handleTileHover} // Handle hover events
+          interactiveLayerIds={["tile-boundaries"]}
+          onMouseMove={handleTileHover}
         >
           <Source id="tiles" type="geojson" data={geoJsonSource}>
             <Layer
@@ -144,7 +127,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
                   "case",
                   ["==", ["get", "id"], selectedTileID],
                   "#0D47A1",
-                  "#888888", // Default fill color
+                  "#888888",
                 ],
                 "fill-opacity": 0.4,
               }}
@@ -153,7 +136,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
               id="tile-borders"
               type="line"
               paint={{
-                "line-color": "#000000", // Border color
+                "line-color": "#000000",
                 "line-width": 2,
               }}
             />
@@ -169,33 +152,23 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
           <NavigationControl position="top-right" />
           {/* {hoveredTile && (
             <Popup
-              longitude={hoveredTile.CenterLon} // Use center coordinates for the popup
+              longitude={hoveredTile.CenterLon}
               latitude={hoveredTile.CenterLat}
               closeButton={false}
               closeOnClick={false}
               anchor="bottom"
-              style={{
-                zIndex: 1000,
-                backgroundColor: "white",
-                padding: "5px",
-                borderRadius: "5px",
-              }}
             >
-              <Text fontSize="sm" fontWeight="bold" color="black">
-                Tile ID: {hoveredTile.ID}
-              </Text>
-              <Text fontSize="xs" color="gray">
-                Quadkey: {hoveredTile.Quadkey}
-              </Text>
-              <Text fontSize="xs" color="gray">
-                Zoom Level: {hoveredTile.ZoomLevel}
-              </Text>
-              <Text fontSize="xs" color="gray">
-                NbFaces: {hoveredTile.NbFaces}
-              </Text>
-              <Text fontSize="xs" color="gray">
-                Radius: {hoveredTile.Radius}
-              </Text>
+              <div>
+                <strong>Tile ID:</strong> {hoveredTile.ID}
+                <br />
+                <strong>Quadkey:</strong> {hoveredTile.Quadkey}
+                <br />
+                <strong>Zoom Level:</strong> {hoveredTile.ZoomLevel}
+                <br />
+                <strong>NbFaces:</strong> {hoveredTile.NbFaces}
+                <br />
+                <strong>Radius:</strong> {hoveredTile.Radius}
+              </div>
             </Popup>
           )} */}
         </Map>
