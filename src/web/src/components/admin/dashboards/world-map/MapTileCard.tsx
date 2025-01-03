@@ -12,7 +12,7 @@ interface MapTileCardProps {
   tiles: Tile[];
   darkmode: string;
   onLocationChange: (location: { latitude: number; longitude: number }) => void;
-  selectedTileID?: string;
+  selectedTileIDs?: string[]; // Updated to accept an array of selected tile IDs
 }
 
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
@@ -49,22 +49,22 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
   tiles,
   darkmode,
   onLocationChange,
-  selectedTileID,
+  selectedTileIDs = [], // Default to an empty array
 }) => {
   const mapRef = useRef<MapRef | null>(null);
   const [hoveredTile, setHoveredTile] = useState<Tile | null>(null);
 
   useEffect(() => {
-    if (selectedTileID) {
-      const selectedTile = tiles.find((tile) => tile.ID === selectedTileID);
-      if (selectedTile && mapRef.current) {
+    if (selectedTileIDs.length > 0) {
+      const firstSelectedTile = tiles.find((tile) => tile.ID === selectedTileIDs[0]);
+      if (firstSelectedTile && mapRef.current) {
         mapRef.current.flyTo({
-          center: [selectedTile.CenterLon, selectedTile.CenterLat],
+          center: [firstSelectedTile.CenterLon, firstSelectedTile.CenterLat],
           zoom: 3,
         });
       }
     }
-  }, [selectedTileID, tiles]);
+  }, [selectedTileIDs, tiles]);
 
   const handleTileHover = (event: any) => {
     const features = event.features;
@@ -125,9 +125,9 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
               paint={{
                 "fill-color": [
                   "case",
-                  ["==", ["get", "id"], selectedTileID],
-                  "#0D47A1",
-                  "#888888",
+                  ["in", ["get", "id"], ["literal", selectedTileIDs]],
+                  "#0D47A1", // Highlight color for selected tiles
+                  "#888888", // Default color
                 ],
                 "fill-opacity": 0.4,
               }}
@@ -150,27 +150,6 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
             trackUserLocation={true}
           />
           <NavigationControl position="top-right" />
-          {/* {hoveredTile && (
-            <Popup
-              longitude={hoveredTile.CenterLon}
-              latitude={hoveredTile.CenterLat}
-              closeButton={false}
-              closeOnClick={false}
-              anchor="bottom"
-            >
-              <div>
-                <strong>Tile ID:</strong> {hoveredTile.ID}
-                <br />
-                <strong>Quadkey:</strong> {hoveredTile.Quadkey}
-                <br />
-                <strong>Zoom Level:</strong> {hoveredTile.ZoomLevel}
-                <br />
-                <strong>NbFaces:</strong> {hoveredTile.NbFaces}
-                <br />
-                <strong>Radius:</strong> {hoveredTile.Radius}
-              </div>
-            </Popup>
-          )} */}
         </Map>
       </Box>
     </Card>

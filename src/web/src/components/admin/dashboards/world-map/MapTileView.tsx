@@ -4,11 +4,11 @@ import useTileServiceStore from "services/tileService"; // Import your tile serv
 import MapTileCard from "./MapTileCard";
 
 interface MapTileViewProps {
-  selectedTileID?: string;
+  selectedTileIDs?: string[];
 }
 
 export default function MapTileView({
-  selectedTileID,
+  selectedTileIDs,
 }: MapTileViewProps) {
   const {
     tiles,
@@ -64,7 +64,7 @@ export default function MapTileView({
           : "mapbox://styles/simmmple/ckwxecg1wapzp14s9qlus38p0"
       }
       onLocationChange={fetchTilesForLocation}
-      selectedTileID={selectedTileID}
+      selectedTileIDs={selectedTileIDs}
     />
   );
 }

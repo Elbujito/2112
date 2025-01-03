@@ -1,19 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { Spinner, Box, Text, Center } from "@chakra-ui/react";
-import useSatelliteServiceStore from "services/satelliteService"; // New store for SatelliteInfo
+import useSatelliteServiceStore from "services/satelliteService"; // Satellite store
+import useTileServiceStore from "services/tileService"; // Tile store
 import GenericTableComponent from "components/table";
 import { SatelliteInfo } from "types/satellites";
 
 interface SatelliteTableViewProps {
     onSelectSatelliteID: (satelliteID: string) => void;
     searchQuery: string;
+    onTilesSelected: (tileIDs: string[]) => void; // Callback for selected tiles
 }
 
 export default function SatelliteTableView({
     onSelectSatelliteID,
     searchQuery,
+    onTilesSelected,
 }: SatelliteTableViewProps) {
     const { satelliteInfo, totalSatelliteInfo, loading, error, fetchPaginatedSatelliteInfo } = useSatelliteServiceStore();
+    const { tileMappings } = useTileServiceStore();
 
     const [pageIndex, setPageIndex] = useState<number>(0);
     const [pageSize, setPageSize] = useState<number>(20);
@@ -22,18 +26,18 @@ export default function SatelliteTableView({
         fetchPaginatedSatelliteInfo(pageIndex, pageSize, searchQuery);
     }, [pageIndex, pageSize, searchQuery]);
 
-
-    const handleSearchSubmit = () => {
-        setPageIndex(0);
-        fetchPaginatedSatelliteInfo(0, pageSize, searchQuery);
-    };
-
     const handleOnPaginationChange = (index: number) => {
         setPageIndex(index);
     };
 
     const handleSatelliteSelection = (satellite: SatelliteInfo) => {
-        onSelectSatelliteID(satellite.Satellite.NoradID);
+        const noradId = satellite.Satellite.NoradID;
+
+        const matchingTiles = tileMappings.filter((mapping) => mapping.NoradID === noradId);
+        const matchingTileIDs = matchingTiles.map((tile) => tile.TileID);
+
+        onSelectSatelliteID(noradId);
+        onTilesSelected(matchingTileIDs);
     };
 
     const columns = [
@@ -112,6 +116,7 @@ export default function SatelliteTableView({
                 pageSize={pageSize}
                 pageIndex={pageIndex}
                 onPageChange={handleOnPaginationChange}
+                onRowClick={handleSatelliteSelection}
             />
         </Box>
     );
