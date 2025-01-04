@@ -106,6 +106,18 @@ export default function SatelliteTableView({
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,
         },
         {
+            accessorKey: "TLEs",
+            header: "TLE Epoch",
+            cell: (info: any) => {
+                const tle = info.row.original.TLEs?.[0];
+                return (
+                    <p className="text-sm">
+                        {tle?.Epoch ? new Date(tle.Epoch).toLocaleString() : "N/A"}
+                    </p>
+                );
+            },
+        },
+        {
             accessorKey: "Satellite.NoradID",
             header: "NORAD ID",
             cell: (info: any) => <p className="text-sm">{info.getValue()}</p>,

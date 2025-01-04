@@ -14,6 +14,7 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/data/models"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xtime"
+	"gorm.io/gorm/clause"
 )
 
 // TleRepository implements the TLERepository interface with caching.
@@ -125,13 +126,18 @@ func (r *TleRepository) SaveTle(ctx context.Context, tle domain.TLE) error {
 
 }
 
-// Cache-Aside Update: Update the database and refresh the cache.
 func (r *TleRepository) UpdateTle(ctx context.Context, tle domain.TLE) error {
 	modelTLE := mapToModelTLE(tle)
-	if err := r.db.DbHandler.Save(&modelTLE).Error; err != nil {
+
+	// Update or insert TLE in the database
+	if err := r.db.DbHandler.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Save(&modelTLE).Error; err != nil {
+		log.Printf("Failed to upsert TLE for NORAD ID %s: %v\n", tle.NoradID, err)
 		return err
 	}
 
+	// Prepare Redis cache key and data
 	key := fmt.Sprintf("satellite:tle:%s", tle.ID)
 	cacheData := map[string]interface{}{
 		"line_1": tle.Line1,
@@ -139,17 +145,20 @@ func (r *TleRepository) UpdateTle(ctx context.Context, tle domain.TLE) error {
 		"epoch":  tle.Epoch,
 		"id":     tle.NoradID,
 	}
+
+	// Update cache
 	if err := r.redisClient.HSet(ctx, key, cacheData); err != nil {
 		log.Printf("Failed to update Redis cache for key %s: %v\n", key, err)
 	}
-	err := r.redisClient.Expire(ctx, key, r.cacheTTL)
-	if err != nil {
-		return err
+	if err := r.redisClient.Expire(ctx, key, r.cacheTTL); err != nil {
+		log.Printf("Failed to set expiration for Redis key %s: %v\n", key, err)
 	}
-	err = r.publishTleToBroker(ctx, tle)
-	if err != nil {
+
+	// Publish TLE to the broker
+	if err := r.publishTleToBroker(ctx, tle); err != nil {
 		log.Printf("Failed to publish TLE to message broker: %v\n", err)
 	}
+
 	return nil
 }
 

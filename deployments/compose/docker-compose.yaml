@@ -49,7 +49,7 @@ services:
       app-service:
         condition: service_healthy
     restart: no
-    command: ["app-service", "task", "exec", "celestrack_tle_upload", "category=active", "maxCount=10"]
+    command: ["app-service", "task", "exec", "celestrack_tle_upload", "category=active", "maxCount=60000"]
 
   satellite-upload-service:
     build:
@@ -61,7 +61,7 @@ services:
       app-service:
         condition: service_healthy
     restart: no
-    command: ["app-service", "task", "exec", "celestrack_satellite_upload", "maxCount=10"]
+    command: ["app-service", "task", "exec", "celestrack_satellite_upload", "maxCount=60000"]
 
   satellite-mappings-service:
     build:
