@@ -68,36 +68,32 @@ export default function MappingTableView({
         },
     ];
 
-    if (loading) {
-        return (
-            <Center className="grid h-full w-full place-items-center">
-                <Spinner size="xl" color="blue.500" />
-            </Center>
-        );
-    }
-
-    if (error) {
-        return (
-            <Center className="grid h-full w-full place-items-center">
-                <Box className="text-center">
-                    <Text className="text-lg font-bold text-red-500">{error}</Text>
-                </Box>
-            </Center>
-        );
-    }
-
     return (
-        <Box className="grid w-full gap-4 rounded-lg shadow-md">
-            <GenericTableComponent
-                getRowId={(row: TileSatelliteMapping) => row.MappingID}
-                columns={columns}
-                data={tileMappings}
-                totalItems={totalTileMappings}
-                pageSize={pageSize}
-                pageIndex={pageIndex}
-                onPageChange={handleOnPaginationChange}
-                onRowClick={handleMappingSelection}
-            />
+        <Box className="grid w-full gap-4 rounded-lg shadow-md relative">
+            {/* Spinner at top-right */}
+
+            {/* Error message */}
+            {error && (
+                <Center className="grid h-full w-full place-items-center">
+                    <Box className="text-center">
+                        <Text className="text-lg font-bold text-red-500">{error}</Text>
+                    </Box>
+                </Center>
+            )}
+
+            {/* Table */}
+            {!error && (
+                <GenericTableComponent
+                    getRowId={(row: TileSatelliteMapping) => row.MappingID}
+                    columns={columns}
+                    data={tileMappings}
+                    totalItems={totalTileMappings}
+                    pageSize={pageSize}
+                    pageIndex={pageIndex}
+                    onPageChange={handleOnPaginationChange}
+                    onRowClick={handleMappingSelection}
+                />
+            )}
         </Box>
     );
 }

@@ -93,7 +93,15 @@ function TableContainer<T>({
                             rows.map((row) => (
                                 <tr
                                     key={getRowId(row.original)}
-                                    onClick={() => {
+                                    onClick={(event) => {
+                                        // Check if the click happened inside the action column
+                                        let targetElement = event.target as HTMLElement | null;
+                                        while (targetElement) {
+                                            if (targetElement.classList?.contains("action-column")) {
+                                                return; // Prevent row click if inside the action column
+                                            }
+                                            targetElement = targetElement.parentElement;
+                                        }
                                         setSelectedRowId(getRowId(row.original));
                                         onRowClick?.(row.original);
                                     }}
@@ -103,16 +111,15 @@ function TableContainer<T>({
                                         }`}
                                 >
                                     {actions && (
-                                        <td className="py-2 px-3 text-xs" style={{ minWidth: '100px' }}>
+                                        <td
+                                            className="py-2 px-3 text-xs action-column"
+                                            style={{ minWidth: "100px" }}
+                                        >
                                             <Menu>
                                                 <MenuButton>
                                                     <MdMoreVert className="cursor-pointer" />
                                                 </MenuButton>
-                                                <MenuList
-                                                    bg="white"
-                                                    border="none"
-                                                    boxShadow="lg"
-                                                >
+                                                <MenuList bg="white" border="none" boxShadow="lg">
                                                     {(actions(row.original) || []).map((action, index) => (
                                                         <MenuItem
                                                             key={index}
@@ -122,9 +129,17 @@ function TableContainer<T>({
                                                             icon={action.icon}
                                                             isDisabled={action.isDisabled}
                                                             bg="white"
-                                                            color={action.isDisabled ? "gray.400" : "black"}
-                                                            _hover={action.isDisabled ? {} : { bg: "lightblue", color: "black" }}
-                                                            _focus={action.isDisabled ? {} : { bg: "lightblue", color: "black" }}
+                                                            color={action.isDisabled ? "gray" : "black"}
+                                                            _hover={
+                                                                action.isDisabled
+                                                                    ? {}
+                                                                    : { bg: "lightblue", color: "black" }
+                                                            }
+                                                            _focus={
+                                                                action.isDisabled
+                                                                    ? {}
+                                                                    : { bg: "lightblue", color: "black" }
+                                                            }
                                                         >
                                                             {action.label}
                                                         </MenuItem>

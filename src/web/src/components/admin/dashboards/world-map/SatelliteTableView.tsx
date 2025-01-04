@@ -9,7 +9,7 @@ import { BiStation, BiTargetLock } from "react-icons/bi";
 interface SatelliteTableViewProps {
     onSelectSatelliteID: (satelliteID: string) => void;
     searchQuery: string;
-    onTilesSelected: (tileIDs: string[]) => void;
+    onTilesSelected: (tileIDs: string[], zoonmTo: boolean) => void;
     onTargetSatellite: (noradID: string, positionData: Record<string, OrbitDataItem[]>) => void; // Callback for targeting satellite with position data
     onPropagateSatellite: (noradID: string) => void; // Callback for targeting satellite
 }
@@ -54,7 +54,7 @@ export default function SatelliteTableView({
 
             const matchingTileIDs = satelliteMappingsByNoradID[noradId]?.map((tile) => tile.TileID) || [];
             onSelectSatelliteID(noradId);
-            onTilesSelected(matchingTileIDs);
+            onTilesSelected(matchingTileIDs, false);
         } catch (err) {
             console.error("Error fetching tiles for NORAD ID:", err);
         }
@@ -144,20 +144,6 @@ export default function SatelliteTableView({
 
     return (
         <Box className="grid w-full gap-4 rounded-lg shadow-md">
-            {loading && (
-                <Center
-                    position="absolute"
-                    top="0"
-                    left="0"
-                    right="0"
-                    bottom="0"
-                    bg="rgba(255, 255, 255, 0.6)"
-                    zIndex="overlay"
-                >
-                    <Spinner size="xl" color="blue.500" />
-                </Center>
-            )}
-
             <GenericTableComponent
                 getRowId={(row: SatelliteInfo) => row.Satellite.NoradID}
                 columns={columns}

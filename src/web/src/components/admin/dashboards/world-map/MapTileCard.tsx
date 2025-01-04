@@ -15,6 +15,7 @@ interface MapTileCardProps {
   onLocationChange: (location: { latitude: number; longitude: number }) => void;
   selectedTileIDs?: string[]; // Updated to accept an array of selected tile IDs
   satellitePositionData?: Record<string, OrbitDataItem[]>; // Added satellite position data
+  zoomTo: boolean,
 }
 
 const generateSquare = (lat: number, lon: number, size: number): Polygon => {
@@ -77,6 +78,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
   onLocationChange,
   selectedTileIDs = [], // Default to an empty array
   satellitePositionData,
+  zoomTo,
 }) => {
   const mapRef = useRef<MapRef | null>(null);
   const [hoveredTile, setHoveredTile] = useState<Tile | null>(null);
@@ -85,7 +87,7 @@ const MapTileCard: React.FC<MapTileCardProps> = ({
   useEffect(() => {
     if (selectedTileIDs.length > 0) {
       const firstSelectedTile = tiles.find((tile) => tile.ID === selectedTileIDs[0]);
-      if (firstSelectedTile && mapRef.current) {
+      if (firstSelectedTile && mapRef.current && zoomTo) {
         mapRef.current.flyTo({
           center: [firstSelectedTile.CenterLon, firstSelectedTile.CenterLat],
           zoom: 3,

@@ -75,36 +75,31 @@ export default function TileTableView({ onSelectTile, searchQuery }: TileTableVi
         },
     ];
 
-    if (loading) {
-        return (
-            <Center className="grid h-full w-full place-items-center">
-                <Spinner size="xl" color="blue.500" />
-            </Center>
-        );
-    }
-
-    if (error) {
-        return (
-            <Center className="grid h-full w-full place-items-center">
-                <Box className="text-center">
-                    <Text className="text-lg font-bold text-red-500">{error}</Text>
-                </Box>
-            </Center>
-        );
-    }
 
     return (
-        <Box className="grid w-full gap-4 rounded-lg shadow-md">
-            <GenericTableComponent
-                getRowId={(row: Tile) => row.ID}
-                columns={columns}
-                data={paginatedTiles}
-                totalItems={tiles.length}
-                pageSize={pageSize}
-                pageIndex={pageIndex}
-                onPageChange={handleOnPaginationChange}
-                onRowClick={handleTileSelection}
-            />
+        <Box className="grid w-full gap-4 rounded-lg shadow-md relative">
+            {/* Error message */}
+            {error && (
+                <Center className="grid h-full w-full place-items-center">
+                    <Box className="text-center">
+                        <Text className="text-lg font-bold text-red-500">{error}</Text>
+                    </Box>
+                </Center>
+            )}
+
+            {/* Table */}
+            {!error && (
+                <GenericTableComponent
+                    getRowId={(row: Tile) => row.ID}
+                    columns={columns}
+                    data={paginatedTiles}
+                    totalItems={tiles.length}
+                    pageSize={pageSize}
+                    pageIndex={pageIndex}
+                    onPageChange={handleOnPaginationChange}
+                    onRowClick={handleTileSelection}
+                />
+            )}
         </Box>
     );
 }

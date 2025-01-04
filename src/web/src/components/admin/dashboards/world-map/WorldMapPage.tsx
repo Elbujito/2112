@@ -10,16 +10,19 @@ import { OrbitDataItem } from "types/satellites";
 const WorldMapPage: React.FC = () => {
     const [selectedTileIDs, setSelectedTileIDs] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
+    const [zoomTo, setZoomTo] = useState<boolean>(false);
     const [appliedSearchQuery, setAppliedSearchQuery] = useState<string>("");
     const [satellitePositionData, setSatellitePositionData] = useState<Record<string, OrbitDataItem[]> | null>(null);
     const [selectedSatelliteNoradID, setSelectedSatelliteNoradID] = useState<string | null>(null); // Track the selected satellite
 
-    const handleTileSelection = (tileIDs: string[]) => {
+    const handleTileSelection = (tileIDs: string[], zoomTo: boolean) => {
         setSelectedTileIDs(tileIDs);
+        setZoomTo(zoomTo)
     };
 
-    const handleSatelliteTileSelection = (tileIDs: string[]) => {
+    const handleSatelliteTileSelection = (tileIDs: string[], zoomTo: boolean) => {
         setSelectedTileIDs(tileIDs);
+        setZoomTo(zoomTo)
         console.log(tileIDs.length);
     };
 
@@ -66,6 +69,7 @@ const WorldMapPage: React.FC = () => {
                         <MapTileView
                             selectedTileIDs={selectedTileIDs}
                             satellitePositionData={filteredSatellitePositionData} // Pass only filtered position data
+                            zoomTo={zoomTo}
                         />
                     </Box>
                 </GridItem>
@@ -74,14 +78,14 @@ const WorldMapPage: React.FC = () => {
                     <Box flex="1" h="100%" overflow="hidden">
                         <MappingTableView
                             searchQuery={appliedSearchQuery}
-                            onSelectTileID={(tileID) => handleTileSelection([tileID])}
+                            onSelectTileID={(tileID) => handleTileSelection([tileID], true)}
                         />
                     </Box>
 
                     <Box flex="1" h="100%" overflow="hidden">
                         <TileTableView
                             searchQuery={appliedSearchQuery}
-                            onSelectTile={(tileID) => handleTileSelection([tileID])}
+                            onSelectTile={(tileID) => handleTileSelection([tileID], true)}
                         />
                     </Box>
 
@@ -89,7 +93,7 @@ const WorldMapPage: React.FC = () => {
                         <SatelliteTableView
                             searchQuery={appliedSearchQuery}
                             onSelectSatelliteID={(noradID) => console.log("Satellite Selected:", noradID)}
-                            onTilesSelected={(tileIDs) => handleSatelliteTileSelection(tileIDs)}
+                            onTilesSelected={(tileIDs, zoomTo) => handleSatelliteTileSelection(tileIDs, zoomTo)}
                             onPropagateSatellite={null}
                             onTargetSatellite={handleSatelliteSelection} // Pass the handler to SatelliteTableView
                         />
