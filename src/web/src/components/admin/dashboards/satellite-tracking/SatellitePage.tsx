@@ -47,7 +47,7 @@ const SatellitePage: React.FC = () => {
         </div>
 
         {/* Satellite Map */}
-        <div className="row-span-1">
+        <div className="row-span-1 h-full">
           <MapSatelliteWithData
             noradID={selectedNoradID}
             userLocation={userLocation}

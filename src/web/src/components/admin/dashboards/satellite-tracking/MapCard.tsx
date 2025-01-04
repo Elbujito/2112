@@ -54,25 +54,25 @@ const MapCard: React.FC<MapCardProps> = ({ onLocationChange }) => {
         accessToken: MAPBOX_TOKEN,
         mapboxgl: map, // Bind to Mapbox GL instance
         marker: true, // Add a marker at the searched location
-        placeholder: "Search for places",
+        // placeholder: "Search for places",
       });
 
       // Add Geocoder control to the map
-      geocoder.on("result", (e) => {
-        const { center } = e.result.geometry;
-        if (center) {
-          const [longitude, latitude] = center;
-          setUserLocation({ latitude, longitude });
-          onLocationChange({ latitude, longitude }); // Notify location change
-        }
-      });
+      // geocoder.on("result", (e) => {
+      //   const { center } = e.result.geometry;
+      //   if (center) {
+      //     const [longitude, latitude] = center;
+      //     setUserLocation({ latitude, longitude });
+      //     onLocationChange({ latitude, longitude }); // Notify location change
+      //   }
+      // });
 
-      map.addControl(geocoder, "top-left");
+      // map.addControl(geocoder, "top-left");
 
-      return () => {
-        // Remove the geocoder when the component unmounts
-        map.removeControl(geocoder);
-      };
+      // return () => {
+      //   // Remove the geocoder when the component unmounts
+      //   map.removeControl(geocoder);
+      // };
     }
   }, [onLocationChange]);
 

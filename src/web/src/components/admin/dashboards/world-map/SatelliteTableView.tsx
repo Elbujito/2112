@@ -172,6 +172,7 @@ export default function SatelliteTableView({
                             label: "Recompute Mapping",
                             onClick: () => handleRecomputeMapping(row.Satellite.NoradID),
                             icon: <BiStation />,
+                            isDisabled: true
                         },
                     ];
                 }}
