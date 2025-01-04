@@ -126,37 +126,57 @@ func (r *TleRepository) SaveTle(ctx context.Context, tle domain.TLE) error {
 
 }
 
-func (r *TleRepository) UpdateTle(ctx context.Context, tle domain.TLE) error {
-	modelTLE := mapToModelTLE(tle)
-
-	// Update or insert TLE in the database
-	if err := r.db.DbHandler.Clauses(clause.OnConflict{
-		UpdateAll: true,
-	}).Save(&modelTLE).Error; err != nil {
-		log.Printf("Failed to upsert TLE for NORAD ID %s: %v\n", tle.NoradID, err)
-		return err
+func (r *TleRepository) UpdateTleBatch(ctx context.Context, tles []domain.TLE) error {
+	if len(tles) == 0 {
+		return fmt.Errorf("no TLEs to update")
 	}
 
-	// Prepare Redis cache key and data
-	key := fmt.Sprintf("satellite:tle:%s", tle.ID)
-	cacheData := map[string]interface{}{
-		"line_1": tle.Line1,
-		"line_2": tle.Line2,
-		"epoch":  tle.Epoch,
-		"id":     tle.NoradID,
-	}
+	const batchSize = 1000 // Process TLEs in batches of 1000
+	for i := 0; i < len(tles); i += batchSize {
+		end := i + batchSize
+		if end > len(tles) {
+			end = len(tles)
+		}
 
-	// Update cache
-	if err := r.redisClient.HSet(ctx, key, cacheData); err != nil {
-		log.Printf("Failed to update Redis cache for key %s: %v\n", key, err)
-	}
-	if err := r.redisClient.Expire(ctx, key, r.cacheTTL); err != nil {
-		log.Printf("Failed to set expiration for Redis key %s: %v\n", key, err)
-	}
+		batch := tles[i:end]
 
-	// Publish TLE to the broker
-	if err := r.publishTleToBroker(ctx, tle); err != nil {
-		log.Printf("Failed to publish TLE to message broker: %v\n", err)
+		// Map TLEs to the database model
+		modelTLEs := make([]models.TLE, len(batch))
+		for j, tle := range batch {
+			modelTLEs[j] = mapToModelTLE(tle)
+		}
+
+		// Batch upsert into the database
+		if err := r.db.DbHandler.Clauses(clause.OnConflict{
+			UpdateAll: true,
+		}).Save(&modelTLEs).Error; err != nil {
+			log.Printf("Failed to batch upsert TLEs: %v\n", err)
+			return err
+		}
+
+		// Process Redis caching and broker publishing
+		for _, tle := range batch {
+			key := fmt.Sprintf("satellite:tle:%s", tle.ID)
+			cacheData := map[string]interface{}{
+				"line_1": tle.Line1,
+				"line_2": tle.Line2,
+				"epoch":  tle.Epoch,
+				"id":     tle.NoradID,
+			}
+
+			// Update Redis cache
+			if err := r.redisClient.HSet(ctx, key, cacheData); err != nil {
+				log.Printf("Failed to update Redis cache for key %s: %v\n", key, err)
+			}
+			if err := r.redisClient.Expire(ctx, key, r.cacheTTL); err != nil {
+				log.Printf("Failed to set expiration for Redis key %s: %v\n", key, err)
+			}
+
+			// Publish to the message broker
+			if err := r.publishTleToBroker(ctx, tle); err != nil {
+				log.Printf("Failed to publish TLE to message broker for NORAD ID %s: %v\n", tle.NoradID, err)
+			}
+		}
 	}
 
 	return nil

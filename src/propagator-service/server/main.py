@@ -5,6 +5,8 @@ from skyfield.api import EarthSatellite, load, wgs84
 from datetime import datetime, timedelta
 import threading
 import logging
+from concurrent.futures import ThreadPoolExecutor
+import os
 from typing import List, Dict
 
 # FastAPI app instance
@@ -192,52 +194,57 @@ def compute_single_visibility(
         return None
 
 def subscribe_to_tle_updates():
-    pubsub = redis_client.pubsub()
-    pubsub.subscribe("satellite_tle_updates")
+    """
+    Subscribes to the Redis TLE update channel and processes updates in a thread pool.
+    """
+    max_threads = int(os.getenv("TLE_UPDATE_THREADS", 5))
+    with ThreadPoolExecutor(max_threads) as executor:
+        pubsub = redis_client.pubsub()
+        pubsub.subscribe("satellite_tle_updates")
+        logger.info(f"Subscribed to Redis channel: satellite_tle_updates with {max_threads} threads")
+        for message in pubsub.listen():
+            if message["type"] == "message":
+                try:
+                    satellite_data = json.loads(message["data"])
+                    executor.submit(process_tle_update, satellite_data)
+                except Exception as e:
+                    logger.error(f"Error scheduling TLE update processing: {e}")
 
-    logger.info("Subscribed to Redis channel: satellite_tle_updates")
-
-    for message in pubsub.listen():
-        if message["type"] == "message":
-            try:
-                satellite_data = json.loads(message["data"])
-                tle_line1 = satellite_data.get("line_1")
-                tle_line2 = satellite_data.get("line_2")
-                satellite_id = satellite_data.get("id")
-                epoch = satellite_data.get("epoch", datetime.utcnow().isoformat() + "Z")
-
-                if not tle_line1 or not tle_line2 or not satellite_id:
-                    logger.warning(f"Incomplete TLE data: {satellite_data}")
-                    continue
-
-                ts = load.timescale()
-                satellite = EarthSatellite(tle_line1, tle_line2, satellite_id, ts)
-                geocentric = satellite.at(ts.now())
-                subpoint = wgs84.subpoint(geocentric)
-                altitude_km = subpoint.elevation.km
-
-                if altitude_km < 2000:  # LEO
-                    pass_duration_minutes = 1440
-                    num_points = 1440
-                elif altitude_km < 35786:  # MEO
-                    pass_duration_minutes = 180
-                    num_points = 50
-                else:  # GEO
-                    pass_duration_minutes = 1440
-                    num_points = 10
-
-                interval_seconds = (pass_duration_minutes * 60) // num_points
-
-                logger.info(f"Starting propagation for satellite {satellite_id}")
-                positions = propagate_satellite_position(
-                    satellite_id, tle_line1, tle_line2, epoch,
-                    pass_duration_minutes, interval_seconds
-                )
-                publish_satellite_positions(satellite_id, positions)
-                logger.info(f"Finished propagation and publishing for satellite {satellite_id}")
-
-            except Exception as e:
-                logger.error(f"Error processing TLE message: {e}")
+def process_tle_update(satellite_data: Dict):
+    """
+    Processes a single TLE update.
+    """
+    try:
+        tle_line1 = satellite_data.get("line_1")
+        tle_line2 = satellite_data.get("line_2")
+        satellite_id = satellite_data.get("id")
+        epoch = satellite_data.get("epoch", datetime.utcnow().isoformat() + "Z")
+        if not tle_line1 or not tle_line2 or not satellite_id:
+            logger.warning(f"Incomplete TLE data: {satellite_data}")
+            return
+        ts = load.timescale()
+        satellite = EarthSatellite(tle_line1, tle_line2, satellite_id, ts)
+        geocentric = satellite.at(ts.now())
+        subpoint = wgs84.subpoint(geocentric)
+        altitude_km = subpoint.elevation.km
+        if altitude_km < 2000:
+            pass_duration_minutes = 1440
+            num_points = 1440
+        elif altitude_km < 35786:
+            pass_duration_minutes = 180
+            num_points = 50
+        else:
+            pass_duration_minutes = 1440
+            num_points = 10
+        interval_seconds = (pass_duration_minutes * 60) // num_points
+        positions = propagate_satellite_position(
+            satellite_id, tle_line1, tle_line2, epoch,
+            pass_duration_minutes, interval_seconds
+        )
+        publish_satellite_positions(satellite_id, positions)
+        logger.info(f"Finished propagation and publishing for satellite {satellite_id}")
+    except Exception as e:
+        logger.error(f"Error processing TLE message: {e}")
 
 def subscribe_to_user_visibility_events():
     pubsub = redis_client.pubsub()

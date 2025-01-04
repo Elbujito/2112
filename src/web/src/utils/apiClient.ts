@@ -4,7 +4,7 @@ import axios from "axios";
 const apiClient = axios.create({
     baseURL: process.env.API_BASE_URL || "http://localhost:8081", // Fallback for local development
     headers: { Accept: "application/json", "Content-Type": "application/json" },
-    timeout: 10000, // Timeout in milliseconds
+    timeout: 30000, // Timeout in milliseconds
 });
 
 // Request interceptor
