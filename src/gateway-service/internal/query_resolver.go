@@ -96,7 +96,6 @@ func (q *queryResolver) SatellitePositionsInRange(ctx context.Context, id string
 	return positions, nil
 }
 
-// CachedSatelliteVisibilities retrieves cached satellite visibilities for a user-defined location and time range.
 func (q *queryResolver) CachedSatelliteVisibilities(ctx context.Context, uid string, userLocation model.UserLocationInput, startTime string, endTime string) ([]*model.SatelliteVisibility, error) {
 	// Prepare Redis key for cached visibilities
 	key := fmt.Sprintf("satellite_visibilities:%s", uid)
@@ -116,5 +115,25 @@ func (q *queryResolver) CachedSatelliteVisibilities(ctx context.Context, uid str
 		return nil, fmt.Errorf("failed to parse cached satellite visibilities for UID %s: %w", uid, err)
 	}
 
-	return visibilities, nil
+	// Deduplicate the visibilities
+	distinctVisibilities := distinctSatelliteVisibilities(visibilities)
+
+	return distinctVisibilities, nil
+}
+
+// Helper function to remove duplicates
+func distinctSatelliteVisibilities(visibilities []*model.SatelliteVisibility) []*model.SatelliteVisibility {
+	seen := make(map[string]bool) // Use a map to track unique entries
+	var distinct []*model.SatelliteVisibility
+
+	for _, visibility := range visibilities {
+		// Create a unique key for each SatelliteVisibility (e.g., combination of important fields)
+		key := fmt.Sprintf("%s_%s_%s", visibility.SatelliteID, visibility.Aos, visibility.Los)
+		if !seen[key] {
+			seen[key] = true
+			distinct = append(distinct, visibility)
+		}
+	}
+
+	return distinct
 }

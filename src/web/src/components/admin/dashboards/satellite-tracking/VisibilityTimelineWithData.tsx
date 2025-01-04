@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo } from "react";
 import { useQuery, useSubscription, useMutation, gql } from "@apollo/client";
-import { Spinner, Box, Text, Center } from "@chakra-ui/react";
+import { Spinner, Box, Text, Center, IconButton } from "@chakra-ui/react";
 import VisibilityTimeline from "./VisibilityTimeline";
+import { FiRefreshCw } from "react-icons/fi";
 
 const GET_CACHED_VISIBILITIES = gql`
   query GetCachedSatelliteVisibilities(
@@ -20,12 +21,6 @@ const GET_CACHED_VISIBILITIES = gql`
       satelliteName
       aos
       los
-      userLocation {
-        latitude
-        longitude
-        radius
-        horizon
-      }
     }
   }
 `;
@@ -47,12 +42,6 @@ const VISIBILITY_SUBSCRIPTION = gql`
       satelliteName
       aos
       los
-      userLocation {
-        latitude
-        longitude
-        radius
-        horizon
-      }
     }
   }
 `;
@@ -74,12 +63,12 @@ const REQUEST_VISIBILITIES_MUTATION = gql`
 `;
 
 interface VisibilityTimelineWithDataProps {
-  uid: string; // User ID
-  userLocation: { latitude: number; longitude: number }; // User's location
+  uid: string;
+  userLocation: { latitude: number; longitude: number };
 }
 
 const VisibilityTimelineWithData: React.FC<VisibilityTimelineWithDataProps> = ({ uid, userLocation }) => {
-  const radius = 500; // 500 km radius
+  const radius = 1; // 500 km radius
   const horizon = 30; // 30 degrees horizon angle
 
   // Set up time range
@@ -109,8 +98,6 @@ const VisibilityTimelineWithData: React.FC<VisibilityTimelineWithDataProps> = ({
     variables: { uid, userLocation: userLocationInput, startTime, endTime },
     skip: !uid,
   });
-
-  // Call the mutation to request visibilities on component mount
   useEffect(() => {
     if (uid) {
       requestVisibilities({
@@ -128,7 +115,6 @@ const VisibilityTimelineWithData: React.FC<VisibilityTimelineWithDataProps> = ({
     return [...queriedData, ...liveUpdates];
   }, [data, subscriptionData]);
 
-  // Handle loading state
   if (queryLoading || mutationLoading) {
     return (
       <Center>
@@ -137,7 +123,6 @@ const VisibilityTimelineWithData: React.FC<VisibilityTimelineWithDataProps> = ({
       </Center>
     );
   }
-
   // Handle error states
   if (queryError || subscriptionError || mutationError) {
     console.error("Query Error:", queryError);
@@ -153,25 +138,21 @@ const VisibilityTimelineWithData: React.FC<VisibilityTimelineWithDataProps> = ({
     );
   }
 
-  // Map and sort visibility data for the timeline
+  // Combine and deduplicate visibility data
   const timelineData = visibilities
     .map((visibility) => {
       const aosDate = new Date(visibility.aos);
       const losDate = new Date(visibility.los);
-
       return {
-        current: false,
-        day: aosDate.getDate().toString(),
-        weekday: aosDate.toLocaleDateString(undefined, { weekday: "short" }),
-        hours: `${aosDate.toLocaleTimeString()} - ${losDate.toLocaleTimeString()}`,
+        day: aosDate.toUTCString().split(",")[1]?.trim().split(" ")[0] || "N/A",
+        weekday: aosDate.toUTCString().split(",")[0] || "N/A",
+        hours: `${aosDate.toUTCString().split(" ")[4]} - ${losDate.toUTCString().split(" ")[4]}`,
         title: "Visibility Window",
         satellite: visibility.satelliteName || "Unknown Satellite",
         noradID: visibility.satelliteId || "N/A",
         aosDate,
       };
-    })
-    .sort((a, b) => a.aosDate.getTime() - b.aosDate.getTime());
-
+    }).sort((a, b) => a.aosDate.getTime() - b.aosDate.getTime());
   return <VisibilityTimeline location={userLocation} data={timelineData} />;
 };
 

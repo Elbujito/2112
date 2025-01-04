@@ -3,18 +3,33 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
 )
 
 type TileService struct {
-	repo        domain.TileRepository
-	mappingRepo domain.MappingRepository
+	repo          domain.TileRepository
+	tleRepo       repository.TleRepository
+	satelliteRepo domain.SatelliteRepository
+	mappingRepo   domain.MappingRepository
 }
 
 // NewTileService creates a new instance of TileService.
-func NewTileService(repo domain.TileRepository, mappingRepo domain.MappingRepository) TileService {
-	return TileService{repo: repo, mappingRepo: mappingRepo}
+func NewTileService(
+	tileRepo domain.TileRepository,
+	tleRepo repository.TleRepository,
+	satelliteRepo domain.SatelliteRepository,
+	mappingRepo domain.MappingRepository,
+) TileService {
+	return TileService{
+		repo:          tileRepo,
+		tleRepo:       tleRepo,
+		satelliteRepo: satelliteRepo,
+		mappingRepo:   mappingRepo,
+	}
 }
 
 // FindAllTiles retrieves all tiles from the repository.
@@ -64,4 +79,56 @@ func (s *TileService) ListSatellitesMappingWithPagination(ctx context.Context, p
 	}
 
 	return mappings, totalRecords, nil
+}
+
+func (s *TileService) GetSatelliteMappingsByNoradID(ctx context.Context, noradID string) ([]domain.TileSatelliteInfo, error) {
+	mappings, err := s.mappingRepo.GetSatelliteMappingsByNoradID(ctx, noradID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve satellites mapping for [%s]: %w", noradID, err)
+	}
+
+	return mappings, nil
+}
+
+// RecomputeMappings deletes existing mappings for a NORAD ID and computes new ones.
+func (s *TileService) RecomputeMappings(ctx context.Context, noradID string, startTime, endTime time.Time) error {
+	log.Printf("Recomputing mappings for NORAD ID: %s\n", noradID)
+
+	// Step 1: Delete existing mappings
+	if err := s.mappingRepo.DeleteMappingsByNoradID(ctx, noradID); err != nil {
+		return fmt.Errorf("failed to delete existing mappings for NORAD ID [%s]: %w", noradID, err)
+	}
+	log.Printf("Deleted existing mappings for NORAD ID: %s\n", noradID)
+
+	// Step 2: Fetch satellite data
+	satellite, err := s.satelliteRepo.FindByNoradID(ctx, noradID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch satellite for NORAD ID [%s]: %w", noradID, err)
+	}
+
+	// Step 3: Fetch satellite positions
+	positions, err := s.tleRepo.QuerySatellitePositions(ctx, satellite.NoradID, startTime, endTime)
+	if err != nil {
+		return fmt.Errorf("failed to fetch satellite positions for NORAD ID [%s]: %w", noradID, err)
+	}
+
+	// Ensure there are enough positions to compute mappings
+	if len(positions) < 2 {
+		log.Printf("Not enough positions to compute mappings for NORAD ID: %s\n", noradID)
+		return nil
+	}
+
+	// Step 4: Compute new mappings
+	mappings, err := s.repo.FindTilesVisibleFromLine(ctx, satellite, positions)
+	if err != nil {
+		return fmt.Errorf("failed to compute tile mappings for NORAD ID [%s]: %w", noradID, err)
+	}
+
+	// Step 5: Save new mappings
+	if err := s.mappingRepo.SaveBatch(ctx, mappings); err != nil {
+		return fmt.Errorf("failed to save new mappings for NORAD ID [%s]: %w", noradID, err)
+	}
+
+	log.Printf("Recomputed and saved %d mappings for NORAD ID: %s\n", len(mappings), noradID)
+	return nil
 }

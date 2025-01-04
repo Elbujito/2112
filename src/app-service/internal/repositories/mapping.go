@@ -79,8 +79,8 @@ func (r *TileSatelliteMappingRepository) SaveBatch(ctx context.Context, visibili
 			}
 			placeholders = append(placeholders, "(?, ?, ?, ?, ?, ?, ?)")
 			valueArgs = append(valueArgs, v.ID, v.NoradID, v.TileID,
-				 v.IntersectionLongitude, // Convert longitude to string
-				 v.IntersectionLatitude,  // Convert latitude to string
+				v.IntersectionLongitude, // Convert longitude to string
+				v.IntersectionLatitude,  // Convert latitude to string
 				v.CreatedAt, v.UpdatedAt)
 		}
 
@@ -335,4 +335,77 @@ func findTileByID(modelTiles []models.Tile, tileID string) models.Tile {
 		}
 	}
 	return models.Tile{}
+}
+
+func (r *TileSatelliteMappingRepository) GetSatelliteMappingsByNoradID(ctx context.Context, noradID string) ([]domain.TileSatelliteInfo, error) {
+	// Step 1: Fetch all mappings for the given NORAD ID
+	var tileMappings []domain.TileSatelliteMapping
+	result := r.db.DbHandler.
+		Where("norad_id = ?", noradID).
+		Find(&tileMappings)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil // No mappings found
+		}
+		return nil, result.Error
+	}
+
+	// Step 2: Collect tile IDs from the fetched mappings
+	tileIDs := make([]string, len(tileMappings))
+	for i, mapping := range tileMappings {
+		tileIDs[i] = mapping.TileID
+	}
+
+	// Step 3: Fetch all tiles corresponding to the collected IDs
+	var modelTiles []models.Tile
+	result = r.db.DbHandler.
+		Where("id IN ?", tileIDs).
+		Find(&modelTiles)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// Step 4: Create a map of Tile ID to Tile for quick lookups
+	tileMap := make(map[string]models.Tile)
+	for _, tile := range modelTiles {
+		tileMap[tile.ID] = tile
+	}
+
+	// Step 5: Aggregate data into TileSatelliteInfo
+	var tileSatelliteInfos []domain.TileSatelliteInfo
+	for _, mapping := range tileMappings {
+		// Lookup the corresponding tile
+		modelTile, exists := tileMap[mapping.TileID]
+		if !exists {
+			continue // Skip if the tile is missing
+		}
+
+		tileSatelliteInfos = append(tileSatelliteInfos, domain.TileSatelliteInfo{
+			MappingID:     mapping.ID,
+			TileID:        modelTile.ID,
+			TileQuadkey:   modelTile.Quadkey,
+			TileCenterLat: modelTile.CenterLat,
+			TileCenterLon: modelTile.CenterLon,
+			TileZoomLevel: modelTile.ZoomLevel,
+			NoradID:       mapping.NoradID,
+			Intersection: domain.Point{
+				Latitude:  mapping.IntersectionLatitude,
+				Longitude: mapping.IntersectionLongitude,
+			},
+		})
+	}
+
+	return tileSatelliteInfos, nil
+}
+
+// DeleteMappingsByNoradID deletes all mappings for a specific NORAD ID.
+func (r *TileSatelliteMappingRepository) DeleteMappingsByNoradID(ctx context.Context, noradID string) error {
+	if err := r.db.DbHandler.WithContext(ctx).
+		Where("norad_id = ?", noradID).
+		Delete(&domain.TileSatelliteMapping{}).Error; err != nil {
+		return fmt.Errorf("failed to delete mappings for NORAD ID [%s]: %w", noradID, err)
+	}
+	return nil
 }

@@ -58,6 +58,15 @@ const MapCard: React.FC<MapCardProps> = ({ onLocationChange }) => {
       });
 
       // Add Geocoder control to the map
+      geocoder.on("result", (e) => {
+        const { center } = e.result.geometry;
+        if (center) {
+          const [longitude, latitude] = center;
+          setUserLocation({ latitude, longitude });
+          onLocationChange({ latitude, longitude }); // Notify location change
+        }
+      });
+
       map.addControl(geocoder, "top-left");
 
       return () => {
@@ -65,12 +74,19 @@ const MapCard: React.FC<MapCardProps> = ({ onLocationChange }) => {
         map.removeControl(geocoder);
       };
     }
-  }, []);
+  }, [onLocationChange]);
 
   const handleGeolocate = (position: GeolocationPosition) => {
     const { latitude, longitude } = position.coords;
     setUserLocation({ latitude, longitude });
-    onLocationChange({ latitude, longitude }); // Pass location to parent component
+    onLocationChange({ latitude, longitude }); // Notify location change
+  };
+
+  const handleMapClick = (e: any) => {
+    const { lngLat } = e;
+    const { lat, lng } = lngLat;
+    setUserLocation({ latitude: lat, longitude: lng });
+    onLocationChange({ latitude: lat, longitude: lng }); // Notify location change
   };
 
   return (
@@ -82,6 +98,7 @@ const MapCard: React.FC<MapCardProps> = ({ onLocationChange }) => {
           longitude: 6.1319, // Longitude for 85 Avenue Guillaume
           zoom: 15, // Adjust zoom level as needed
         }}
+        onClick={handleMapClick} // Handle map clicks
         style={{
           borderRadius: "20px",
           width: "100%",

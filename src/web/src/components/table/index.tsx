@@ -10,7 +10,6 @@ import {
 } from "@tanstack/react-table";
 import { Menu, MenuItem, MenuButton, MenuList } from "@chakra-ui/react";
 import { CustomScrollbar } from "components/scrollbar/CustomScrollbar";
-import { FaEdit, FaTrashAlt } from "react-icons/fa";  // Example icons for actions
 
 function TableContainer<T>({
     columns,
@@ -30,7 +29,12 @@ function TableContainer<T>({
     totalItems: number;
     onPageChange: (pageIndex: number) => void;
     getRowId: (row: T) => string;
-    actions?: (row: T) => { label: string; onClick: () => void; icon?: JSX.Element }[] | null;
+    actions?: (row: T) => {
+        label: string;
+        onClick: () => void;
+        icon?: JSX.Element;
+        isDisabled?: boolean;
+    }[] | null;
     onRowClick?: (row: T) => void;
 }) {
     const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
@@ -105,28 +109,26 @@ function TableContainer<T>({
                                                     <MdMoreVert className="cursor-pointer" />
                                                 </MenuButton>
                                                 <MenuList
-                                                    bg="white" // White background for the menu
+                                                    bg="white"
                                                     border="none"
                                                     boxShadow="lg"
                                                 >
-                                                    {(actions(row.original) || []).map(
-                                                        (action, index) => (
-                                                            <MenuItem
-                                                                key={index}
-                                                                onClick={() => {
-                                                                    action.onClick();
-                                                                    // Chakra UI closes the menu automatically on item click
-                                                                }}
-                                                                icon={action.icon || <MdMoreVert />}
-                                                                bg="white" // Menu item white background
-                                                                color="black" // Text color set to black for better contrast
-                                                                _hover={{ bg: "lightblue", color: "black" }} // Hover effect: light blue background
-                                                                _focus={{ bg: "lightblue", color: "black" }} // Focus effect: light blue background
-                                                            >
-                                                                {action.label}
-                                                            </MenuItem>
-                                                        )
-                                                    )}
+                                                    {(actions(row.original) || []).map((action, index) => (
+                                                        <MenuItem
+                                                            key={index}
+                                                            onClick={() => {
+                                                                if (!action.isDisabled) action.onClick();
+                                                            }}
+                                                            icon={action.icon}
+                                                            isDisabled={action.isDisabled}
+                                                            bg="white"
+                                                            color={action.isDisabled ? "gray.400" : "black"}
+                                                            _hover={action.isDisabled ? {} : { bg: "lightblue", color: "black" }}
+                                                            _focus={action.isDisabled ? {} : { bg: "lightblue", color: "black" }}
+                                                        >
+                                                            {action.label}
+                                                        </MenuItem>
+                                                    ))}
                                                 </MenuList>
                                             </Menu>
                                         </td>

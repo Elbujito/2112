@@ -20,6 +20,8 @@ type MappingRepository interface {
 		noradID string,
 	) ([]TileSatelliteInfo, error)
 	ListSatellitesMappingWithPagination(ctx context.Context, page int, pageSize int, search *SearchRequest) ([]TileSatelliteInfo, int64, error)
+	GetSatelliteMappingsByNoradID(ctx context.Context, noradID string) ([]TileSatelliteInfo, error)
+	DeleteMappingsByNoradID(ctx context.Context, noradID string) error
 }
 
 // TileSatelliteMapping represents the domain entity TileSatelliteMapping

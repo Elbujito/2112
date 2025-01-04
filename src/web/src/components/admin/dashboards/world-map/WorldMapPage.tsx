@@ -11,7 +11,8 @@ const WorldMapPage: React.FC = () => {
     const [selectedTileIDs, setSelectedTileIDs] = useState<string[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [appliedSearchQuery, setAppliedSearchQuery] = useState<string>("");
-    const [satellitePositionData, setSatellitePositionData] = useState<Record<string, OrbitDataItem[]> | null>(null); // State to hold position data
+    const [satellitePositionData, setSatellitePositionData] = useState<Record<string, OrbitDataItem[]> | null>(null);
+    const [selectedSatelliteNoradID, setSelectedSatelliteNoradID] = useState<string | null>(null); // Track the selected satellite
 
     const handleTileSelection = (tileIDs: string[]) => {
         setSelectedTileIDs(tileIDs);
@@ -19,11 +20,12 @@ const WorldMapPage: React.FC = () => {
 
     const handleSatelliteTileSelection = (tileIDs: string[]) => {
         setSelectedTileIDs(tileIDs);
-        console.log(tileIDs.length)
+        console.log(tileIDs.length);
     };
 
     const handleSatelliteSelection = (noradID: string, positionData: Record<string, OrbitDataItem[]>) => {
         console.log("Selected Satellite NORAD ID:", noradID);
+        setSelectedSatelliteNoradID(noradID);
         setSatellitePositionData(positionData);
     };
 
@@ -35,6 +37,12 @@ const WorldMapPage: React.FC = () => {
         setAppliedSearchQuery(searchQuery.toLowerCase());
         console.log("Search submitted with query:", searchQuery.toLowerCase());
     };
+
+    // Filter position data to only include the selected satellite
+    const filteredSatellitePositionData =
+        selectedSatelliteNoradID && satellitePositionData
+            ? { [selectedSatelliteNoradID]: satellitePositionData[selectedSatelliteNoradID] }
+            : null;
 
     return (
         <Box p={4} w="100%" h="100%">
@@ -57,7 +65,7 @@ const WorldMapPage: React.FC = () => {
                     <Box flex="1" h="100%">
                         <MapTileView
                             selectedTileIDs={selectedTileIDs}
-                            satellitePositionData={satellitePositionData} // Pass position data to the map
+                            satellitePositionData={filteredSatellitePositionData} // Pass only filtered position data
                         />
                     </Box>
                 </GridItem>

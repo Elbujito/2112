@@ -17,7 +17,43 @@ logger = logging.getLogger(__name__)
 # Redis client setup
 redis_client = redis.StrictRedis(host="redis-service", port=6379, decode_responses=True)
 
-# Function to propagate satellite positions
+def normalize_and_parse_iso_date(iso_date: str) -> datetime:
+    """
+    Normalize and parse an ISO 8601 date string to a datetime object, rounded to the nearest second.
+
+    Args:
+        iso_date (str): The ISO 8601 date string to normalize and parse.
+
+    Returns:
+        datetime: The parsed datetime object, rounded to the nearest second.
+
+    Raises:
+        ValueError: If the date string is not a valid ISO 8601 format.
+    """
+    try:
+        # Normalize the ISO date string
+        if iso_date.endswith("Z"):
+            iso_date = iso_date[:-1] + "+00:00"
+
+        # Handle fractional seconds (remove or round them)
+        if "." in iso_date:
+            main_part, fractional_and_offset = iso_date.split(".", 1)
+            fractional, *offset = fractional_and_offset.split("+", 1)
+            
+            # Round fractional seconds to the nearest second
+            if int(fractional[:1]) >= 5:  # Check the first digit of the fractional part
+                iso_date = f"{main_part}+{'+'.join(offset) if offset else ''}"
+                iso_date = str(datetime.fromisoformat(iso_date) + timedelta(seconds=1))
+            else:
+                iso_date = f"{main_part}+{'+'.join(offset) if offset else ''}"
+
+        # Parse the normalized ISO date string
+        return datetime.fromisoformat(iso_date)
+
+    except ValueError as e:
+        logger.error(f"Error parsing ISO date {iso_date}: {e}")
+        raise ValueError(f"Error parsing ISO date {iso_date}: {e}")
+
 def propagate_satellite_position(
     satellite_id: str,
     tle_line1: str,
@@ -27,21 +63,26 @@ def propagate_satellite_position(
     interval_seconds: int
 ) -> List[Dict]:
     try:
-         # Preprocess the timestamp
-        start_time = start_time.split("+")[0]
-        if "." in start_time:
-            start_time = start_time.split(".")[0] + "." + start_time.split(".")[1][:6] + "+00:00"
-        else:
-            start_time += "+00:00"
-        start_time = datetime.fromisoformat(start_time)
+        init_start_time = start_time  # Save the original start time for debugging
+
+        # Normalize and parse the start_time
+        start_time = normalize_and_parse_iso_date(start_time)
+
+        # Load the satellite TLE data
         ts = load.timescale()
         satellite = EarthSatellite(tle_line1, tle_line2, satellite_id, ts)
 
+        # Calculate propagation range
         end_time = start_time + timedelta(minutes=duration_minutes)
         current_time = start_time
+
         positions = []
 
+        # Propagate the satellite's position at regular intervals
         while current_time <= end_time:
+            if not isinstance(current_time, datetime):
+                raise ValueError(f"current_time is not a datetime object: {type(current_time)}")
+
             t = ts.utc(current_time.year, current_time.month, current_time.day,
                        current_time.hour, current_time.minute, current_time.second)
             geocentric = satellite.at(t)
@@ -58,9 +99,12 @@ def propagate_satellite_position(
         return positions
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error propagating satellite position: {e}")
+        logger.error(f"Error propagating satellite position init_start_time {init_start_time}: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error propagating satellite position init_start_time {init_start_time}: {e}"
+        )
 
-# Function to publish satellite positions to Redis
 def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
     try:
         for pos in positions:
@@ -68,7 +112,6 @@ def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
             timestamp = datetime.fromisoformat(pos['timestamp']).timestamp()
             redis_client.zadd(key, {json.dumps(pos): timestamp})
             redis_client.publish("satellite_positions", json.dumps(pos))
-            logger.info(f"Published position for {satellite_id} at {pos['timestamp']}")
 
         update_event = {
             "event": "event_satellite_positions_updated",
@@ -148,8 +191,6 @@ def compute_single_visibility(
         logger.error(f"Error computing single visibility: {e}")
         return None
 
-
-# Function to subscribe to TLE updates
 def subscribe_to_tle_updates():
     pubsub = redis_client.pubsub()
     pubsub.subscribe("satellite_tle_updates")
@@ -165,11 +206,10 @@ def subscribe_to_tle_updates():
                 satellite_id = satellite_data.get("id")
                 epoch = satellite_data.get("epoch", datetime.utcnow().isoformat() + "Z")
 
-                logger.info(f"Received TLE update for satellite {satellite_id}")
                 if not tle_line1 or not tle_line2 or not satellite_id:
                     logger.warning(f"Incomplete TLE data: {satellite_data}")
                     continue
-                # Calculate altitude and orbital period
+
                 ts = load.timescale()
                 satellite = EarthSatellite(tle_line1, tle_line2, satellite_id, ts)
                 geocentric = satellite.at(ts.now())
@@ -177,14 +217,14 @@ def subscribe_to_tle_updates():
                 altitude_km = subpoint.elevation.km
 
                 if altitude_km < 2000:  # LEO
-                    pass_duration_minutes = 1440  # 24 hours
-                    num_points = 1440  # 1 point per minute
+                    pass_duration_minutes = 1440
+                    num_points = 1440
                 elif altitude_km < 35786:  # MEO
-                    pass_duration_minutes = 180  # 3 hours
-                    num_points = 50  # Approx. 1 point every 3.6 minutes
+                    pass_duration_minutes = 180
+                    num_points = 50
                 else:  # GEO
-                    pass_duration_minutes = 1440  # 24 hours
-                    num_points = 10  # 1 point every 144 minutes
+                    pass_duration_minutes = 1440
+                    num_points = 10
 
                 interval_seconds = (pass_duration_minutes * 60) // num_points
 
@@ -199,7 +239,6 @@ def subscribe_to_tle_updates():
             except Exception as e:
                 logger.error(f"Error processing TLE message: {e}")
 
-# Function to subscribe to user visibility events and set a list of visibilities
 def subscribe_to_user_visibility_events():
     pubsub = redis_client.pubsub()
     pubsub.psubscribe("user_visibilities_event:*")
@@ -209,6 +248,9 @@ def subscribe_to_user_visibility_events():
     for message in pubsub.listen():
         if message["type"] == "pmessage":  # Pattern-based message
             try:
+                # Log the raw incoming message
+                logger.info(f"Incoming visibility event: {message}")
+
                 visibilities = json.loads(message["data"])
 
                 if not isinstance(visibilities, list):
@@ -216,7 +258,10 @@ def subscribe_to_user_visibility_events():
                     continue
 
                 results = []
+
                 for visibility_data in visibilities:
+                    logger.debug(f"Processing visibility data: {visibility_data}")
+
                     satellite_id = visibility_data.get("satelliteID")
                     satellite_name = visibility_data.get("satelliteName")
                     start_time = visibility_data.get("startTime")
@@ -246,19 +291,15 @@ def subscribe_to_user_visibility_events():
             except Exception as e:
                 logger.error(f"Error processing visibility events: {e}")
 
-
-# Start subscriptions on app startup
 @app.on_event("startup")
 def start_subscriptions():
     threading.Thread(target=subscribe_to_tle_updates, daemon=True).start()
     threading.Thread(target=subscribe_to_user_visibility_events, daemon=True).start()
 
-# Root endpoint for checking service status
 @app.get("/")
 def read_root():
     return {"message": "Satellite Propagation Service is running"}
 
-# Health check endpoint
 @app.get("/health")
 def health_check():
     try:
@@ -267,25 +308,40 @@ def health_check():
     except Exception as e:
         raise HTTPException(status_code=500, detail="Redis connection failed")
 
-# Endpoint to propagate satellite position based on TLE
 @app.post("/satellite/propagate")
-async def propagate_satellite(request: Request, background_tasks: BackgroundTasks):
-    data = await request.json()
-    tle_line1 = data.get("line_1")
-    tle_line2 = data.get("line_2")
-    start_time = data.get("start_time")
-    duration_minutes = data.get("duration_minutes", 90)
-    interval_seconds = data.get("interval_seconds", 15)
+async def propagate_endpoint(request: Request) -> Dict[str, List[Dict]]:
+    """
+    Propagate satellite positions and return them wrapped in a JSON object.
+    """
+    try:
+        # Await the request body to parse JSON
+        data = await request.json()
+        logger.info(f"Received payload: {data}")
 
-    if not tle_line1 or not tle_line2 or not start_time:
-        raise HTTPException(status_code=400, detail="TLE data and start time are required")
+        tle_line1 = data.get("tle_line1")
+        tle_line2 = data.get("tle_line2")
+        start_time = data.get("start_time")
+        duration_minutes = data.get("duration_minutes", 90)
+        interval_seconds = data.get("interval_seconds", 15)
+        satellite_id = data.get("norad_id")
 
-    satellite_id = f"satellite-{hash(tle_line1 + tle_line2)}"
+        if not tle_line1 or not tle_line2 or not start_time:
+            raise HTTPException(status_code=400, detail="TLE data and start time are required")
 
-    positions = propagate_satellite_position(
-        satellite_id, tle_line1, tle_line2, start_time, duration_minutes, interval_seconds
-    )
+        logger.info(f"Propagating satellite {satellite_id} from {start_time}")
 
-    background_tasks.add_task(publish_satellite_positions, satellite_id, positions)
+        # Call the propagation function
+        positions = propagate_satellite_position(
+            satellite_id, tle_line1, tle_line2, start_time, duration_minutes, interval_seconds
+        )
 
-    return {"message": "Satellite propagation started", "positions_count": len(positions)}
+        # Publish the positions to Redis
+        publish_satellite_positions(satellite_id, positions)
+        logger.info(f"Published positions for satellite {satellite_id}")
+
+        # Return positions wrapped in a "positions" key
+        return {"positions": positions}
+
+    except Exception as e:
+        logger.error(f"Error propagating satellite positions: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error propagating satellite positions: {str(e)}")

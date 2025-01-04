@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	propagator "github.com/Elbujito/2112/src/app-service/internal/clients/propagate"
@@ -39,33 +40,65 @@ func (s *SatelliteService) Propagate(ctx context.Context, noradID string, durati
 	}
 
 	// Set up the time range
-	startTime := time.Now()
-	// endTime := startTime.Add(duration)
+	startTime := time.Now().UTC()
 
 	// Use PropagatorClient to propagate satellite positions
-	propagatedPositions, err := s.propagateClient.FetchPropagation(ctx, tle.Line1, tle.Line2, startTime.Format(time.RFC3339), int(duration.Minutes()), int(interval.Seconds()))
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch propagated positions for NORAD ID %s: %w", noradID, err)
-	}
+	resultChan, errorChan := s.propagateClient.FetchPropagation(
+		ctx,
+		tle.Line1,
+		tle.Line2,
+		startTime.Format(time.RFC3339),
+		int(duration.Minutes()),
+		int(interval.Seconds()),
+		noradID,
+	)
 
-	// Convert the API response to the internal SatellitePosition format
-	var positions []xspace.SatellitePosition
-	for _, pos := range propagatedPositions {
-		// Parse the time from the API response
-		parsedTime, err := time.Parse(time.RFC3339, pos.Time)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse time %s for NORAD ID %s: %w", pos.Time, noradID, err)
+	// Wait for results or errors
+	select {
+	case propagatedPositions := <-resultChan:
+		if propagatedPositions == nil {
+			return nil, fmt.Errorf("received nil propagated positions for NORAD ID %s", noradID)
 		}
 
-		positions = append(positions, xspace.SatellitePosition{
-			Latitude:  pos.Latitude,
-			Longitude: pos.Longitude,
-			Altitude:  pos.Altitude,
-			Time:      parsedTime,
-		})
+		// Log the first and last positions
+		if len(propagatedPositions) > 0 {
+			firstPos := propagatedPositions[0]
+			lastPos := propagatedPositions[len(propagatedPositions)-1]
+
+			log.Printf("First Position for NORAD ID %s: Latitude: %f, Longitude: %f, Altitude: %f, Time: %s",
+				noradID, firstPos.Latitude, firstPos.Longitude, firstPos.Altitude, firstPos.Time)
+
+			log.Printf("Last Position for NORAD ID %s: Latitude: %f, Longitude: %f, Altitude: %f, Time: %s",
+				noradID, lastPos.Latitude, lastPos.Longitude, lastPos.Altitude, lastPos.Time)
+		}
+
+		// Convert the API response to the internal SatellitePosition format
+		var positions []xspace.SatellitePosition
+		for _, pos := range propagatedPositions {
+			// Parse the time from the API response
+			parsedTime, err := time.Parse(time.RFC3339, pos.Time)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse time %s for NORAD ID %s: %w", pos.Time, noradID, err)
+			}
+
+			positions = append(positions, xspace.SatellitePosition{
+				Latitude:  pos.Latitude,
+				Longitude: pos.Longitude,
+				Altitude:  pos.Altitude,
+				Time:      parsedTime,
+			})
+		}
+		return positions, nil
+
+	case err := <-errorChan:
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch propagated positions for NORAD ID %s: %w", noradID, err)
+		}
+	case <-ctx.Done():
+		return nil, fmt.Errorf("operation canceled for NORAD ID %s: %w", noradID, ctx.Err())
 	}
 
-	return positions, nil
+	return nil, fmt.Errorf("unexpected end of Propagate function for NORAD ID %s", noradID)
 }
 
 // GetSatelliteByNoradID retrieves a satellite by NORAD ID.

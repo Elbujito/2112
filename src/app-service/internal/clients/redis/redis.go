@@ -95,7 +95,7 @@ func (r *RedisClient) Set(ctx context.Context, key string, value interface{}) er
 // Publish sends a message to a Redis Pub/Sub channel.
 func (r *RedisClient) Publish(ctx context.Context, channel string, message interface{}) error {
 	// Log the publishing attempt
-	log.Printf("Publishing message to channel %s: %v\n", channel, message)
+	log.Printf("Publishing message to channel %s\n", channel)
 
 	// Attempt to publish the message
 	if err := r.client.Publish(channel, message).Err(); err != nil {

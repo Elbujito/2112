@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Spinner, Box, Text, Center, AlertDialog, AlertDialogOverlay, AlertDialogContent, AlertDialogHeader, AlertDialogBody, AlertDialogFooter, Button } from "@chakra-ui/react";
+import { Spinner, Box, Center } from "@chakra-ui/react";
 import useSatelliteServiceStore from "services/satelliteService"; // Satellite store
 import useTileServiceStore from "services/tileService"; // Tile store
 import GenericTableComponent from "components/table";
 import { OrbitDataItem, SatelliteInfo } from "types/satellites";
-import { BiTargetLock } from "react-icons/bi";
+import { BiStation, BiTargetLock } from "react-icons/bi";
 
 interface SatelliteTableViewProps {
     onSelectSatelliteID: (satelliteID: string) => void;
@@ -21,15 +21,22 @@ export default function SatelliteTableView({
     onTargetSatellite,
     onPropagateSatellite,
 }: SatelliteTableViewProps) {
-    const { satelliteInfo, totalSatelliteInfo, loading, error, orbitData, fetchPaginatedSatelliteInfo, fetchSatellitePositions } = useSatelliteServiceStore();
-    const { tileMappings } = useTileServiceStore();
+    const {
+        satelliteInfo,
+        totalSatelliteInfo,
+        orbitData,
+        loading,
+        fetchPaginatedSatelliteInfo,
+        fetchSatellitePositions,
+        fetchSatellitePositionsWithPropagation,
+    } = useSatelliteServiceStore();
+
+    const { fetchSatelliteMappingsByNoradID, satelliteMappingsByNoradID, recomputeMappingsByNoradID } =
+        useTileServiceStore();
 
     const [pageIndex, setPageIndex] = useState<number>(0);
     const [pageSize, setPageSize] = useState<number>(20);
-    const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false); // Manage error dialog visibility
-    const [errorMessage, setErrorMessage] = useState<string>("");
-
-    const cancelRef = useRef<HTMLButtonElement>(null); // Reference for the cancel button
+    const localOrbitDataRef = useRef<Record<string, OrbitDataItem[]>>({});
 
     useEffect(() => {
         fetchPaginatedSatelliteInfo(pageIndex, pageSize, searchQuery);
@@ -39,35 +46,57 @@ export default function SatelliteTableView({
         setPageIndex(index);
     };
 
-    const handleSatelliteSelection = (satellite: SatelliteInfo) => {
+    const handleSatelliteSelection = async (satellite: SatelliteInfo) => {
         const noradId = satellite.Satellite.NoradID;
 
-        const matchingTiles = tileMappings.filter((mapping) => mapping.NoradID === noradId);
-        const matchingTileIDs = matchingTiles.map((tile) => tile.TileID);
-
-        onSelectSatelliteID(noradId);
-        onTilesSelected(matchingTileIDs);
-    };
-
-    const handleTargetSatellite = async (noradID: string) => {
-        onTargetSatellite(noradID, { [noradID]: [] });
-        const startTime = new Date(Date.now()).toISOString();
-        const endTime = new Date(Date.now() + 60 * 60 * 1000 * 24).toISOString(); // 24 hours ahead
-
         try {
-            const positionData = await fetchSatellitePositions(noradID, startTime, endTime);
-            onTargetSatellite(noradID, orbitData); // Pass the position data to the parent callback
-        } catch (error) {
-            console.error("Error fetching satellite positions:", error);
-            setErrorMessage(error.message || "Failed to fetch satellite positions.");
-            setIsErrorDialogOpen(true); // Show error dialog
-            onTargetSatellite(noradID, { [noradID]: [] });
+            await fetchSatelliteMappingsByNoradID(noradId);
+
+            const matchingTileIDs = satelliteMappingsByNoradID[noradId]?.map((tile) => tile.TileID) || [];
+            onSelectSatelliteID(noradId);
+            onTilesSelected(matchingTileIDs);
+        } catch (err) {
+            console.error("Error fetching tiles for NORAD ID:", err);
         }
     };
 
-    const handlePropagateSatellite = (noradID: string) => {
-        // Invoke the callback to propagate satellite
-        onPropagateSatellite(noradID);
+    const handleTargetSatellite = async (noradID: string) => {
+        const startTime = new Date(Date.now()).toISOString(); // UTC format
+        const endTime = new Date(Date.now() + 60 * 60 * 1000 * 24).toISOString(); // UTC format
+
+        try {
+            await fetchSatellitePositions(noradID, startTime, endTime);
+
+            localOrbitDataRef.current = { [noradID]: orbitData[noradID] || [] };
+            onTargetSatellite(noradID, localOrbitDataRef.current);
+        } catch (error) {
+            console.error("Error fetching satellite positions:", error);
+            localOrbitDataRef.current = {};
+        }
+    };
+
+    const handlePropagateSatellite = async (noradID: string) => {
+        const durationHours = 24;
+        const intervalMinutes = 1;
+
+        try {
+            await fetchSatellitePositionsWithPropagation(noradID, durationHours, intervalMinutes);
+            onPropagateSatellite(noradID);
+        } catch (err) {
+            console.error("Error propagating satellite:", err);
+        }
+    };
+
+    const handleRecomputeMapping = async (noradID: string) => {
+        const startTime = new Date(Date.now() - 10 * 60 * 1000).toISOString(); // 10 minutes earlier in UTC
+        const endTime = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24 hours ahead in UTC
+
+        try {
+            await recomputeMappingsByNoradID(noradID, startTime, endTime);
+            console.log(`Mappings recomputed successfully for NORAD ID: ${noradID}`);
+        } catch (err) {
+            console.error(`Error recomputing mapping for NORAD ID: ${noradID}`, err);
+        }
     };
 
     const columns = [
@@ -96,7 +125,7 @@ export default function SatelliteTableView({
             header: "Launch Date",
             cell: (info: any) =>
                 info.getValue() ? (
-                    <p className="text-sm">{new Date(info.getValue()).toLocaleDateString()}</p>
+                    <p className="text-sm">{new Date(info.getValue()).toISOString().split("T")[0]}</p> // UTC Date
                 ) : (
                     <p className="text-sm">N/A</p>
                 ),
@@ -113,16 +142,22 @@ export default function SatelliteTableView({
         },
     ];
 
-    if (loading) {
-        return (
-            <Center className="grid h-full w-full place-items-center">
-                <Spinner size="xl" color="blue.500" />
-            </Center>
-        );
-    }
-
     return (
         <Box className="grid w-full gap-4 rounded-lg shadow-md">
+            {loading && (
+                <Center
+                    position="absolute"
+                    top="0"
+                    left="0"
+                    right="0"
+                    bottom="0"
+                    bg="rgba(255, 255, 255, 0.6)"
+                    zIndex="overlay"
+                >
+                    <Spinner size="xl" color="blue.500" />
+                </Center>
+            )}
+
             <GenericTableComponent
                 getRowId={(row: SatelliteInfo) => row.Satellite.NoradID}
                 columns={columns}
@@ -132,39 +167,29 @@ export default function SatelliteTableView({
                 pageIndex={pageIndex}
                 onPageChange={handleOnPaginationChange}
                 onRowClick={handleSatelliteSelection}
-                actions={(row: SatelliteInfo) => [
-                    {
-                        label: "Target",
-                        onClick: () => handleTargetSatellite(row.Satellite.NoradID),
-                        icon: <BiTargetLock />,
-                    },
-                    {
-                        label: "Propagate",
-                        onClick: () => handlePropagateSatellite(row.Satellite.NoradID),
-                    },
-                ]}
-            />
+                actions={(row: SatelliteInfo) => {
+                    const noradID = row.Satellite.NoradID;
+                    const isTargetDisabled = !orbitData[noradID]; // Disable if no orbit data for the NORAD ID
 
-            {/* Error Dialog (Popup) */}
-            <AlertDialog
-                isOpen={isErrorDialogOpen}
-                onClose={() => setIsErrorDialogOpen(false)}
-                leastDestructiveRef={cancelRef} // Add the cancelRef here
-            >
-                <AlertDialogOverlay>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>Error</AlertDialogHeader>
-                        <AlertDialogBody>
-                            {errorMessage || "An unexpected error occurred."}
-                        </AlertDialogBody>
-                        <AlertDialogFooter>
-                            <Button ref={cancelRef} onClick={() => setIsErrorDialogOpen(false)}>
-                                Close
-                            </Button>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialogOverlay>
-            </AlertDialog>
+                    return [
+                        {
+                            label: "Target",
+                            onClick: () => handleTargetSatellite(row.Satellite.NoradID),
+                            icon: <BiTargetLock />,
+                            isDisabled: isTargetDisabled,
+                        },
+                        {
+                            label: "Propagate",
+                            onClick: () => handlePropagateSatellite(row.Satellite.NoradID),
+                        },
+                        {
+                            label: "Recompute Mapping",
+                            onClick: () => handleRecomputeMapping(row.Satellite.NoradID),
+                            icon: <BiStation />,
+                        },
+                    ];
+                }}
+            />
         </Box>
     );
 }

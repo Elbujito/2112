@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"time"
 
@@ -192,7 +193,6 @@ func (r *TleRepository) publishTleToBroker(ctx context.Context, tle domain.TLE) 
 	return nil
 }
 
-// QuerySatellitePositions fetches satellite positions from Redis within a given time range.
 func (r *TleRepository) QuerySatellitePositions(ctx context.Context, satelliteID string, startTime, endTime time.Time) ([]domain.SatellitePosition, error) {
 	log.Printf("Querying satellite positions for satellite ID: %s, from %s to %s\n", satelliteID, startTime, endTime)
 
@@ -224,6 +224,10 @@ func (r *TleRepository) QuerySatellitePositions(ctx context.Context, satelliteID
 		}
 		positions = append(positions, position)
 	}
+
+	sort.Slice(positions, func(i, j int) bool {
+		return positions[i].Timestamp.Before(positions[j].Timestamp)
+	})
 
 	log.Printf("Found %d satellite positions for satellite ID: %s, from %s to %s\n", len(positions), satelliteID, startTime, endTime)
 	return positions, nil

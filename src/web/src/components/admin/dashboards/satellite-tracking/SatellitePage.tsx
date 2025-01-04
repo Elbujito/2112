@@ -10,10 +10,12 @@ const SatellitePage: React.FC = () => {
   const [selectedNoradID, setSelectedNoradID] = useState<string | null>(null);
 
   // State for user location
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number }>({
-    latitude: 37.7749, // Default to San Francisco
-    longitude: -122.4194,
-  });
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(
+    null
+  );
+
+  // State to track if the location is explicitly set by the user
+  const [isLocationSet, setIsLocationSet] = useState<boolean>(false);
 
   // Handle NORAD ID selection from the Satellite Table
   const handleNoradIDChange = (noradID: string) => {
@@ -23,6 +25,7 @@ const SatellitePage: React.FC = () => {
   // Handle user location change from the MapCard
   const handleLocationChange = (location: { latitude: number; longitude: number }) => {
     setUserLocation(location);
+    setIsLocationSet(true); // Mark the location as explicitly set
   };
 
   return (
@@ -54,7 +57,15 @@ const SatellitePage: React.FC = () => {
 
       {/* Bottom Row: Visibility Timeline (spans all 12 columns) */}
       <div className="row-span-1 col-span-12">
-        <VisibilityTimelineWithData userLocation={userLocation} uid={"adrien-test"} />
+        {isLocationSet && userLocation ? (
+          <VisibilityTimelineWithData userLocation={userLocation} uid={"adrien-test"} />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-500">
+              Set your location using the map to view visibility timelines.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

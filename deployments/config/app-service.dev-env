@@ -10,3 +10,4 @@ DB_PLATFORM=postgres
 DB_SSL_MODE=disable
 LOG_LEVEL=debug
 DISABLE_FEATURES=ory_keto,ory_kratos,redis
+PROPAGATOR_URL=http://propagator-service:5000/satellite/propagate

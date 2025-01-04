@@ -87,6 +87,11 @@ func (h *SatellitesTilesMappingsHandler) computeTileMappings(
 ) error {
 	log.Printf("Finding visible tiles for satellite %s along its path\n", sat.NoradID)
 
+	err := h.mappingRepo.DeleteMappingsByNoradID(ctx, sat.NoradID)
+	if err != nil {
+		return fmt.Errorf("failed to delete visible tiles along the path: %w", err)
+	}
+
 	// Find tiles visible along the satellite's path
 	mappings, err := h.tileRepo.FindTilesVisibleFromLine(ctx, sat, positions)
 	if err != nil {
@@ -98,12 +103,10 @@ func (h *SatellitesTilesMappingsHandler) computeTileMappings(
 		return nil
 	}
 
-	if len(mappings) > 0 {
-		if err := h.mappingRepo.SaveBatch(ctx, mappings); err != nil {
-			return fmt.Errorf("failed to save mappings: %w", err)
-		}
-		log.Printf("Saved %d mappings for satellite %s\n", len(mappings), sat.NoradID)
+	if err := h.mappingRepo.SaveBatch(ctx, mappings); err != nil {
+		return fmt.Errorf("failed to save mappings: %w", err)
 	}
+	log.Printf("Saved %d mappings for satellite %s\n", len(mappings), sat.NoradID)
 
 	return nil
 }

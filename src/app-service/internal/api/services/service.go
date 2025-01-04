@@ -42,7 +42,7 @@ func NewServiceComponent(env *config.SEnv) *ServiceComponent {
 
 	// Create services
 	satelliteService := services.NewSatelliteService(tleRepo, propagteClient, celestrackClient, satelliteRepo)
-	tileService := services.NewTileService(tileRepo, mappingRepo)
+	tileService := services.NewTileService(tileRepo, tleRepo, satelliteRepo, mappingRepo)
 
 	return &ServiceComponent{
 		SatelliteService: satelliteService,

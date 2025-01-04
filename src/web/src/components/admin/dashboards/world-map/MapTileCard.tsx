@@ -5,27 +5,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import Card from "components/card";
 import { Tile } from "types/tiles";
 import { OrbitDataItem } from "types/satellites";
-import { Feature, FeatureCollection, LineString, Polygon, Position } from "geojson";
-
-// Utility function for calculating distance between two points (Haversine formula)
-const haversineDistance = (p1: Position, p2: Position): number => {
-  const R = 6371; // Earth radius in kilometers
-  const lat1 = p1[1] * (Math.PI / 180);
-  const lat2 = p2[1] * (Math.PI / 180);
-  const lon1 = p1[0] * (Math.PI / 180);
-  const lon2 = p2[0] * (Math.PI / 180);
-
-  const dlat = lat2 - lat1;
-  const dlon = lon2 - lon1;
-
-  const a = Math.sin(dlat / 2) * Math.sin(dlat / 2) +
-    Math.cos(lat1) * Math.cos(lat2) *
-    Math.sin(dlon / 2) * Math.sin(dlon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c; // Distance in kilometers
-  return distance;
-};
+import { FeatureCollection, Polygon, Position } from "geojson";
 
 const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN;
 
@@ -74,7 +54,7 @@ const generateSatellitePoints = (satellitePositionData: Record<string, OrbitData
       const positions = satellitePositionData[satelliteID];
 
       // Map each position to a Point feature
-      return positions.map((pos) => ({
+      return positions?.map((pos) => ({
         type: "Feature",
         geometry: {
           type: "Point",

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import apiClient from "../utils/apiClient";
 import { SatelliteInfo, OrbitDataItem } from "types/satellites";
 import { gql } from "@apollo/client";
-import AppoloClient from "lib/ApolloClient";
+import ApolloClient from "lib/ApolloClient";
 
 interface SatelliteServiceState {
     satelliteInfo: SatelliteInfo[];
@@ -11,7 +11,8 @@ interface SatelliteServiceState {
     loading: boolean;
     error: string | null;
     fetchPaginatedSatelliteInfo: (pageIndex: number, pageSize: number, search: string) => Promise<void>;
-    fetchSatellitePositions: (noradID: string, startTime: string, endTime: string) => Promise<void>; // Method to fetch positions (void return type)
+    fetchSatellitePositions: (noradID: string, startTime: string, endTime: string) => Promise<void>;
+    fetchSatellitePositionsWithPropagation: (noradID: string, durationHours: number, intervalMinutes: number) => Promise<void>;
 }
 
 const GET_SATELLITE_POSITIONS = gql`
@@ -62,26 +63,23 @@ const useSatelliteServiceStore = create<SatelliteServiceState>((set) => ({
         set({ loading: true, error: null });
 
         try {
-            // Use Apollo Client's `query` method to fetch data
-            const { data } = await AppoloClient.query({
+            const { data } = await ApolloClient.query({
                 query: GET_SATELLITE_POSITIONS,
                 variables: { id: noradID, startTime, endTime },
             });
 
-            let orbitData: OrbitDataItem[] = [];
-            if (data && Array.isArray(data.satellitePositionsInRange)) {
-                orbitData = data.satellitePositionsInRange.map((item: any) => ({
-                    latitude: item.latitude,
-                    longitude: item.longitude,
-                    altitude: item.altitude,
-                    time: item.timestamp,
-                }));
-            } else {
-                console.warn("Unexpected data structure:", data?.satellitePositionsInRange);
-            }
+            const orbitData: OrbitDataItem[] = data?.satellitePositionsInRange?.map((item: any) => ({
+                latitude: item.latitude,
+                longitude: item.longitude,
+                altitude: item.altitude,
+                time: item.timestamp,
+            })) || [];
 
             if (orbitData.length > 0) {
-                set({ orbitData: { [noradID]: orbitData }, loading: false });
+                set((state) => ({
+                    orbitData: { ...state.orbitData, [noradID]: orbitData },
+                    loading: false,
+                }));
             } else {
                 set({
                     error: "No satellite position data found.",
@@ -90,6 +88,47 @@ const useSatelliteServiceStore = create<SatelliteServiceState>((set) => ({
             }
         } catch (err) {
             console.error("Error fetching satellite positions:", err);
+            set({
+                error: "Failed to load satellite positions.",
+                loading: false,
+            });
+        }
+    },
+
+    fetchSatellitePositionsWithPropagation: async (noradID: string, durationHours: number, intervalMinutes: number): Promise<void> => {
+        set({ loading: true, error: null });
+
+        try {
+            const response = await apiClient.get(`/satellites/orbit`, {
+                params: {
+                    noradID,
+                    durationHours,
+                    intervalMinutes,
+                },
+            });
+
+            const positions = response.data || [];
+
+            if (positions.length > 0) {
+                const orbitData: OrbitDataItem[] = positions.map((position: any) => ({
+                    latitude: position.latitude,
+                    longitude: position.longitude,
+                    altitude: position.altitude,
+                    time: position.timestamp,
+                }));
+
+                set((state) => ({
+                    orbitData: { ...state.orbitData, [noradID]: orbitData },
+                    loading: false,
+                }));
+            } else {
+                set({
+                    error: "No satellite position data found.",
+                    loading: false,
+                });
+            }
+        } catch (err) {
+            console.error("Error fetching satellite positions with propagation:", err);
             set({
                 error: "Failed to load satellite positions.",
                 loading: false,

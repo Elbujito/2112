@@ -3,6 +3,7 @@ package tiles
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 	"github.com/Elbujito/2112/src/app-service/internal/services"
@@ -113,4 +114,68 @@ func (h *TileHandler) GetPaginatedSatelliteMappings(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, response)
+}
+
+// GetSatelliteMappingByNoradID handles requests to fetch tiles in a region.
+func (h *TileHandler) GetSatelliteMappingsByNoradID(c echo.Context) error {
+	// Parse query parameters for bounding box
+	noradID := c.QueryParam("noradID")
+
+	// Call the service to fetch mappings
+	mappings, err := h.Service.GetSatelliteMappingsByNoradID(c.Request().Context(), noradID)
+	if err != nil {
+		c.Logger().Error("Failed to fetch mappings:", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "unable to fetch mappings by norad ID [%s]", noradID)
+	}
+
+	// Return tiles in JSON response
+	return c.JSON(http.StatusOK, mappings)
+}
+
+// RecomputeMappingsByNoradID handles requests to recompute satellite mappings for a given NORAD ID.
+func (h *TileHandler) RecomputeMappingsByNoradID(c echo.Context) error {
+	// Extract the NORAD ID from the query parameter
+	noradID := c.QueryParam("noradID")
+	if noradID == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Missing noradID parameter")
+	}
+
+	// Extract startTime and endTime from query parameters
+	startTimeStr := c.QueryParam("startTime")
+	endTimeStr := c.QueryParam("endTime")
+
+	if startTimeStr == "" || endTimeStr == "" {
+		return echo.NewHTTPError(http.StatusBadRequest, "Both startTime and endTime parameters are required")
+	}
+
+	// Parse the startTime and endTime parameters
+	startTime, err := time.Parse(time.RFC3339, startTimeStr)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid startTime format, expected RFC3339")
+	}
+
+	endTime, err := time.Parse(time.RFC3339, endTimeStr)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid endTime format, expected RFC3339")
+	}
+
+	// Ensure startTime is before endTime
+	if !startTime.Before(endTime) {
+		return echo.NewHTTPError(http.StatusBadRequest, "startTime must be before endTime")
+	}
+
+	// Call the service method to recompute mappings
+	err = h.Service.RecomputeMappings(c.Request().Context(), noradID, startTime, endTime)
+	if err != nil {
+		c.Logger().Error("Failed to recompute mappings for NORAD ID:", noradID, "Error:", err)
+		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to recompute mappings for NORAD ID")
+	}
+
+	// Return a success response
+	return c.JSON(http.StatusOK, map[string]string{
+		"message":   "Mappings recomputed successfully",
+		"noradID":   noradID,
+		"startTime": startTime.Format(time.RFC3339),
+		"endTime":   endTime.Format(time.RFC3339),
+	})
 }

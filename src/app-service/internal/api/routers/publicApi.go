@@ -153,4 +153,6 @@ func (r *PublicRouter) registerPublicAPIRoutes() {
 	tile.GET("/all", tileHandler.GetAllTiles)
 	tile.GET("/region", tileHandler.GetTilesInRegionHandler)
 	tile.GET("/mappings", tileHandler.GetPaginatedSatelliteMappings)
+	tile.PUT("/mappings/recompute/bynoradID", tileHandler.RecomputeMappingsByNoradID)
+	tile.GET("/mappings/bynoradID", tileHandler.GetSatelliteMappingsByNoradID)
 }
