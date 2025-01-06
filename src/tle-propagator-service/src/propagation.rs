@@ -213,11 +213,6 @@ pub async fn process_tle_update(mut con: redis::Connection, tle_update: TLEUpdat
             break; // Break on Redis storage error
         }
 
-        // Log success
-        info!(
-            "Successfully stored position for satellite {}: {:?}",
-            tle_update.id, position
-        );
     }
 
     let summary = json!({
