@@ -160,9 +160,8 @@ fn determine_sampling_params(altitude_km: f64) -> (u64, u64) {
     }
 }
 
-
 /// Process a single TLE update, propagate positions, and store them in Redis.
-pub async fn process_tle_update(redis_client: Arc<RedisClient>, tle_update: TLEUpdate) {
+pub async fn process_tle_update(mut con: redis::Connection, tle_update: TLEUpdate) {
     info!("Received TLE update for satellite {}", tle_update.id);
 
     let start_time = SystemTime::now();
@@ -178,7 +177,7 @@ pub async fn process_tle_update(redis_client: Arc<RedisClient>, tle_update: TLEU
     for position in &positions {
         // Log the position details
         debug!("Processing position for satellite {}: {:?}", tle_update.id, position);
-    
+
         // Serialize the position into JSON
         let position_json = match serde_json::to_value(position) {
             Ok(json) => json,
@@ -187,7 +186,7 @@ pub async fn process_tle_update(redis_client: Arc<RedisClient>, tle_update: TLEU
                 break; // Break on serialization error
             }
         };
-    
+
         // Parse the timestamp as a score
         let score = match position.timestamp.parse::<DateTime<Utc>>() {
             Ok(dt) => dt.timestamp(), // Use seconds as an integer
@@ -199,13 +198,13 @@ pub async fn process_tle_update(redis_client: Arc<RedisClient>, tle_update: TLEU
                 break;
             }
         };
-    
+
         // Attempt to store the position in Redis
         if let Err(e) = store_to_redis(
             &format!("satellite_positions:{}", tle_update.id),
             &position_json,
             score,
-            &redis_client,
+            &mut con,
         ) {
             error!(
                 "Failed to store position in Redis for satellite {}: {:?}, position: {:?}",
@@ -213,14 +212,13 @@ pub async fn process_tle_update(redis_client: Arc<RedisClient>, tle_update: TLEU
             );
             break; // Break on Redis storage error
         }
-    
+
         // Log success
         info!(
             "Successfully stored position for satellite {}: {:?}",
             tle_update.id, position
         );
     }
-    
 
     let summary = json!({
         "event": "event_satellite_positions_updated",
@@ -230,7 +228,7 @@ pub async fn process_tle_update(redis_client: Arc<RedisClient>, tle_update: TLEU
         "positions_count": positions.len(),
     });
 
-    match publish_to_redis("event_satellite_positions_updated", &summary, &redis_client) {
+    match publish_to_redis("event_satellite_positions_updated", &summary, &mut con) {
         Ok(_) => {
             info!(
                 "Successfully published update for satellite {} to Redis.",
@@ -266,7 +264,15 @@ pub async fn subscribe_to_tle_updates(redis_client: Arc<RedisClient>, max_thread
         while let Some(tle_update) = rx.recv().await {
             let redis_client = Arc::clone(&redis_client);
             tokio::spawn(async move {
-                process_tle_update(redis_client, tle_update).await;
+                let mut con = match redis_client.get_connection() {
+                    Ok(c) => c,
+                    Err(e) => {
+                        error!("Failed to connect to Redis: {:?}", e);
+                        return;
+                    }
+                };
+
+                process_tle_update(con, tle_update).await;
             });
         }
     });

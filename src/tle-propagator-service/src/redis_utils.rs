@@ -1,11 +1,10 @@
-use redis:: { Commands, RedisResult };
-use serde_json:: Value;
+use redis::{Commands, RedisResult};
+use serde_json::Value;
 use tracing::{debug, error};
 use redis::RedisError;
 
-pub fn publish_to_redis(channel: & str, message: & Value, redis_client: & redis:: Client) -> RedisResult < () > {
-    let mut con = redis_client.get_connection() ?;
-    let _: () = con.publish(channel, message.to_string()) ?;
+pub fn publish_to_redis(channel: &str, message: &Value, con: &mut redis::Connection) -> RedisResult<()> {
+    let _: () = con.publish(channel, message.to_string())?;
     Ok(())
 }
 
@@ -13,7 +12,7 @@ pub fn store_to_redis(
     key: &str,
     data: &Value,
     score: i64, // Changed to integer
-    redis_client: &redis::Client,
+    con: &mut redis::Connection,
 ) -> RedisResult<()> {
     // Validate inputs
     if key.is_empty() {
@@ -33,21 +32,12 @@ pub fn store_to_redis(
         ))
     })?;
 
-    // Connect to Redis
-    let mut con = redis_client.get_connection().map_err(|e| {
-        error!("Failed to connect to Redis for key '{}': {}", key, e);
-        RedisError::from((
-            redis::ErrorKind::IoError,
-            "Failed to connect to Redis", // Changed to static str
-        ))
-    })?;
-
     // Execute ZADD
     redis::cmd("ZADD")
         .arg(key)
         .arg(score)
         .arg(&serialized_data)
-        .query(&mut con)
+        .query(con)
         .map_err(|e| {
             error!(
                 "Failed to execute ZADD for key '{}', score {}: {}",
