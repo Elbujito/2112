@@ -30,7 +30,7 @@ async fn main() {
 
     info!("Connected to Redis at {}", redis_url);
 
-    let worker_count = 5; // Number of workers to process TLE updates
+    let worker_count = 4; // Number of workers to process TLE updates
 
     // Run the subscription service and listen for termination signals
     tokio::select! {

@@ -69,11 +69,11 @@ func (h *CelestrackTleUploadHandler) Run(ctx context.Context, args map[string]st
 	}
 
 	// Ensure satellites exist for the batch
-	for _, tle := range tles {
-		if err := h.ensureSatelliteExists(ctx, tle.NoradID, category); err != nil {
-			return fmt.Errorf("failed to ensure satellite existence for NORAD ID %s: %v", tle.NoradID, err)
-		}
-	}
+	// for _, tle := range tles {
+	// 	if err := h.ensureSatelliteExists(ctx, tle.NoradID, category); err != nil {
+	// 		return fmt.Errorf("failed to ensure satellite existence for NORAD ID %s: %v", tle.NoradID, err)
+	// 	}
+	// }
 
 	log.Printf("Returning %d TLEs for category %s", len(tles), category)
 	err = h.tleRepo.UpdateTleBatch(ctx, tles)

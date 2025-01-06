@@ -300,7 +300,7 @@ def subscribe_to_user_visibility_events():
 
 @app.on_event("startup")
 def start_subscriptions():
-    threading.Thread(target=subscribe_to_tle_updates, daemon=True).start()
+    # threading.Thread(target=subscribe_to_tle_updates, daemon=True).start()
     threading.Thread(target=subscribe_to_user_visibility_events, daemon=True).start()
 
 @app.get("/")

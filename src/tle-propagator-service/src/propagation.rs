@@ -1,11 +1,11 @@
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH, Duration};
+use std::time::{SystemTime, Duration};
 use redis::Client as RedisClient;
 use serde_json::json;
 use tokio::sync::mpsc;
-use tracing::{error, info, debug};
+use tracing::{info, error, debug};
 use chrono::{DateTime, Utc};
-use sgp4::{Elements, Constants, MinutesSinceEpoch};
+use sgp4::{Constants, MinutesSinceEpoch};
 use crate::tle::{TLEUpdate, SatellitePosition};
 use crate::redis_utils::{publish_to_redis, store_to_redis};
 
@@ -21,26 +21,6 @@ fn parse_eccentricity(tle_line2: &str) -> f64 {
 /// Extract inclination from TLE second line as a float.
 fn parse_inclination(tle_line2: &str) -> f64 {
     tle_line2[8..16].trim().parse::<f64>().unwrap_or(0.0)
-}
-
-/// Convert TLE epoch to UNIX time in seconds.
-fn tle_epoch_to_unix(epoch: f64) -> f64 {
-    let year = if epoch >= 1_000.0 {
-        2000 + ((epoch / 1_000.0).floor() as i32)
-    } else {
-        1900 + ((epoch / 1_000.0).floor() as i32)
-    };
-    let day_of_year = epoch % 1_000.0;
-
-    let jan_1 = chrono::NaiveDate::from_ymd_opt(year, 1, 1)
-        .expect("Failed to create NaiveDate for January 1st");
-
-    jan_1
-        .and_hms_opt(0, 0, 0)
-        .expect("Failed to create NaiveDateTime at midnight")
-        .and_utc()
-        .timestamp() as f64
-        + (day_of_year - 1.0) * 86400.0
 }
 
 /// Convert SystemTime to a readable ISO 8601 timestamp.
@@ -65,8 +45,6 @@ pub async fn propagate_satellite_positions(
     tle_line1: &str,
     tle_line2: &str,
     start_time: SystemTime,
-    duration_minutes: u64,
-    interval_seconds: u64,
 ) -> Vec<SatellitePosition> {
     let mut positions = Vec::new();
     let mut failures = Vec::new();
@@ -99,7 +77,7 @@ pub async fn propagate_satellite_positions(
     };
 
     // Compute constants for propagation
-    let constants = match Constants::from_elements_afspc_compatibility_mode(&elements) {
+    let constants = match Constants::from_elements(&elements) {
         Ok(c) => c,
         Err(e) => {
             error!("Failed to create constants for satellite {}: {:?}", satellite_id, e);
@@ -107,37 +85,27 @@ pub async fn propagate_satellite_positions(
         }
     };
 
-    debug!(
-        "Successfully completed TLE parsing and constants computation for satellite {}.",
-        satellite_id
-    );
-
-    let tle_epoch = tle_epoch_to_unix(elements.epoch());
-    let end_time = start_time + Duration::from_secs(duration_minutes * 60);
     let mut current_time = start_time;
 
     debug!(
-        "Propagating satellite {} from {:?} to {:?} with interval {} seconds",
+        "Starting propagation for satellite {} from {:?}",
         satellite_id,
-        system_time_to_iso8601(start_time),
-        system_time_to_iso8601(end_time),
-        interval_seconds
+        system_time_to_iso8601(start_time)
     );
 
-    while current_time <= end_time {
-        let timestamp = match current_time.duration_since(UNIX_EPOCH) {
-            Ok(d) => d.as_secs_f64(),
-            Err(e) => {
-                error!("SystemTime error: {:?}", e);
-                break;
-            }
-        };
+    while let Ok(duration_since_start) = current_time.duration_since(start_time) {
+        let timestamp = duration_since_start.as_secs_f64();
 
-        let minutes_since_epoch = MinutesSinceEpoch((timestamp - tle_epoch) / 60.0);
+        // Calculate minutes since start_time
+        let minutes_since_start = MinutesSinceEpoch(timestamp / 60.0);
 
-        match constants.propagate_afspc_compatibility_mode(minutes_since_epoch) {
+        match constants.propagate(minutes_since_start) {
             Ok(prediction) => {
                 let (latitude, longitude, altitude) = calculate_lat_lon_alt(prediction.position);
+
+                // Determine the duration and number of points based on altitude
+                let (pass_duration_minutes, interval_seconds) = determine_sampling_params(altitude);
+
                 positions.push(SatellitePosition {
                     id: satellite_id.to_string(),
                     timestamp: system_time_to_iso8601(current_time),
@@ -145,16 +113,22 @@ pub async fn propagate_satellite_positions(
                     longitude,
                     altitude,
                 });
+
+                current_time += Duration::from_secs(interval_seconds);
+
+                // Stop propagating if the duration exceeds the pass duration
+                if duration_since_start.as_secs() / 60 >= pass_duration_minutes {
+                    break;
+                }
             }
-            Err(_) => {
+            Err(e) => {
+                error!("Propagation error for satellite {}: {:?}", satellite_id, e);
                 failures.push(current_time);
+                break;
             }
         }
-
-        current_time += Duration::from_secs(interval_seconds);
     }
 
-    // Summary log for successful propagation
     if failures.is_empty() {
         info!(
             "Successfully propagated satellite {}: {} positions generated.",
@@ -162,32 +136,28 @@ pub async fn propagate_satellite_positions(
             positions.len()
         );
     } else {
-        // Log batch failures
         let total_failures = failures.len();
-        let sample_failures: Vec<String> = failures
-            .iter()
-            .take(5)
-            .map(|&time| system_time_to_iso8601(time))
-            .collect();
-
         error!(
-            "Propagation failed for satellite {}: {} failures out of {} intervals. Sample times: {:?}{}",
-            satellite_id,
-            total_failures,
-            ((end_time.duration_since(start_time).unwrap().as_secs() / interval_seconds) as usize),
-            sample_failures,
-            if total_failures > 5 {
-                format!(" ... (and {} more)", total_failures - 5)
-            } else {
-                String::new()
-            }
+            "Propagation failed for satellite {}: {} failures.",
+            satellite_id, total_failures
         );
-
-        // Return an empty positions list to indicate failure
-        return Vec::new();
     }
 
     positions
+}
+
+/// Determine sampling parameters based on altitude.
+fn determine_sampling_params(altitude_km: f64) -> (u64, u64) {
+    if altitude_km < 2000.0 {
+        // Low Earth Orbit (LEO)
+        (1440, 60) // 1 day duration, 1-minute intervals
+    } else if altitude_km < 35786.0 {
+        // Medium Earth Orbit (MEO)
+        (180, 216) // 3 hours duration, ~3.6-minute intervals
+    } else {
+        // Geostationary Earth Orbit (GEO)
+        (1440, 8640) // 1 day duration, ~2.4-hour intervals
+    }
 }
 
 
@@ -196,37 +166,61 @@ pub async fn process_tle_update(redis_client: Arc<RedisClient>, tle_update: TLEU
     info!("Received TLE update for satellite {}", tle_update.id);
 
     let start_time = SystemTime::now();
-    let duration_minutes = 90;
-    let interval_seconds = 15;
 
     let positions = propagate_satellite_positions(
         &tle_update.id,
         &tle_update.line_1,
         &tle_update.line_2,
-        start_time,
-        duration_minutes,
-        interval_seconds,
+        start_time
     )
     .await;
 
     for position in &positions {
+        // Log the position details
+        debug!("Processing position for satellite {}: {:?}", tle_update.id, position);
+    
+        // Serialize the position into JSON
         let position_json = match serde_json::to_value(position) {
             Ok(json) => json,
             Err(e) => {
-                error!("Failed to serialize position for satellite {}: {:?}", tle_update.id, e);
-                continue;
+                error!("Failed to serialize position for satellite {}: {:?}, position: {:?}", tle_update.id, e, position);
+                break; // Break on serialization error
             }
         };
-
+    
+        // Parse the timestamp as a score
+        let score = match position.timestamp.parse::<DateTime<Utc>>() {
+            Ok(dt) => dt.timestamp(), // Use seconds as an integer
+            Err(e) => {
+                error!(
+                    "Invalid timestamp for satellite {}: {:?}, position: {:?}",
+                    tle_update.id, e, position
+                );
+                break;
+            }
+        };
+    
+        // Attempt to store the position in Redis
         if let Err(e) = store_to_redis(
             &format!("satellite_positions:{}", tle_update.id),
             &position_json,
-            position.timestamp.parse().unwrap_or_default(),
+            score,
             &redis_client,
         ) {
-            error!("Failed to store position in Redis for satellite {}: {:?}", tle_update.id, e);
+            error!(
+                "Failed to store position in Redis for satellite {}: {:?}, position: {:?}",
+                tle_update.id, e, position
+            );
+            break; // Break on Redis storage error
         }
+    
+        // Log success
+        info!(
+            "Successfully stored position for satellite {}: {:?}",
+            tle_update.id, position
+        );
     }
+    
 
     let summary = json!({
         "event": "event_satellite_positions_updated",
