@@ -6,13 +6,14 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
 )
 
 type TleServiceClient interface {
-	FetchTLEFromSatCatByCategory(ctx context.Context, category string) ([]domain.TLE, error)
+	FetchTLEFromSatCatByCategory(ctx context.Context, category string, contextID string) ([]domain.TLE, error)
 }
 
 type CelestrackTleUploadHandler struct {
@@ -36,7 +37,7 @@ func (h *CelestrackTleUploadHandler) GetTask() Task {
 	return Task{
 		Name:         "celestrack_tle_upload",
 		Description:  "Fetch TLE from CelesTrak and upsert it in the database",
-		RequiredArgs: []string{"category", "maxCount"},
+		RequiredArgs: []string{"category", "maxCount", "contextID"},
 	}
 }
 
@@ -52,13 +53,18 @@ func (h *CelestrackTleUploadHandler) Run(ctx context.Context, args map[string]st
 		return fmt.Errorf("missing required argument: maxCount")
 	}
 
+	contextID, ok := args["contextID"]
+	if !ok || nbTles == "" {
+		return fmt.Errorf("missing required argument: maxCount")
+	}
+
 	// Convert nbTles to an integer (assuming it's a string or a similar type in args)
 	maxCount, err := strconv.Atoi(nbTles)
 	if err != nil {
 		return fmt.Errorf("invalid value for max: %v", err)
 	}
 
-	tles, err := h.tleService.FetchTLEFromSatCatByCategory(ctx, category)
+	tles, err := h.tleService.FetchTLEFromSatCatByCategory(ctx, category, contextID)
 	if err != nil {
 		return fmt.Errorf("failed to fetch TLE catalog for category %s: %v", category, err)
 	}
@@ -94,10 +100,15 @@ func (h *CelestrackTleUploadHandler) ensureSatelliteExists(ctx context.Context, 
 		return nil
 	}
 
+	nowUtc := time.Now().UTC()
+
 	newSatellite, err := domain.NewSatellite(
 		fmt.Sprintf("Unknown Satellite %s", noradID),
 		noradID,
 		domain.SatelliteType(strings.ToUpper(category)),
+		true,  //active by default
+		false, // not in favourite
+		nowUtc,
 	)
 
 	if err != nil {

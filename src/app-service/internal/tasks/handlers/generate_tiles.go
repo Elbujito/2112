@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xpolygon"
@@ -57,8 +58,10 @@ func (h *GenerateTilesHandler) Run(ctx context.Context, args map[string]string) 
 
 	polygons := xpolygon.GenerateAllTilesForRadius(radius, faces)
 
+	nowUtc := time.Now().UTC()
+
 	for _, p := range polygons {
-		tile := domain.NewTile(p)
+		tile := domain.NewTile(p, nowUtc, false, true, "")
 		err := h.tileRepo.Upsert(ctx, tile)
 		if err != nil {
 			return fmt.Errorf("failed to upsert Tile for Key %s: %v", tile.Quadkey, err)

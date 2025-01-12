@@ -6,7 +6,7 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 )
 
-// Satellite Model
+// Satellite represents a satellite database model.
 type Satellite struct {
 	ModelBase
 	Name           string     `gorm:"size:255;not null"`        // Satellite name
@@ -22,40 +22,22 @@ type Satellite struct {
 	Apogee         *float64   `gorm:"type:float"`               // Apogee altitude in kilometers (optional)
 	Perigee        *float64   `gorm:"type:float"`               // Perigee altitude in kilometers (optional)
 	RCS            *float64   `gorm:"type:float"`               // Radar cross-section in square meters (optional)
-	Altitude       *float64   `gorm:"type:float"`               // Radar cross-section in square meters (optional)
-}
-
-// MapToForm maps the Satellite model to a SatelliteForm.
-func (model *Satellite) MapToForm() *SatelliteForm {
-	return &SatelliteForm{
-		FormBase: FormBase{
-			ID:        model.ID,
-			CreatedAt: model.CreatedAt,
-			UpdatedAt: model.UpdatedAt,
-		},
-		Name:           model.Name,
-		NoradID:        model.NoradID,
-		Type:           model.Type,
-		LaunchDate:     model.LaunchDate,
-		DecayDate:      model.DecayDate,
-		IntlDesignator: model.IntlDesignator,
-		Owner:          model.Owner,
-		ObjectType:     model.ObjectType,
-		Period:         model.Period,
-		Inclination:    model.Inclination,
-		Apogee:         model.Apogee,
-		Perigee:        model.Perigee,
-		RCS:            model.RCS,
-		Altitude:       model.Altitude,
-	}
+	Altitude       *float64   `gorm:"type:float"`               // Altitude in kilometers (optional)
 }
 
 // MapToDomain converts a Satellite database model to a Satellite domain model.
 func MapToSatelliteDomain(s Satellite) domain.Satellite {
 	return domain.Satellite{
-		ID:             s.ID,
-		CreatedAt:      s.CreatedAt,
-		UpdatedAt:      s.UpdatedAt,
+		ModelBase: domain.ModelBase{
+			ID:          s.ID,
+			CreatedAt:   s.CreatedAt,
+			UpdatedAt:   &s.UpdatedAt,
+			DeleteAt:    s.DeleteAt,
+			ProcessedAt: s.ProcessedAt,
+			IsActive:    s.IsActive,
+			IsFavourite: s.IsFavourite,
+			DisplayName: s.DisplayName,
+		},
 		Name:           s.Name,
 		NoradID:        s.NoradID,
 		Type:           domain.SatelliteType(s.Type),
@@ -70,5 +52,35 @@ func MapToSatelliteDomain(s Satellite) domain.Satellite {
 		Perigee:        s.Perigee,
 		RCS:            s.RCS,
 		Altitude:       s.Altitude,
+	}
+}
+
+// MapToSatelliteModel converts a Satellite domain model to a Satellite database model.
+func MapToSatelliteModel(d domain.Satellite) Satellite {
+	return Satellite{
+		ModelBase: ModelBase{
+			ID:          d.ModelBase.ID,
+			CreatedAt:   d.ModelBase.CreatedAt,
+			UpdatedAt:   *d.ModelBase.UpdatedAt,
+			DeleteAt:    d.ModelBase.DeleteAt,
+			ProcessedAt: d.ModelBase.ProcessedAt,
+			IsActive:    d.ModelBase.IsActive,
+			IsFavourite: d.ModelBase.IsFavourite,
+			DisplayName: d.ModelBase.DisplayName,
+		},
+		Name:           d.Name,
+		NoradID:        d.NoradID,
+		Type:           string(d.Type),
+		LaunchDate:     d.LaunchDate,
+		DecayDate:      d.DecayDate,
+		IntlDesignator: d.IntlDesignator,
+		Owner:          d.Owner,
+		ObjectType:     d.ObjectType,
+		Period:         d.Period,
+		Inclination:    d.Inclination,
+		Apogee:         d.Apogee,
+		Perigee:        d.Perigee,
+		RCS:            d.RCS,
+		Altitude:       d.Altitude,
 	}
 }

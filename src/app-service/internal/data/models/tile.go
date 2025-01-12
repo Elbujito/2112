@@ -80,23 +80,32 @@ func MapFromDomain(domainTile domain.Tile) Tile {
 }
 
 // MapToDomain converts a models.Tile to a domain.Tile.
-func MapToDomain(modelTile Tile) domain.Tile {
+func MapToTileDomain(t Tile) domain.Tile {
 	// Deserialize boundaries
 	var boundaries []xpolygon.Point
-	err := json.Unmarshal([]byte(modelTile.BoundariesJSON), &boundaries)
+	err := json.Unmarshal([]byte(t.BoundariesJSON), &boundaries)
 	if err != nil {
 		boundaries = nil // Default to nil if deserialization fails
 	}
 
 	// Convert to domain
 	return domain.Tile{
-		ID:        modelTile.ID,
-		Quadkey:   modelTile.Quadkey,
-		ZoomLevel: modelTile.ZoomLevel,
-		CenterLat: modelTile.CenterLat,
-		CenterLon: modelTile.CenterLon,
-		NbFaces:   modelTile.NbFaces,
-		Radius:    modelTile.Radius,
+		ModelBase: domain.ModelBase{
+			ID:          t.ID,
+			CreatedAt:   t.CreatedAt,
+			UpdatedAt:   &t.UpdatedAt,
+			DeleteAt:    t.DeleteAt,
+			ProcessedAt: t.ProcessedAt,
+			IsActive:    t.IsActive,
+			IsFavourite: t.IsFavourite,
+			DisplayName: t.DisplayName,
+		},
+		Quadkey:   t.Quadkey,
+		ZoomLevel: t.ZoomLevel,
+		CenterLat: t.CenterLat,
+		CenterLon: t.CenterLon,
+		NbFaces:   t.NbFaces,
+		Radius:    t.Radius,
 		Vertices:  boundaries,
 	}
 }

@@ -11,6 +11,7 @@ import (
 
 // TLE represents the domain entity for Two-Line Element sets.
 type TLE struct {
+	ModelBase
 	ID      string    // Unique identifier
 	NoradID string    // NORAD ID associated with the satellite
 	Line1   string    // First line of the TLE
@@ -34,7 +35,7 @@ func (tle *TLE) Validate() error {
 
 // NewTLE creates a new TLE instance with the provided data.
 // It validates the input and returns an error if any field is invalid.
-func NewTLE(noradID string, line1 string, line2 string) (TLE, error) {
+func NewTLE(noradID string, line1 string, line2 string, createdAt time.Time, displayName string, isActive bool, isFavourite bool) (TLE, error) {
 
 	tleEpoch, err := xtime.ParseEpoch(line1)
 	if err != nil {
@@ -42,6 +43,15 @@ func NewTLE(noradID string, line1 string, line2 string) (TLE, error) {
 	}
 
 	tle := TLE{
+		ModelBase: ModelBase{
+			ID:          uuid.NewString(),
+			CreatedAt:   createdAt,
+			UpdatedAt:   &createdAt,
+			DisplayName: displayName,
+			IsActive:    isActive,
+			ProcessedAt: &createdAt,
+			IsFavourite: isFavourite,
+		},
 		ID:      uuid.NewString(),
 		NoradID: noradID,
 		Line1:   line1,

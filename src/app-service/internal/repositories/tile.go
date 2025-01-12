@@ -24,6 +24,77 @@ func NewTileRepository(db *data.Database) domain.TileRepository {
 	return &TileRepository{db: db}
 }
 
+// FindTilesInRegion retrieves tiles that intersect a given bounding box and belong to a specific context.
+func (r *TileRepository) FindTilesInRegion(ctx context.Context, contextID string, minLat, minLon, maxLat, maxLon float64) ([]domain.Tile, error) {
+	var tiles []models.Tile
+
+	// Execute the query with context filtering
+	result := r.db.DbHandler.WithContext(ctx).Raw(`
+		SELECT t.*
+		FROM tiles t
+		INNER JOIN context_tiles ct ON t.id = ct.tile_id
+		WHERE ct.context_id = ?
+		AND ST_Intersects(
+			t.spatial_index,
+			ST_MakeEnvelope(?, ?, ?, ?, 4326)
+		)
+	`, contextID, minLon, minLat, maxLon, maxLat).Scan(&tiles)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, context.Canceled) {
+			return nil, fmt.Errorf("query canceled: %w", result.Error)
+		}
+		if errors.Is(result.Error, context.DeadlineExceeded) {
+			return nil, fmt.Errorf("query deadline exceeded: %w", result.Error)
+		}
+		return nil, fmt.Errorf("failed to find tiles in region for context %s: %w", contextID, result.Error)
+	}
+
+	// Map tiles to domain models
+	var domainTiles []domain.Tile
+	for _, tile := range tiles {
+		domainTiles = append(domainTiles, models.MapToTileDomain(tile))
+	}
+
+	return domainTiles, nil
+}
+
+// FindTilesIntersectingLocation retrieves all tiles that intersect the given location and belong to a specific context.
+func (r *TileRepository) FindTilesIntersectingLocation(ctx context.Context, contextID string, lat, lon, radius float64) ([]domain.Tile, error) {
+	var tiles []models.Tile
+
+	// Query tiles that intersect the user's location and are associated with the given context
+	result := r.db.DbHandler.WithContext(ctx).Raw(`
+		SELECT t.*
+		FROM tiles t
+		INNER JOIN context_tiles ct ON t.id = ct.tile_id
+		WHERE ct.context_id = ?
+		AND ST_DWithin(
+			t.spatial_index,
+			ST_MakePoint(?, ?)::geography,
+			?
+		)
+	`, contextID, lon, lat, radius).Scan(&tiles)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, context.Canceled) {
+			return nil, fmt.Errorf("query canceled: %w", result.Error)
+		}
+		if errors.Is(result.Error, context.DeadlineExceeded) {
+			return nil, fmt.Errorf("query deadline exceeded: %w", result.Error)
+		}
+		return nil, fmt.Errorf("failed to find tiles intersecting location for context %s: %w", contextID, result.Error)
+	}
+
+	// Map tiles to domain models
+	var domainTiles []domain.Tile
+	for _, tile := range tiles {
+		domainTiles = append(domainTiles, models.MapToTileDomain(tile))
+	}
+
+	return domainTiles, nil
+}
+
 // FindByQuadkey retrieves a Tile by its quadkey.
 func (r *TileRepository) FindByQuadkey(ctx context.Context, quadkey string) (*domain.Tile, error) {
 	var tile models.Tile
@@ -34,7 +105,7 @@ func (r *TileRepository) FindByQuadkey(ctx context.Context, quadkey string) (*do
 		return nil, result.Error
 	}
 
-	tileMapped := models.MapToDomain(tile)
+	tileMapped := models.MapToTileDomain(tile)
 	return &tileMapped, nil
 }
 
@@ -53,7 +124,7 @@ func (r *TileRepository) FindBySpatialLocation(ctx context.Context, lat, lon flo
 		return nil, result.Error
 	}
 
-	tileMapped := models.MapToDomain(tile)
+	tileMapped := models.MapToTileDomain(tile)
 	return &tileMapped, nil
 }
 
@@ -65,10 +136,9 @@ func (r *TileRepository) FindAll(ctx context.Context) ([]domain.Tile, error) {
 		return nil, result.Error
 	}
 
-	// Map models to domain
 	var domainTiles []domain.Tile
 	for _, t := range tiles {
-		domainTiles = append(domainTiles, models.MapToDomain(t))
+		domainTiles = append(domainTiles, models.MapToTileDomain(t))
 	}
 	return domainTiles, nil
 }
@@ -77,6 +147,15 @@ func (r *TileRepository) FindAll(ctx context.Context) ([]domain.Tile, error) {
 func (r *TileRepository) Save(ctx context.Context, tile domain.Tile) error {
 	modelTile := models.MapFromDomain(tile)
 	return r.db.DbHandler.Create(&modelTile).Error
+}
+
+// SaveBatch allows batch insertion of tiles for optimized performance.
+func (r *TileRepository) SaveBatch(ctx context.Context, tiles []domain.Tile) error {
+	modelTiles := make([]models.Tile, len(tiles))
+	for i, t := range tiles {
+		modelTiles[i] = models.MapFromDomain(t)
+	}
+	return r.db.DbHandler.Create(&modelTiles).Error
 }
 
 // Update modifies an existing Tile record.
@@ -90,72 +169,66 @@ func (r *TileRepository) DeleteByQuadkey(ctx context.Context, key string) error 
 	return r.db.DbHandler.Where("quadkey = ?", key).Delete(&models.Tile{}).Error
 }
 
-// Upsert inserts or updates a Tile record in the database.
-func (r *TileRepository) Upsert(ctx context.Context, tile domain.Tile) error {
-	// Check for an existing tile using the spatial location or quadkey
-	existingTile, err := r.FindByQuadkey(ctx, tile.Quadkey)
-	if err != nil {
-		return err
+// AssociateTileWithContext associates a Tile with a specific Context.
+func (r *TileRepository) AssociateTileWithContext(ctx context.Context, contextID string, tileID string) error {
+	contextTile := models.ContextTile{
+		ContextID: contextID,
+		TileID:    tileID,
 	}
 
-	if existingTile != nil {
-		// Update if the tile exists
-		return r.Update(ctx, tile)
+	if err := r.db.DbHandler.Create(&contextTile).Error; err != nil {
+		return fmt.Errorf("failed to associate Tile with context: %w", err)
 	}
-
-	// Save if the tile doesn't exist
-	return r.Save(ctx, tile)
+	return nil
 }
 
-// DeleteBySpatialLocation removes a Tile record by its geographical location.
-func (r *TileRepository) DeleteBySpatialLocation(ctx context.Context, lat, lon float64) error {
-	var tile models.Tile
-	result := r.db.DbHandler.Raw(`
-		SELECT *
-		FROM tiles
-		WHERE ST_Contains(spatial_index, ST_SetSRID(ST_Point(?, ?), 4326))
-		LIMIT 1
-	`, lon, lat).Scan(&tile)
-	if result.Error != nil || result.RowsAffected == 0 {
-		return errors.New("tile not found")
+// GetTilesByContext retrieves all Tiles associated with a specific Context.
+func (r *TileRepository) GetTilesByContext(ctx context.Context, contextID string) ([]domain.Tile, error) {
+	var contextTiles []models.ContextTile
+
+	if err := r.db.DbHandler.Where("context_id = ?", contextID).Find(&contextTiles).Error; err != nil {
+		return nil, fmt.Errorf("failed to retrieve Tiles by context: %w", err)
 	}
 
-	return r.db.DbHandler.Delete(&tile).Error
-}
+	tileIDs := make([]string, len(contextTiles))
+	for i, contextTile := range contextTiles {
+		tileIDs[i] = contextTile.TileID
+	}
 
-// FindTilesInRegion retrieves tiles that intersect a given bounding box.
-func (r *TileRepository) FindTilesInRegion(ctx context.Context, minLat, minLon, maxLat, maxLon float64) ([]domain.Tile, error) {
 	var tiles []models.Tile
-	result := r.db.DbHandler.Raw(`
-		SELECT *
-		FROM tiles
-		WHERE ST_Intersects(spatial_index, ST_MakeEnvelope(?, ?, ?, ?, 4326))
-	`, minLon, minLat, maxLon, maxLat).Scan(&tiles)
-	if result.Error != nil {
-		return nil, result.Error
+	if err := r.db.DbHandler.Where("id IN ?", tileIDs).Find(&tiles).Error; err != nil {
+		return nil, fmt.Errorf("failed to retrieve Tile details: %w", err)
 	}
 
-	// Map models to domain
 	var domainTiles []domain.Tile
-	for _, t := range tiles {
-		domainTiles = append(domainTiles, models.MapToDomain(t))
+	for _, tile := range tiles {
+		domainTiles = append(domainTiles, models.MapToTileDomain(tile))
 	}
+
 	return domainTiles, nil
 }
 
+// RemoveTileFromContext removes the association between a Tile and a Context.
+func (r *TileRepository) RemoveTileFromContext(ctx context.Context, contextID string, tileID string) error {
+	if err := r.db.DbHandler.Where("context_id = ? AND tile_id = ?", contextID, tileID).
+		Delete(&models.ContextTile{}).Error; err != nil {
+		return fmt.Errorf("failed to remove Tile from context: %w", err)
+	}
+	return nil
+}
+
+// FindTilesVisibleFromLine retrieves Tiles intersecting a satellite's trajectory.
 func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domain.Satellite, points []domain.SatellitePosition) ([]domain.TileSatelliteMapping, error) {
 	if len(points) < 2 {
 		return nil, fmt.Errorf("at least two points are required to create a line")
 	}
 
-	// Construct a WKT (Well-Known Text) representation of the LINESTRING
 	wktPoints := make([]string, len(points))
 	for i, point := range points {
 		wktPoints[i] = fmt.Sprintf("%f %f", point.Longitude, point.Latitude)
 	}
 	lineString := fmt.Sprintf("LINESTRING(%s)", strings.Join(wktPoints, ", "))
 
-	// Query to find intersecting tiles and calculate interest points
 	query := `
         WITH line_geom AS (
             SELECT ST_GeomFromText(?, 4326) AS geom
@@ -167,48 +240,42 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domai
         WHERE ST_Intersects(spatial_index, line_geom.geom)
     `
 
-	// Execute the query
 	var results []struct {
 		models.Tile
 		IntersectionGeom string `gorm:"column:intersection_geom"`
 	}
 	result := r.db.DbHandler.Raw(query, lineString).Scan(&results)
 	if result.Error != nil {
-		log.Printf("Error executing query: %v\n", result.Error)
 		return nil, result.Error
 	}
 
-	if len(results) == 0 {
-		log.Printf("No tiles intersect the line for satellite %s\n", sat.NoradID)
-		return nil, nil
-	}
-
-	// Map results to domain with interest points
 	var mappings []domain.TileSatelliteMapping
 	for _, res := range results {
-		tile := models.MapToDomain(res.Tile)
-
-		// Parse intersection geometry
+		tile := models.MapToTileDomain(res.Tile)
 		interestPoint, err := parseIntersectionGeometry(res.IntersectionGeom)
 		if err != nil {
 			log.Printf("Failed to parse intersection geometry for TileID %s: %v\n", tile.ID, err)
-			continue // Skip invalid intersections
+			continue
 		}
 
-		mapping := domain.TileSatelliteMapping{
-			NoradID:               sat.NoradID,
-			TileID:                tile.ID,
-			IntersectionLongitude: interestPoint.Longitude,
-			IntersectionLatitude:  interestPoint.Latitude,
-			CreatedAt:             time.Now(),
-			UpdatedAt:             time.Now(),
-		}
+		nowUtc := time.Now().UTC()
+		mapping := domain.NewMapping(
+			sat.NoradID,
+			tile.ID,
+			interestPoint,
+			nowUtc,
+			nowUtc,
+			"",
+			true,
+			false,
+		)
 		mappings = append(mappings, mapping)
 	}
 
 	return mappings, nil
 }
 
+// parseIntersectionGeometry parses WKT intersection points.
 func parseIntersectionGeometry(wkt string) (domain.Point, error) {
 	if wkt == "" || !strings.HasPrefix(wkt, "POINT(") || !strings.HasSuffix(wkt, ")") {
 		return domain.Point{}, fmt.Errorf("invalid WKT format: %s", wkt)
@@ -236,43 +303,40 @@ func parseIntersectionGeometry(wkt string) (domain.Point, error) {
 	}, nil
 }
 
-// FindTilesIntersectingLocation retrieves all tiles that intersect the user's location.
-func (r *TileRepository) FindTilesIntersectingLocation(ctx context.Context, lat, lon, radius float64) ([]domain.Tile, error) {
-	var tiles []models.Tile
-
-	// Query tiles that intersect the user's location with the given radius
+// DeleteBySpatialLocation removes a Tile record by its geographical location.
+func (r *TileRepository) DeleteBySpatialLocation(ctx context.Context, lat, lon float64) error {
+	var tile models.Tile
 	result := r.db.DbHandler.Raw(`
 		SELECT *
 		FROM tiles
-		WHERE ST_DWithin(
-			spatial_index,
-			ST_MakePoint(?, ?)::geography,
-			?
-		)
-	`, lon, lat, radius).Scan(&tiles)
+		WHERE ST_Contains(spatial_index, ST_SetSRID(ST_Point(?, ?), 4326))
+		LIMIT 1
+	`, lon, lat).Scan(&tile)
 
 	if result.Error != nil {
-		return nil, result.Error
+		if result.RowsAffected == 0 {
+			return fmt.Errorf("tile not found at the specified location")
+		}
+		return result.Error
 	}
 
-	if len(tiles) == 0 {
-		return nil, errors.New("no tiles intersecting the user's location")
-	}
-
-	// Map tiles to domain objects
-	var domainTiles []domain.Tile
-	for _, tile := range tiles {
-		domainTiles = append(domainTiles, models.MapToDomain(tile))
-	}
-
-	return domainTiles, nil
+	// Delete the tile
+	return r.db.DbHandler.Delete(&tile).Error
 }
 
-// SaveBatch allows batch insertion of tiles for optimized performance.
-func (r *TileRepository) SaveBatch(ctx context.Context, tiles []domain.Tile) error {
-	modelTiles := make([]models.Tile, len(tiles))
-	for i, t := range tiles {
-		modelTiles[i] = models.MapFromDomain(t)
+// Upsert inserts or updates a Tile record in the database.
+func (r *TileRepository) Upsert(ctx context.Context, tile domain.Tile) error {
+	// Check for an existing tile using the spatial location or quadkey
+	existingTile, err := r.FindByQuadkey(ctx, tile.Quadkey)
+	if err != nil {
+		return err
 	}
-	return r.db.DbHandler.Create(&modelTiles).Error
+
+	if existingTile != nil {
+		// Update if the tile exists
+		return r.Update(ctx, tile)
+	}
+
+	// Save if the tile doesn't exist
+	return r.Save(ctx, tile)
 }

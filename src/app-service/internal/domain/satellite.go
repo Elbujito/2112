@@ -30,9 +30,7 @@ func (t SatelliteType) IsValid() error {
 }
 
 type Satellite struct {
-	ID             string // Unique identifier
-	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	ModelBase
 	Name           string
 	NoradID        string
 	Type           SatelliteType
@@ -67,13 +65,20 @@ func NewSatelliteFromStatCat(
 	rcs *float64,
 	altitude *float64,
 ) (Satellite, error) {
+	nowUtc := time.Now().UTC()
 	if err := satType.IsValid(); err != nil {
 		return Satellite{}, err
 	}
 	return Satellite{
-		ID:             uuid.NewString(),
-		CreatedAt:      time.Now(),
-		UpdatedAt:      time.Now(),
+		ModelBase: ModelBase{
+			ID:          uuid.NewString(),
+			CreatedAt:   nowUtc,
+			UpdatedAt:   &nowUtc,
+			DisplayName: name,
+			IsActive:    true,
+			ProcessedAt: &nowUtc,
+			IsFavourite: false,
+		},
 		Name:           name,
 		NoradID:        noradID,
 		Type:           satType,
@@ -91,22 +96,29 @@ func NewSatelliteFromStatCat(
 }
 
 // NewSatellite creates a new Satellite instance.
-func NewSatellite(name string, noradID string, satType SatelliteType) (Satellite, error) {
+func NewSatellite(name string, noradID string, satType SatelliteType, isFavourite bool, isActive bool, createdAt time.Time) (Satellite, error) {
 	if err := satType.IsValid(); err != nil {
 		return Satellite{}, err
 	}
 	return Satellite{
-		ID:        uuid.NewString(),
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
-		Name:      name,
-		NoradID:   noradID,
-		Type:      satType,
+		ModelBase: ModelBase{
+			ID:          uuid.NewString(),
+			CreatedAt:   createdAt,
+			UpdatedAt:   &createdAt,
+			DisplayName: name,
+			IsActive:    isActive,
+			ProcessedAt: &createdAt,
+			IsFavourite: isFavourite,
+		},
+		Name:    name,
+		NoradID: noradID,
+		Type:    satType,
 	}, nil
 }
 
 // SatelliteRepository defines the interface for Satellite operations.
 type SatelliteRepository interface {
+	// Existing Methods
 	FindByNoradID(ctx context.Context, noradID string) (Satellite, error)
 	FindAll(ctx context.Context) ([]Satellite, error)
 	Save(ctx context.Context, satellite Satellite) error
@@ -115,6 +127,12 @@ type SatelliteRepository interface {
 	SaveBatch(ctx context.Context, satellites []Satellite) error
 	FindAllWithPagination(ctx context.Context, page int, pageSize int, searchRequest *SearchRequest) ([]Satellite, int64, error)
 	FindSatelliteInfoWithPagination(ctx context.Context, page int, pageSize int, searchRequest *SearchRequest) ([]SatelliteInfo, int64, error)
+
+	// New Context-Specific Methods
+	AssignSatelliteToContext(ctx context.Context, contextID, satelliteID string) error
+	RemoveSatelliteFromContext(ctx context.Context, contextID, satelliteID string) error
+	FindContextsBySatellite(ctx context.Context, satelliteID string) ([]Context, error)
+	FindSatellitesByContext(ctx context.Context, contextID string) ([]Satellite, error)
 }
 
 type SatellitePosition struct {
@@ -122,6 +140,7 @@ type SatellitePosition struct {
 	Longitude float64   `json:"longitude"`
 	Altitude  float64   `json:"altitude"`
 	Timestamp time.Time `json:"time"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type SatelliteInfo struct {

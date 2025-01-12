@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 # Redis client setup
 redis_client = redis.StrictRedis(host="redis-service", port=6379, decode_responses=True)
 
+# Function to propagate satellite positions
 def normalize_and_parse_iso_date(iso_date: str) -> datetime:
     """
     Normalize and parse an ISO 8601 date string to a datetime object, rounded to the nearest second.
@@ -72,13 +73,10 @@ def propagate_satellite_position(
         ts = load.timescale()
         satellite = EarthSatellite(tle_line1, tle_line2, satellite_id, ts)
 
-        # Calculate propagation range
         end_time = start_time + timedelta(minutes=duration_minutes)
         current_time = start_time
-
         positions = []
 
-        # Propagate the satellite's position at regular intervals
         while current_time <= end_time:
             if not isinstance(current_time, datetime):
                 raise ValueError(f"current_time is not a datetime object: {type(current_time)}")
@@ -99,12 +97,9 @@ def propagate_satellite_position(
         return positions
 
     except Exception as e:
-        logger.error(f"Error propagating satellite position init_start_time {init_start_time}: {e}")
-        raise HTTPException(
-            status_code=400,
-            detail=f"Error propagating satellite position init_start_time {init_start_time}: {e}"
-        )
+        raise HTTPException(status_code=400, detail=f"Error propagating satellite position: {e}")
 
+# Function to publish satellite positions to Redis
 def publish_satellite_positions(satellite_id: str, positions: List[Dict]):
     try:
         for pos in positions:
@@ -191,6 +186,8 @@ def compute_single_visibility(
         logger.error(f"Error computing single visibility: {e}")
         return None
 
+
+# Function to subscribe to TLE updates
 def subscribe_to_tle_updates():
     pubsub = redis_client.pubsub()
     pubsub.subscribe("satellite_tle_updates")
@@ -206,10 +203,11 @@ def subscribe_to_tle_updates():
                 satellite_id = satellite_data.get("id")
                 epoch = satellite_data.get("epoch", datetime.utcnow().isoformat() + "Z")
 
+                logger.info(f"Received TLE update for satellite {satellite_id}")
                 if not tle_line1 or not tle_line2 or not satellite_id:
                     logger.warning(f"Incomplete TLE data: {satellite_data}")
-                    continue
-
+                    return
+                # Calculate altitude and orbital period
                 ts = load.timescale()
                 satellite = EarthSatellite(tle_line1, tle_line2, satellite_id, ts)
                 geocentric = satellite.at(ts.now())
@@ -217,14 +215,14 @@ def subscribe_to_tle_updates():
                 altitude_km = subpoint.elevation.km
 
                 if altitude_km < 2000:  # LEO
-                    pass_duration_minutes = 1440
-                    num_points = 1440
+                    pass_duration_minutes = 1440  # 24 hours
+                    num_points = 1440  # 1 point per minute
                 elif altitude_km < 35786:  # MEO
-                    pass_duration_minutes = 180
-                    num_points = 50
+                    pass_duration_minutes = 180  # 3 hours
+                    num_points = 50  # Approx. 1 point every 3.6 minutes
                 else:  # GEO
-                    pass_duration_minutes = 1440
-                    num_points = 10
+                    pass_duration_minutes = 1440  # 24 hours
+                    num_points = 10  # 1 point every 144 minutes
 
                 interval_seconds = (pass_duration_minutes * 60) // num_points
 
@@ -239,6 +237,7 @@ def subscribe_to_tle_updates():
             except Exception as e:
                 logger.error(f"Error processing TLE message: {e}")
 
+# Function to subscribe to user visibility events and set a list of visibilities
 def subscribe_to_user_visibility_events():
     pubsub = redis_client.pubsub()
     pubsub.psubscribe("user_visibilities_event:*")
@@ -248,20 +247,13 @@ def subscribe_to_user_visibility_events():
     for message in pubsub.listen():
         if message["type"] == "pmessage":  # Pattern-based message
             try:
-                # Log the raw incoming message
+                         # Log the raw incoming message
                 logger.info(f"Incoming visibility event: {message}")
 
                 visibilities = json.loads(message["data"])
 
-                if not isinstance(visibilities, list):
-                    logger.warning(f"Expected a list of visibilities but received: {type(visibilities)}")
-                    continue
-
                 results = []
-
                 for visibility_data in visibilities:
-                    logger.debug(f"Processing visibility data: {visibility_data}")
-
                     satellite_id = visibility_data.get("satelliteID")
                     satellite_name = visibility_data.get("satelliteName")
                     start_time = visibility_data.get("startTime")
@@ -291,15 +283,19 @@ def subscribe_to_user_visibility_events():
             except Exception as e:
                 logger.error(f"Error processing visibility events: {e}")
 
+
+# Start subscriptions on app startup
 @app.on_event("startup")
 def start_subscriptions():
     threading.Thread(target=subscribe_to_tle_updates, daemon=True).start()
     threading.Thread(target=subscribe_to_user_visibility_events, daemon=True).start()
 
+# Root endpoint for checking service status
 @app.get("/")
 def read_root():
     return {"message": "Satellite Propagation Service is running"}
 
+# Health check endpoint
 @app.get("/health")
 def health_check():
     try:
@@ -308,6 +304,7 @@ def health_check():
     except Exception as e:
         raise HTTPException(status_code=500, detail="Redis connection failed")
 
+# Endpoint to propagate satellite position based on TLE
 @app.post("/satellite/propagate")
 async def propagate_endpoint(request: Request) -> Dict[str, List[Dict]]:
     """

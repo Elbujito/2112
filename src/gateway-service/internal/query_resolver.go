@@ -104,7 +104,7 @@ func (q *queryResolver) CachedSatelliteVisibilities(ctx context.Context, uid str
 	data, err := q.CustomResolver.rdb.Get(ctx, key).Result()
 	if err != nil {
 		log.Printf("Error fetching cached satellite visibilities for UID %s: %v", uid, err)
-		return nil, fmt.Errorf("cached visibilities not found for UID %s: %w", uid, err)
+		return nil, fmt.Errorf("cached visibilities not found for UID %s: %w", uid, err) 
 	}
 
 	// Parse cached visibility data into SatelliteVisibility objects
