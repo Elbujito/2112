@@ -38,6 +38,7 @@ func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository
 		satelliteRepo,
 		visibilityRepo,
 		redisClient,
+		4,
 	)
 
 	celestrackSatelliteUpload := handlers.NewCelesTrackSatelliteUploadHandler(

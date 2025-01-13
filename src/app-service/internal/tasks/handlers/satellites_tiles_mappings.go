@@ -18,6 +18,7 @@ type SatellitesTilesMappingsHandler struct {
 	satelliteRepo domain.SatelliteRepository
 	mappingRepo   domain.MappingRepository
 	redisClient   *redis.RedisClient
+	workerCount   int
 }
 
 // NewSatellitesTilesMappingsHandler creates a new instance of the handler.
@@ -27,6 +28,7 @@ func NewSatellitesTilesMappingsHandler(
 	satelliteRepo domain.SatelliteRepository,
 	mappingRepo domain.MappingRepository,
 	redisClient *redis.RedisClient,
+	workerCount int, // Number of workers
 ) SatellitesTilesMappingsHandler {
 	return SatellitesTilesMappingsHandler{
 		tileRepo:      tileRepo,
@@ -34,6 +36,7 @@ func NewSatellitesTilesMappingsHandler(
 		satelliteRepo: satelliteRepo,
 		mappingRepo:   mappingRepo,
 		redisClient:   redisClient,
+		workerCount:   workerCount,
 	}
 }
 
@@ -93,7 +96,6 @@ func (h *SatellitesTilesMappingsHandler) computeTileMappings(
 		return fmt.Errorf("failed to delete visible tiles along the path: %w", err)
 	}
 
-	// Find tiles visible along the satellite's path
 	mappings, err := h.tileRepo.FindTilesVisibleFromLine(ctx, sat, positions)
 	if err != nil {
 		return fmt.Errorf("failed to find visible tiles along the path: %w", err)
@@ -112,32 +114,28 @@ func (h *SatellitesTilesMappingsHandler) computeTileMappings(
 	return nil
 }
 
-// Subscribe listens for satellite position updates and computes visibility.
+// Subscribe listens for satellite position updates and computes visibility using a worker pool.
 func (h *SatellitesTilesMappingsHandler) Subscribe(ctx context.Context, channel string) error {
 	log.Printf("Subscribing to Redis channel: %s\n", channel)
+
+	// Create a channel for incoming messages
+	messageChan := make(chan string, 100)
+
+	// Start worker pool
+	for i := 0; i < h.workerCount; i++ {
+		go h.worker(ctx, messageChan)
+	}
+
+	// Subscribe to the Redis channel
 	err := h.redisClient.Subscribe(ctx, channel, func(message string) error {
-		// Parse the incoming message
-		var update struct {
-			SatelliteID string `json:"satellite_id"`
-			StartTime   string `json:"start_time"`
-			EndTime     string `json:"end_time"`
+		select {
+		case messageChan <- message:
+			// Successfully passed message to the channel
+		case <-ctx.Done():
+			// Context canceled
+			return ctx.Err()
 		}
-		if err := json.Unmarshal([]byte(message), &update); err != nil {
-			return fmt.Errorf("failed to parse update message: %w", err)
-		}
-
-		// Convert StartTime and EndTime to time.Time
-		startTime, err := time.Parse(time.RFC3339, update.StartTime)
-		if err != nil {
-			return fmt.Errorf("failed to parse start time: %w", err)
-		}
-		endTime, err := time.Parse(time.RFC3339, update.EndTime)
-		if err != nil {
-			return fmt.Errorf("failed to parse end time: %w", err)
-		}
-
-		log.Printf("Received update for satellite ID: %s, from %s to %s\n", update.SatelliteID, startTime, endTime)
-		return h.Exec(ctx, update.SatelliteID, startTime, endTime)
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("failed to subscribe to channel %s: %w", channel, err)
@@ -145,4 +143,42 @@ func (h *SatellitesTilesMappingsHandler) Subscribe(ctx context.Context, channel 
 
 	log.Printf("Subscribed to Redis channel: %s\n", channel)
 	return nil
+}
+
+// worker processes incoming messages in the messageChan
+func (h *SatellitesTilesMappingsHandler) worker(ctx context.Context, messageChan <-chan string) {
+	for {
+		select {
+		case message := <-messageChan:
+			var update struct {
+				SatelliteID string `json:"satellite_id"`
+				StartTime   string `json:"start_time"`
+				EndTime     string `json:"end_time"`
+			}
+			if err := json.Unmarshal([]byte(message), &update); err != nil {
+				log.Printf("Failed to parse update message: %v\n", err)
+				continue
+			}
+
+			startTime, err := time.Parse(time.RFC3339, update.StartTime)
+			if err != nil {
+				log.Printf("Failed to parse start time: %v\n", err)
+				continue
+			}
+			endTime, err := time.Parse(time.RFC3339, update.EndTime)
+			if err != nil {
+				log.Printf("Failed to parse end time: %v\n", err)
+				continue
+			}
+
+			log.Printf("Processing update for satellite ID: %s, from %s to %s\n", update.SatelliteID, startTime, endTime)
+			if err := h.Exec(ctx, update.SatelliteID, startTime, endTime); err != nil {
+				log.Printf("Failed to execute computation for satellite ID %s: %v\n", update.SatelliteID, err)
+			}
+
+		case <-ctx.Done():
+			log.Println("Worker shutting down due to context cancellation")
+			return
+		}
+	}
 }
