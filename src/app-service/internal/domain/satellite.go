@@ -11,6 +11,7 @@ import (
 
 // SatelliteType represents the type of a satellite.
 type SatelliteType string
+type SatelliteID string
 
 const (
 	// Active satellite type.
@@ -131,7 +132,7 @@ type SatelliteRepository interface {
 	// New Context-Specific Methods
 	AssignSatelliteToContext(ctx context.Context, contextID, satelliteID string) error
 	RemoveSatelliteFromContext(ctx context.Context, contextID, satelliteID string) error
-	FindContextsBySatellite(ctx context.Context, satelliteID string) ([]Context, error)
+	FindContextsBySatellite(ctx context.Context, satelliteID string) ([]GameContext, error)
 	FindSatellitesByContext(ctx context.Context, contextID string) ([]Satellite, error)
 }
 

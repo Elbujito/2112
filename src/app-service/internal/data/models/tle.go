@@ -35,3 +35,23 @@ func MapToTLEDomain(t TLE) domain.TLE {
 		Epoch:   t.Epoch,
 	}
 }
+
+// MapToTLEModel converts a domain.TLE to a models.TLE.
+func MapToTLEModel(t domain.TLE) TLE {
+	return TLE{
+		ModelBase: ModelBase{
+			ID:          t.ModelBase.ID,
+			CreatedAt:   t.ModelBase.CreatedAt,
+			UpdatedAt:   *t.ModelBase.UpdatedAt,
+			DeleteAt:    t.ModelBase.DeleteAt,
+			ProcessedAt: t.ModelBase.ProcessedAt,
+			IsActive:    t.ModelBase.IsActive,
+			IsFavourite: t.ModelBase.IsFavourite,
+			DisplayName: t.ModelBase.DisplayName,
+		},
+		NoradID: t.NoradID,
+		Line1:   t.Line1,
+		Line2:   t.Line2,
+		Epoch:   t.Epoch,
+	}
+}

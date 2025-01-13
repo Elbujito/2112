@@ -4,19 +4,28 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	fx "github.com/Elbujito/2112/src/app-service/pkg/option"
+	xtime "github.com/Elbujito/2112/src/app-service/pkg/time"
 )
 
 // Context represents the database model for logical groupings.
 type Context struct {
 	ModelBase
-	Name        string `gorm:"size:255;unique;not null"` // Unique name of the context
-	Description string `gorm:"size:1024"`                // Optional description of the context
-	ActivatedAt *time.Time
+	Name                       string     `gorm:"size:255;unique;not null"` // Unique name of the context
+	TenantID                   string     `gorm:"size:255;not null;index"`  // Tenant identifier
+	Description                string     `gorm:"size:1024"`                // Optional description of the context
+	MaxSatellite               int        `gorm:"not null"`                 // Maximum number of satellites allowed
+	MaxTiles                   int        `gorm:"not null"`                 // Maximum number of tiles allowed
+	ActivatedAt                *time.Time // Time the context was activated
+	DesactivatedAt             *time.Time // Time the context was deactivated
+	TriggerGeneratedMappingAt  *time.Time // Time the mapping was generated
+	TriggerImportedTLEAt       *time.Time // Time the TLE data was imported
+	TriggerImportedSatelliteAt *time.Time // Time the satellite data was imported
 }
 
-// MapToContextDomain converts a Context database model to a Context domain model.
-func MapToContextDomain(c Context) domain.Context {
-	return domain.Context{
+// MapToContextDomain converts a Context database model to a GameContext domain model.
+func MapToContextDomain(c Context) domain.GameContext {
+	return domain.GameContext{
 		ModelBase: domain.ModelBase{
 			ID:          c.ID,
 			CreatedAt:   c.CreatedAt,
@@ -27,14 +36,21 @@ func MapToContextDomain(c Context) domain.Context {
 			IsFavourite: c.IsFavourite,
 			DisplayName: c.DisplayName,
 		},
-		Name:        c.Name,
-		Description: c.Description,
-		ActivatedAt: c.ActivatedAt,
+		TenantID: domain.TenantID(c.TenantID),
+		Name:     domain.GameContextName(c.Name),
+		Description: fx.ConvertOption(fx.AsOption(&c.Description), func(d string) domain.GameContextDescription {
+			return domain.GameContextDescription(d)
+		}),
+		ActivatedAt:                xtime.ToUtcTime(c.ActivatedAt),
+		DesactivatedAt:             xtime.ToUtcTime(c.DesactivatedAt),
+		TriggerGeneratedMappingAt:  xtime.ToUtcTime(c.TriggerGeneratedMappingAt),
+		TriggerImportedTLEAt:       xtime.ToUtcTime(c.TriggerImportedTLEAt),
+		TriggerImportedSatelliteAt: xtime.ToUtcTime(c.TriggerImportedSatelliteAt),
 	}
 }
 
-// MapToContextModel converts a Context domain model to a Context database model.
-func MapToContextModel(c domain.Context) Context {
+// MapToContextModel converts a GameContext domain model to a Context database model.
+func MapToContextModel(c domain.GameContext) Context {
 	return Context{
 		ModelBase: ModelBase{
 			ID:          c.ModelBase.ID,
@@ -46,11 +62,18 @@ func MapToContextModel(c domain.Context) Context {
 			IsFavourite: c.ModelBase.IsFavourite,
 			DisplayName: c.ModelBase.DisplayName,
 		},
-		Name:        c.Name,
-		Description: c.Description,
-		ActivatedAt: c.ActivatedAt,
+		TenantID:                   string(c.TenantID),
+		Name:                       string(c.Name),
+		Description:                string(fx.GetOrDefault(c.Description, domain.GameContextDescription(""))),
+		ActivatedAt:                xtime.ToTimePointer(c.ActivatedAt),
+		DesactivatedAt:             xtime.ToTimePointer(c.DesactivatedAt),
+		TriggerGeneratedMappingAt:  xtime.ToTimePointer(c.TriggerGeneratedMappingAt),
+		TriggerImportedTLEAt:       xtime.ToTimePointer(c.TriggerImportedTLEAt),
+		TriggerImportedSatelliteAt: xtime.ToTimePointer(c.TriggerImportedSatelliteAt),
 	}
 }
+
+// Common conversion functions for working with database models
 
 // ContextTile defines the many-to-many relationship between Context and Tile.
 type ContextTile struct {
@@ -60,25 +83,22 @@ type ContextTile struct {
 	Tile      Tile    `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
 }
 
-// MapToContextTileDomain converts a ContextTile database model to a ContextTile domain model.
-func MapToContextTileDomain(ct ContextTile) domain.ContextTile {
-	return domain.ContextTile{
+// MapToContextTileDomain converts a ContextTile database model to a GameContextTile domain model.
+func MapToContextTileDomain(ct ContextTile) domain.GameContextTile {
+	return domain.GameContextTile{
 		ContextID: ct.ContextID,
 		TileID:    ct.TileID,
+		Tile:      MapToTileDomain(ct.Tile),
 	}
 }
 
-// MapToContextTileModel converts a ContextTile domain model to a ContextTile database model.
-func MapToContextTileModel(ct domain.ContextTile) ContextTile {
+// MapToContextTileModel converts a GameContextTile domain model to a ContextTile database model.
+func MapToContextTileModel(ct domain.GameContextTile) ContextTile {
 	return ContextTile{
 		ContextID: ct.ContextID,
 		TileID:    ct.TileID,
+		Tile:      MapFromDomain(ct.Tile),
 	}
-}
-
-// TableName overrides the default table name for ContextTile.
-func (ContextTile) TableName() string {
-	return "context_tiles"
 }
 
 // ContextTLE defines the many-to-many relationship between Context and TLE.
@@ -89,25 +109,22 @@ type ContextTLE struct {
 	TLE       TLE     `gorm:"constraint:OnDelete:CASCADE;foreignKey:TLEID;references:ID"`
 }
 
-// MapToContextTLEDomain converts a ContextTLE database model to a ContextTLE domain model.
-func MapToContextTLEDomain(ct ContextTLE) domain.ContextTLE {
-	return domain.ContextTLE{
+// MapToContextTLEDomain converts a ContextTLE database model to a GameContextTLE domain model.
+func MapToContextTLEDomain(ct ContextTLE) domain.GameContextTLE {
+	return domain.GameContextTLE{
 		ContextID: ct.ContextID,
 		TLEID:     ct.TLEID,
+		TLE:       MapToTLEDomain(ct.TLE),
 	}
 }
 
-// MapToContextTLEModel converts a ContextTLE domain model to a ContextTLE database model.
-func MapToContextTLEModel(ct domain.ContextTLE) ContextTLE {
+// MapToContextTLEModel converts a GameContextTLE domain model to a ContextTLE database model.
+func MapToContextTLEModel(ct domain.GameContextTLE) ContextTLE {
 	return ContextTLE{
 		ContextID: ct.ContextID,
 		TLEID:     ct.TLEID,
+		TLE:       MapToTLEModel(ct.TLE),
 	}
-}
-
-// TableName overrides the default table name for ContextTLE.
-func (ContextTLE) TableName() string {
-	return "context_tles"
 }
 
 // ContextSatellite defines the many-to-many relationship between Context and Satellite.
@@ -118,23 +135,20 @@ type ContextSatellite struct {
 	Satellite   Satellite `gorm:"constraint:OnDelete:CASCADE;foreignKey:SatelliteID;references:ID"`
 }
 
-// MapToContextSatelliteDomain converts a ContextSatellite database model to a ContextSatellite domain model.
-func MapToContextSatelliteDomain(cs ContextSatellite) domain.ContextSatellite {
-	return domain.ContextSatellite{
+// MapToContextSatelliteDomain converts a ContextSatellite database model to a GameContextSatellite domain model.
+func MapToContextSatelliteDomain(cs ContextSatellite) domain.GameContextSatellite {
+	return domain.GameContextSatellite{
 		ContextID:   cs.ContextID,
-		SatelliteID: cs.SatelliteID,
+		SatelliteID: domain.SatelliteID(cs.SatelliteID),
+		Satellite:   MapToSatelliteDomain(cs.Satellite),
 	}
 }
 
-// MapToContextSatelliteModel converts a ContextSatellite domain model to a ContextSatellite database model.
-func MapToContextSatelliteModel(cs domain.ContextSatellite) ContextSatellite {
+// MapToContextSatelliteModel converts a GameContextSatellite domain model to a ContextSatellite database model.
+func MapToContextSatelliteModel(cs domain.GameContextSatellite) ContextSatellite {
 	return ContextSatellite{
 		ContextID:   cs.ContextID,
-		SatelliteID: cs.SatelliteID,
+		SatelliteID: string(cs.SatelliteID),
+		Satellite:   MapToSatelliteModel(cs.Satellite),
 	}
-}
-
-// TableName overrides the default table name for ContextSatellite.
-func (ContextSatellite) TableName() string {
-	return "context_satellites"
 }

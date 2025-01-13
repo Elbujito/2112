@@ -10,14 +10,21 @@ import (
 
 func init() {
 	m := &gormigrate.Migration{
-		ID: "2025011102_create_quadkey_visibility_schema_with_context_and_tile",
+		ID: "2025011102_init",
 		Migrate: func(db *gorm.DB) error {
 			// Define the Context table
 			type Context struct {
 				models.ModelBase
-				Name        string     `gorm:"size:255;unique;not null"` // Context name
-				Description string     `gorm:"size:1024"`                // Optional description
-				ActivatedAt *time.Time `gorm:"not null"`
+				Name                       string     `gorm:"size:255;unique;not null"` // Context name
+				TenantID                   string     `gorm:"size:255;not null;index"`  // Tenant identifier
+				Description                string     `gorm:"size:1024"`                // Optional description
+				MaxSatellite               int        `gorm:"not null"`
+				MaxTiles                   int        `gorm:"not null"`
+				ActivatedAt                *time.Time `gorm:"null"`
+				DesactivatedAt             *time.Time `gorm:"null"`
+				TriggerGeneratedMappingAt  *time.Time `gorm:"null"`
+				TriggerImportedTLEAt       *time.Time `gorm:"null"`
+				TriggerImportedSatelliteAt *time.Time `gorm:"null"`
 			}
 
 			// Define the Satellite table
@@ -77,24 +84,32 @@ func init() {
 
 			// Define the many-to-many relationship tables
 			type ContextSatellite struct {
-				ContextID   string    `gorm:"not null;index"`
-				SatelliteID string    `gorm:"not null;index"`
+				ContextID   string    `gorm:"not null;index;uniqueIndex:unique_context_satellite"`
+				SatelliteID string    `gorm:"not null;index;uniqueIndex:unique_context_satellite"`
 				Context     Context   `gorm:"constraint:OnDelete:CASCADE;foreignKey:ContextID;references:ID"`
 				Satellite   Satellite `gorm:"constraint:OnDelete:CASCADE;foreignKey:SatelliteID;references:ID"`
 			}
 
 			type ContextTLE struct {
-				ContextID string  `gorm:"not null;index"`
-				TLEID     string  `gorm:"not null;index"`
+				ContextID string  `gorm:"not null;index;uniqueIndex:unique_context_tle"`
+				TLEID     string  `gorm:"not null;index;uniqueIndex:unique_context_tle"`
 				Context   Context `gorm:"constraint:OnDelete:CASCADE;foreignKey:ContextID;references:ID"`
 				TLE       TLE     `gorm:"constraint:OnDelete:CASCADE;foreignKey:TLEID;references:ID"`
 			}
 
 			type ContextTile struct {
-				ContextID string  `gorm:"not null;index"` // Foreign key to Context table
-				TileID    string  `gorm:"not null;index"` // Foreign key to Tile table
+				ContextID string  `gorm:"not null;index;uniqueIndex:unique_context_tile"`
+				TileID    string  `gorm:"not null;index;uniqueIndex:unique_context_tile"`
 				Context   Context `gorm:"constraint:OnDelete:CASCADE;foreignKey:ContextID;references:ID"`
 				Tile      Tile    `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
+			}
+
+			if err := db.Exec(`
+				ALTER TABLE contexts
+				ADD CONSTRAINT unique_tenant_context_name
+				UNIQUE (tenant_id, name);
+			`).Error; err != nil {
+				return err
 			}
 
 			// AutoMigrate all tables
@@ -111,31 +126,17 @@ func init() {
 				return err
 			}
 
-			// Add unique constraints for many-to-many tables
-			if err := db.Exec(`
-				ALTER TABLE context_satellites
-				ADD CONSTRAINT unique_context_satellite UNIQUE (context_id, satellite_id);
-
-				ALTER TABLE context_tles
-				ADD CONSTRAINT unique_context_tle UNIQUE (context_id, tle_id);
-
-				ALTER TABLE context_tiles
-				ADD CONSTRAINT unique_context_tile UNIQUE (context_id, tile_id);
-			`).Error; err != nil {
-				return err
-			}
-
 			return nil
 		},
 		Rollback: func(db *gorm.DB) error {
-			// Drop constraints and tables in reverse order
+			// Drop tables in reverse order of dependencies
 			if err := db.Exec(`
-				ALTER TABLE context_satellites DROP CONSTRAINT IF EXISTS unique_context_satellite;
-				ALTER TABLE context_tles DROP CONSTRAINT IF EXISTS unique_context_tle;
-				ALTER TABLE context_tiles DROP CONSTRAINT IF EXISTS unique_context_tile;
+				ALTER TABLE contexts
+				DROP CONSTRAINT IF EXISTS unique_tenant_context_name;
 			`).Error; err != nil {
 				return err
 			}
+
 			return db.Migrator().DropTable(
 				"context_satellites",
 				"context_tles",

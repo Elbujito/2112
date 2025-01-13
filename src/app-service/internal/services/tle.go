@@ -18,14 +18,14 @@ type celestrackClient interface {
 type TleService struct {
 	celestrackClient celestrackClient
 	tleRepo          repository.TleRepository
-	contextRepo      domain.ContextRepository
+	contextRepo      domain.GameContextRepository
 }
 
 // NewTleService creates a new instance of TleService.
 func NewTleService(
 	celestrackClient celestrackClient,
 	tleRepo repository.TleRepository,
-	contextRepo domain.ContextRepository,
+	contextRepo domain.GameContextRepository,
 ) TleService {
 	return TleService{
 		celestrackClient: celestrackClient,
@@ -35,9 +35,9 @@ func NewTleService(
 }
 
 // FetchTLEFromSatCatByCategory fetches TLEs from a given category and associates them with a context.
-func (s *TleService) FetchTLEFromSatCatByCategory(ctx context.Context, category, contextID string) ([]domain.TLE, error) {
+func (s *TleService) FetchTLEFromSatCatByCategory(ctx context.Context, category string, contextName domain.GameContextName) ([]domain.TLE, error) {
 	// Validate the contextID
-	if _, err := s.contextRepo.FindByID(ctx, contextID); err != nil {
+	if _, err := s.contextRepo.FindByUniqueName(ctx, contextName); err != nil {
 		return nil, fmt.Errorf("invalid contextID: %w", err)
 	}
 
@@ -56,7 +56,7 @@ func (s *TleService) FetchTLEFromSatCatByCategory(ctx context.Context, category,
 			raw.Line1,
 			raw.Line2,
 			nowUtc,
-			contextID, // Associate with the context
+			string(contextName), // Associate with the context
 			true,
 			false,
 		)
@@ -71,9 +71,9 @@ func (s *TleService) FetchTLEFromSatCatByCategory(ctx context.Context, category,
 }
 
 // FetchSatelliteMetadata retrieves metadata about satellites and associates them with a context.
-func (s *TleService) FetchSatelliteMetadata(ctx context.Context, contextID string) ([]domain.Satellite, error) {
+func (s *TleService) FetchSatelliteMetadata(ctx context.Context, contextName domain.GameContextName) ([]domain.Satellite, error) {
 	// Validate the contextID
-	if _, err := s.contextRepo.FindByID(ctx, contextID); err != nil {
+	if _, err := s.contextRepo.FindByUniqueName(ctx, contextName); err != nil {
 		return nil, fmt.Errorf("invalid contextID: %w", err)
 	}
 

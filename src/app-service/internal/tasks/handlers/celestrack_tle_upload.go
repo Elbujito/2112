@@ -13,7 +13,7 @@ import (
 )
 
 type TleServiceClient interface {
-	FetchTLEFromSatCatByCategory(ctx context.Context, category string, contextID string) ([]domain.TLE, error)
+	FetchTLEFromSatCatByCategory(ctx context.Context, category string, contextName domain.GameContextName) ([]domain.TLE, error)
 }
 
 type CelestrackTleUploadHandler struct {
@@ -37,7 +37,7 @@ func (h *CelestrackTleUploadHandler) GetTask() Task {
 	return Task{
 		Name:         "celestrack_tle_upload",
 		Description:  "Fetch TLE from CelesTrak and upsert it in the database",
-		RequiredArgs: []string{"category", "maxCount", "contextID"},
+		RequiredArgs: []string{"category", "maxCount", "contextName"},
 	}
 }
 
@@ -53,7 +53,7 @@ func (h *CelestrackTleUploadHandler) Run(ctx context.Context, args map[string]st
 		return fmt.Errorf("missing required argument: maxCount")
 	}
 
-	contextID, ok := args["contextID"]
+	contextName, ok := args["contextName"]
 	if !ok || nbTles == "" {
 		return fmt.Errorf("missing required argument: maxCount")
 	}
@@ -64,7 +64,7 @@ func (h *CelestrackTleUploadHandler) Run(ctx context.Context, args map[string]st
 		return fmt.Errorf("invalid value for max: %v", err)
 	}
 
-	tles, err := h.tleService.FetchTLEFromSatCatByCategory(ctx, category, contextID)
+	tles, err := h.tleService.FetchTLEFromSatCatByCategory(ctx, category, domain.GameContextName(contextName))
 	if err != nil {
 		return fmt.Errorf("failed to fetch TLE catalog for category %s: %v", category, err)
 	}

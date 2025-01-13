@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	apicontext "github.com/Elbujito/2112/src/app-service/internal/api/handlers/context"
 	"github.com/Elbujito/2112/src/app-service/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/healthz"
 	"github.com/Elbujito/2112/src/app-service/internal/api/handlers/satellites"
@@ -138,9 +139,9 @@ func (r *PublicRouter) registerPublicApiErrorHandlers() {
 
 // Register public API routes
 func (r *PublicRouter) registerPublicAPIRoutes() {
-
 	// Initialize the SatelliteHandler with the SatelliteService from ServiceComponent
 	satelliteHandler := satellites.NewSatelliteHandler(r.ServiceComponent.SatelliteService)
+	contextHandler := apicontext.NewContextHandler(r.ServiceComponent.ContextService)
 	tileHandler := tiles.NewTileHandler(r.ServiceComponent.TileService)
 
 	satellite := r.Echo.Group("/satellites")
@@ -155,4 +156,13 @@ func (r *PublicRouter) registerPublicAPIRoutes() {
 	tile.GET("/mappings", tileHandler.GetPaginatedSatelliteMappings)
 	tile.PUT("/mappings/recompute/bynoradID", tileHandler.RecomputeMappingsByNoradID)
 	tile.GET("/mappings/bynoradID", tileHandler.GetSatelliteMappingsByNoradID)
+
+	context := r.Echo.Group("/contexts")
+	context.GET("/all", contextHandler.GetPaginatedContexts)
+	context.POST("/", contextHandler.CreateContext)                    // Create a new context
+	context.PUT("/:name", contextHandler.UpdateContext)                // Update an existing context by name
+	context.GET("/:name", contextHandler.GetContextByName)             // Get context details by name
+	context.DELETE("/:name", contextHandler.DeleteContextByName)       // Delete a context by name
+	context.PUT("/:name/activate", contextHandler.ActivateContext)     // Activate a context by name
+	context.PUT("/:name/deactivate", contextHandler.DeactivateContext) // Deactivate a context by name
 }

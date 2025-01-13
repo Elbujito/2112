@@ -223,7 +223,7 @@ func (r *SatelliteRepository) RemoveSatelliteFromContext(ctx context.Context, co
 }
 
 // FindContextsBySatellite retrieves contexts associated with a given satellite.
-func (r *SatelliteRepository) FindContextsBySatellite(ctx context.Context, satelliteID string) ([]domain.Context, error) {
+func (r *SatelliteRepository) FindContextsBySatellite(ctx context.Context, satelliteID string) ([]domain.GameContext, error) {
 	var contexts []models.Context
 	result := r.db.DbHandler.Table("contexts").
 		Joins("JOIN context_satellites ON contexts.id = context_satellites.context_id").
@@ -234,7 +234,7 @@ func (r *SatelliteRepository) FindContextsBySatellite(ctx context.Context, satel
 		return nil, result.Error
 	}
 
-	var domainContexts []domain.Context
+	var domainContexts []domain.GameContext
 	for _, contextModel := range contexts {
 		domainContexts = append(domainContexts, models.MapToContextDomain(contextModel))
 	}
