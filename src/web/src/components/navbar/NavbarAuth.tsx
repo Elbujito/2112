@@ -254,7 +254,7 @@ function NavbarAuth(props: {
           </div>
         </div>
       </div>
-      <a
+      {/* <a
         target="blank"
         href="https://horizon-ui.com/pro?ref=live-pro-tailwind-react"
         className="hidden xl:flex"
@@ -262,7 +262,7 @@ function NavbarAuth(props: {
         <button className="linear hidden items-center justify-center rounded-3xl bg-white px-8 py-2 text-base font-medium text-brand-500 transition duration-200 hover:opacity-90 active:opacity-80 xl:flex">
           Buy Now
         </button>
-      </a>
+      </a> */}
     </div>
   );
 }

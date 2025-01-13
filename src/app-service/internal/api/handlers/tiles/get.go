@@ -22,7 +22,7 @@ func NewTileHandler(service services.TileService) *TileHandler {
 
 // GetAllTiles fetches all available tiles.
 func (h *TileHandler) GetAllTiles(c echo.Context) error {
-	tiles, err := h.Service.FindAllTiles(c.Request().Context())
+	tiles, err := h.Service.FindAllTiles(c.Request().Context(), "todoTileHandler")
 	if err != nil {
 		c.Echo().Logger.Error("Failed to fetch tiles: ", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to fetch tiles")
@@ -65,7 +65,7 @@ func (h *TileHandler) GetTilesInRegionHandler(c echo.Context) error {
 	}
 
 	// Call the service to fetch tiles
-	tiles, err := h.Service.GetTilesInRegion(c.Request().Context(), minLat, minLon, maxLat, maxLon)
+	tiles, err := h.Service.GetTilesInRegion(c.Request().Context(), "todoTileHandler", minLat, minLon, maxLat, maxLon)
 	if err != nil {
 		c.Logger().Error("Failed to fetch tiles in region:", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "unable to fetch tiles in region")
@@ -99,7 +99,7 @@ func (h *TileHandler) GetPaginatedSatelliteMappings(c echo.Context) error {
 	}
 
 	// Call the service method for pagination with search filters
-	mappings, totalRecords, err := h.Service.ListSatellitesMappingWithPagination(c.Request().Context(), page, pageSize, searchRequest)
+	mappings, totalRecords, err := h.Service.ListSatellitesMappingWithPagination(c.Request().Context(), "todoTileHandler", page, pageSize, searchRequest)
 	if err != nil {
 		c.Echo().Logger.Error("Failed to fetch paginated satellites mappings: ", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to fetch satellites mappings")
@@ -122,7 +122,7 @@ func (h *TileHandler) GetSatelliteMappingsByNoradID(c echo.Context) error {
 	noradID := c.QueryParam("noradID")
 
 	// Call the service to fetch mappings
-	mappings, err := h.Service.GetSatelliteMappingsByNoradID(c.Request().Context(), noradID)
+	mappings, err := h.Service.GetSatelliteMappingsByNoradID(c.Request().Context(), "todoTileHandler", noradID)
 	if err != nil {
 		c.Logger().Error("Failed to fetch mappings:", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "unable to fetch mappings by norad ID [%s]", noradID)
@@ -165,7 +165,7 @@ func (h *TileHandler) RecomputeMappingsByNoradID(c echo.Context) error {
 	}
 
 	// Call the service method to recompute mappings
-	err = h.Service.RecomputeMappings(c.Request().Context(), noradID, startTime, endTime)
+	err = h.Service.RecomputeMappings(c.Request().Context(), "todoTileHandler", noradID, startTime, endTime)
 	if err != nil {
 		c.Logger().Error("Failed to recompute mappings for NORAD ID:", noradID, "Error:", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Unable to recompute mappings for NORAD ID")

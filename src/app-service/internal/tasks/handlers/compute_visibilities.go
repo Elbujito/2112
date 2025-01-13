@@ -95,7 +95,7 @@ func (h *ComputeVisibilitiessHandler) Subscribe(ctx context.Context, channel str
 		log.Printf("Received visibility request for UID: %s at location (%.6f, %.6f) with radius %.2f, horizon %.2f, from %s to %s\n",
 			request.UID, request.Latitude, request.Longitude, request.Radius, request.Horizon, startTime, endTime)
 
-		return h.computeVisibility(ctx, request.UID, request.Latitude, request.Longitude, request.Radius, startTime, endTime)
+		return h.computeVisibility(ctx, request.UID, "toprovideincomputeVisibility", request.Latitude, request.Longitude, request.Radius, startTime, endTime)
 	})
 
 	if err != nil {
@@ -107,7 +107,7 @@ func (h *ComputeVisibilitiessHandler) Subscribe(ctx context.Context, channel str
 }
 
 // computeVisibility computes visibilities for a given user location and time range.
-func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid string, latitude, longitude, radius float64, startTime, endTime time.Time) error {
+func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid string, contextID string, latitude, longitude, radius float64, startTime, endTime time.Time) error {
 	if latitude < -90 || latitude > 90 {
 		return fmt.Errorf("latitude out of bounds: %f", latitude)
 	}
@@ -118,7 +118,7 @@ func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid
 		return fmt.Errorf("radius must be greater than 0")
 	}
 
-	tiles, err := h.tileRepo.FindTilesIntersectingLocation(ctx, latitude, longitude, radius)
+	tiles, err := h.tileRepo.FindTilesIntersectingLocation(ctx, contextID, latitude, longitude, radius)
 	if err != nil {
 		return fmt.Errorf("failed to find tiles intersecting location: %w", err)
 	}
@@ -132,7 +132,7 @@ func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid
 		tileIDs = append(tileIDs, tile.ID)
 	}
 
-	satellites, err := h.mappingRepo.FindSatellitesForTiles(ctx, tileIDs)
+	satellites, err := h.mappingRepo.FindSatellitesForTiles(ctx, contextID, tileIDs)
 	if err != nil {
 		return fmt.Errorf("failed to find satellites for tiles: %w", err)
 	}
@@ -168,8 +168,6 @@ func (h *ComputeVisibilitiessHandler) computeVisibility(ctx context.Context, uid
 			"userUID": uid,
 		}
 		visibilities = append(visibilities, visibility)
-
-		log.Printf("Published visibility for UID: %s\n", uid)
 	}
 
 	cachedData, err := json.Marshal(visibilities)

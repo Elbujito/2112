@@ -74,7 +74,7 @@ func (h *SatellitesTilesMappingsHandler) Exec(ctx context.Context, id string, st
 	}
 
 	log.Printf("Computing mappings for satellite %s\n", sat.NoradID)
-	if err := h.computeTileMappings(ctx, sat, positions); err != nil {
+	if err := h.computeTileMappings(ctx, "todoSatellitesTilesMappingsHandler", sat, positions); err != nil {
 		return fmt.Errorf("error computing mappings for satellite %s: %w", sat.NoradID, err)
 	}
 
@@ -85,12 +85,13 @@ func (h *SatellitesTilesMappingsHandler) Exec(ctx context.Context, id string, st
 // computeTileMappings computes visibility for a list of satellite positions.
 func (h *SatellitesTilesMappingsHandler) computeTileMappings(
 	ctx context.Context,
+	contextID string,
 	sat domain.Satellite,
 	positions []domain.SatellitePosition,
 ) error {
 	log.Printf("Finding visible tiles for satellite %s along its path\n", sat.NoradID)
 
-	err := h.mappingRepo.DeleteMappingsByNoradID(ctx, sat.NoradID)
+	err := h.mappingRepo.DeleteMappingsByNoradID(ctx, contextID, sat.NoradID)
 	if err != nil {
 		return fmt.Errorf("failed to delete visible tiles along the path: %w", err)
 	}

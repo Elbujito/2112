@@ -50,7 +50,7 @@ build-redis: ## Build the Redis service
 
 .PHONY: up
 up: ## Start all services
-	docker-compose -f $(DOCKER_COMPOSE_FILE) up -d
+	docker-compose -f $(DOCKER_COMPOSE_FILE) up
 
 .PHONY: down
 down: ## Stop all services

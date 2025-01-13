@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/Elbujito/2112/src/app-service/internal/domain"
+)
 
 // TLE Model
 type TLE struct {
@@ -11,17 +15,23 @@ type TLE struct {
 	Epoch   time.Time `gorm:"not null"` // Time associated with the TLE
 }
 
-// MapToForm converts the TLE model to a TLEForm structure
-func (model *TLE) MapToForm() *TLEForm {
-	return &TLEForm{
-		FormBase: FormBase{
-			ID:        model.ID,
-			CreatedAt: model.CreatedAt,
-			UpdatedAt: model.UpdatedAt,
+// MapToDomain converts a models.Tile to a domain.Tile.
+func MapToTLEDomain(t TLE) domain.TLE {
+	// Convert to domain
+	return domain.TLE{
+		ModelBase: domain.ModelBase{
+			ID:          t.ID,
+			CreatedAt:   t.CreatedAt,
+			UpdatedAt:   &t.UpdatedAt,
+			DeleteAt:    t.DeleteAt,
+			ProcessedAt: t.ProcessedAt,
+			IsActive:    t.IsActive,
+			IsFavourite: t.IsFavourite,
+			DisplayName: t.DisplayName,
 		},
-		NoradID: model.NoradID,
-		Line1:   model.Line1,
-		Line2:   model.Line2,
-		Epoch:   model.Epoch.Format(time.RFC3339), // ISO8601 format
+		NoradID: t.NoradID,
+		Line1:   t.Line1,
+		Line2:   t.Line2,
+		Epoch:   t.Epoch,
 	}
 }

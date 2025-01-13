@@ -32,38 +32,49 @@ func NewTileService(
 	}
 }
 
-// FindAllTiles retrieves all tiles from the repository.
-func (s *TileService) FindAllTiles(ctx context.Context) ([]domain.Tile, error) {
-	tiles, err := s.repo.FindAll(ctx)
+// FindAllTiles retrieves all tiles associated with a specific context.
+func (s *TileService) FindAllTiles(ctx context.Context, contextID string) ([]domain.Tile, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	tiles, err := s.repo.FindTilesInRegion(ctx, contextID, -90, -180, 90, 180) // World bounding box
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch tiles: %w", err)
+		return nil, fmt.Errorf("failed to fetch tiles for context [%s]: %w", contextID, err)
 	}
 
 	if len(tiles) == 0 {
-		return nil, fmt.Errorf("no tiles found")
+		return nil, fmt.Errorf("no tiles found for context [%s]", contextID)
 	}
 
 	return tiles, nil
 }
 
-// GetTilesInRegion fetches tiles that intersect with the given bounding box.
-func (s *TileService) GetTilesInRegion(ctx context.Context, minLat, minLon, maxLat, maxLon float64) ([]domain.Tile, error) {
+// GetTilesInRegion fetches tiles that intersect with a bounding box and belong to a specific context.
+func (s *TileService) GetTilesInRegion(ctx context.Context, contextID string, minLat, minLon, maxLat, maxLon float64) ([]domain.Tile, error) {
 	// Validate input
 	if minLat >= maxLat || minLon >= maxLon {
 		return nil, fmt.Errorf("invalid bounding box coordinates")
 	}
 
-	// Call the repository to fetch tiles
-	tiles, err := s.repo.FindTilesInRegion(ctx, minLat, minLon, maxLat, maxLon)
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	tiles, err := s.repo.FindTilesInRegion(ctx, contextID, minLat, minLon, maxLat, maxLon)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching tiles in region: %w", err)
+		return nil, fmt.Errorf("error fetching tiles in region for context [%s]: %w", contextID, err)
 	}
 
 	return tiles, nil
 }
 
-// ListSatellitesMappingWithPagination retrieves satellites with pagination and includes a flag indicating if a TLE is present.
-func (s *TileService) ListSatellitesMappingWithPagination(ctx context.Context, page int, pageSize int, search *domain.SearchRequest) ([]domain.TileSatelliteInfo, int64, error) {
+// ListSatellitesMappingWithPagination retrieves mappings with pagination for a specific context.
+func (s *TileService) ListSatellitesMappingWithPagination(ctx context.Context, contextID string, page int, pageSize int, search *domain.SearchRequest) ([]domain.TileSatelliteInfo, int64, error) {
 	// Validate inputs
 	if page <= 0 {
 		return nil, 0, fmt.Errorf("page must be greater than 0")
@@ -72,33 +83,51 @@ func (s *TileService) ListSatellitesMappingWithPagination(ctx context.Context, p
 		return nil, 0, fmt.Errorf("pageSize must be greater than 0")
 	}
 
-	// Fetch satellites with pagination and TLE flag
-	mappings, totalRecords, err := s.mappingRepo.ListSatellitesMappingWithPagination(ctx, page, pageSize, search)
+	select {
+	case <-ctx.Done():
+		return nil, 0, ctx.Err()
+	default:
+	}
+
+	mappings, totalRecords, err := s.mappingRepo.ListSatellitesMappingWithPagination(ctx, contextID, page, pageSize, search)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to retrieve satellites mapping with paginations: %w", err)
+		return nil, 0, fmt.Errorf("failed to retrieve satellites mapping with pagination for context [%s]: %w", contextID, err)
 	}
 
 	return mappings, totalRecords, nil
 }
 
-func (s *TileService) GetSatelliteMappingsByNoradID(ctx context.Context, noradID string) ([]domain.TileSatelliteInfo, error) {
-	mappings, err := s.mappingRepo.GetSatelliteMappingsByNoradID(ctx, noradID)
+// GetSatelliteMappingsByNoradID retrieves mappings for a specific NORAD ID and context.
+func (s *TileService) GetSatelliteMappingsByNoradID(ctx context.Context, contextID, noradID string) ([]domain.TileSatelliteInfo, error) {
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	default:
+	}
+
+	mappings, err := s.mappingRepo.GetSatelliteMappingsByNoradID(ctx, contextID, noradID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to retrieve satellites mapping for [%s]: %w", noradID, err)
+		return nil, fmt.Errorf("failed to retrieve satellite mappings for NORAD ID [%s] in context [%s]: %w", noradID, contextID, err)
 	}
 
 	return mappings, nil
 }
 
-// RecomputeMappings deletes existing mappings for a NORAD ID and computes new ones.
-func (s *TileService) RecomputeMappings(ctx context.Context, noradID string, startTime, endTime time.Time) error {
-	log.Printf("Recomputing mappings for NORAD ID: %s\n", noradID)
+// RecomputeMappings deletes existing mappings for a NORAD ID in a specific context and computes new ones.
+func (s *TileService) RecomputeMappings(ctx context.Context, contextID, noradID string, startTime, endTime time.Time) error {
+	log.Printf("Recomputing mappings for NORAD ID: %s in context: %s\n", noradID, contextID)
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+	}
 
 	// Step 1: Delete existing mappings
-	if err := s.mappingRepo.DeleteMappingsByNoradID(ctx, noradID); err != nil {
-		return fmt.Errorf("failed to delete existing mappings for NORAD ID [%s]: %w", noradID, err)
+	if err := s.mappingRepo.DeleteMappingsByNoradID(ctx, contextID, noradID); err != nil {
+		return fmt.Errorf("failed to delete existing mappings for NORAD ID [%s] in context [%s]: %w", noradID, contextID, err)
 	}
-	log.Printf("Deleted existing mappings for NORAD ID: %s\n", noradID)
+	log.Printf("Deleted existing mappings for NORAD ID: %s in context: %s\n", noradID, contextID)
 
 	// Step 2: Fetch satellite data
 	satellite, err := s.satelliteRepo.FindByNoradID(ctx, noradID)
@@ -112,7 +141,6 @@ func (s *TileService) RecomputeMappings(ctx context.Context, noradID string, sta
 		return fmt.Errorf("failed to fetch satellite positions for NORAD ID [%s]: %w", noradID, err)
 	}
 
-	// Ensure there are enough positions to compute mappings
 	if len(positions) < 2 {
 		log.Printf("Not enough positions to compute mappings for NORAD ID: %s\n", noradID)
 		return nil
@@ -129,6 +157,6 @@ func (s *TileService) RecomputeMappings(ctx context.Context, noradID string, sta
 		return fmt.Errorf("failed to save new mappings for NORAD ID [%s]: %w", noradID, err)
 	}
 
-	log.Printf("Recomputed and saved %d mappings for NORAD ID: %s\n", len(mappings), noradID)
+	log.Printf("Recomputed and saved %d mappings for NORAD ID: %s in context: %s\n", len(mappings), noradID, contextID)
 	return nil
 }
