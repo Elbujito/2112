@@ -189,7 +189,6 @@ func (r *TileRepository) FindTilesVisibleFromLine(ctx context.Context, sat domai
 		tile := models.MapToDomain(res.Tile)
 
 		// Parse intersection geometry
-		log.Printf("Processing Tile ID: %s, Raw IntersectionGeom: %s", tile.ID, res.IntersectionGeom)
 		interestPoint, err := parseIntersectionGeometry(res.IntersectionGeom)
 		if err != nil {
 			log.Printf("Failed to parse intersection geometry for TileID %s: %v\n", tile.ID, err)

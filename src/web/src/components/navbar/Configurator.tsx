@@ -247,9 +247,9 @@ export default function HeaderLinks(props: { [x: string]: any }) {
                   Configurator
                 </p>
                 <p className="text-md flex font-medium text-gray-600">
-                  Horizon UI PRO TS
+                  2112 Project
                   <span className="ml-1.5 flex items-center rounded-3xl bg-brand-50 px-2 text-sm font-semibold text-brand-500 dark:bg-white/10 dark:text-white">
-                    v2.0.0
+                    v0.0.1
                   </span>
                 </p>
               </div>

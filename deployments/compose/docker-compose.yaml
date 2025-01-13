@@ -193,6 +193,24 @@ services:
   #     - "3000:3000"
   #   restart: unless-stopped
 
+  # tle-propagator-service:
+  #   build:
+  #     context: ../../.
+  #     dockerfile: deployments/docker/Dockerfile.tle-propagator
+  #   container_name: tle-propagator-service
+  #   env_file: ../config/tle-propagator-service.dev-env
+  #   ports:
+  #     - "5001:5000"
+  #   depends_on:
+  #     redis-service:
+  #       condition: service_healthy
+    # restart: always
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 3
+
 volumes:
   redis-data:
   postgres-data:

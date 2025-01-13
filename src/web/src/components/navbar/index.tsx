@@ -106,9 +106,9 @@ const Navbar = (props: {
                 <BsArrowBarUp />
               </div>
               <div className="ml-2 flex h-full w-full flex-col justify-center rounded-lg px-1 text-sm">
-                <p className="mb-1 text-left text-base font-bold text-gray-900 dark:text-white">
+                {/* <p className="mb-1 text-left text-base font-bold text-gray-900 dark:text-white">
                   New Update: Horizon UI Dashboard PRO
-                </p>
+                </p> */}
                 <p className="font-base text-left text-xs text-gray-900 dark:text-white">
                   A new update for your downloaded item is available!
                 </p>
@@ -120,9 +120,9 @@ const Navbar = (props: {
                 <BsArrowBarUp />
               </div>
               <div className="ml-2 flex h-full w-full flex-col justify-center rounded-lg px-1 text-sm">
-                <p className="mb-1 text-left text-base font-bold text-gray-900 dark:text-white">
+                {/* <p className="mb-1 text-left text-base font-bold text-gray-900 dark:text-white">
                   New Update: Horizon UI Dashboard PRO
-                </p>
+                </p> */}
                 <p className="font-base text-left text-xs text-gray-900 dark:text-white">
                   A new update for your downloaded item is available!
                 </p>
@@ -141,7 +141,7 @@ const Navbar = (props: {
           animation="origin-[75%_0%] md:origin-top-right transition-all duration-300 ease-in-out"
         >
           <div className="flex w-[350px] flex-col gap-2 rounded-[20px] bg-white p-4 shadow-xl shadow-shadow-500 dark:!bg-navy-700 dark:text-white dark:shadow-none">
-            <div
+            {/* <div
               style={{
                 backgroundImage: `url(${navbarimage.src})`,
                 backgroundRepeat: 'no-repeat',
@@ -155,7 +155,7 @@ const Navbar = (props: {
               className="px-full linear flex cursor-pointer items-center justify-center rounded-xl bg-brand-500 py-[11px] font-bold text-white transition duration-200 hover:bg-brand-600 hover:text-white active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200"
             >
               Buy Horizon UI PRO
-            </a>
+            </a> */}
             <a
               target="blank"
               href="https://horizon-ui.com/docs-tailwind/docs/react/installation?ref=live-pro-tailwind-react"
@@ -163,13 +163,13 @@ const Navbar = (props: {
             >
               See Documentation
             </a>
-            <a
+            {/* <a
               target="blank"
               href="https://horizon-ui.com/?ref=live-pro-tailwind-react"
               className="px-full linear hover:bg-black flex cursor-pointer items-center justify-center rounded-xl py-[11px] font-bold text-navy-700 transition duration-200 hover:text-navy-700 dark:text-white dark:hover:text-white"
             >
               Try Horizon Free
-            </a>
+            </a> */}
           </div>
         </Dropdown>
         <Configurator
@@ -209,7 +209,7 @@ const Navbar = (props: {
             <div className="ml-4 mt-3">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-bold text-navy-700 dark:text-white">
-                  👋 Hey, Adela
+                  👋 Hey, Elbujito
                 </p>{' '}
               </div>
             </div>
