@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"io"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	log "github.com/Elbujito/2112/src/app-service/pkg/log"
 	traceConfig "github.com/Elbujito/2112/src/app-service/pkg/tracing/config"
 )
 
@@ -68,6 +70,13 @@ func init() {
 	if err != nil {
 		return
 	}
+
+	var logWriter io.Writer
+	logger, err := log.NewLogger(logWriter, log.Level("debug"), log.LoggerTypes.Logrus())
+	if err != nil {
+		panic(err)
+	}
+	log.SetDefaultLogger(logger)
 
 }
 

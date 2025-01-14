@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	log "github.com/Elbujito/2112/src/app-service/pkg/log"
 	"github.com/Elbujito/2112/src/app-service/pkg/tracing"
 )
 
@@ -122,7 +123,9 @@ func (c *ContextService) AssignSatellite(ctx context.Context, name domain.GameCo
 	ctx, span := tracing.NewSpan(ctx, "AssignSatellite")
 	defer span.EndWithError(err)
 	err = c.repo.AssignSatellite(ctx, name, satelliteID)
+	ctxLog := log.WithFields(log.Fields{"func": "AssignSatellite"})
 	if err != nil {
+		ctxLog.WithError(err).Error("failed to assign satellite")
 		return err
 	}
 	return nil
