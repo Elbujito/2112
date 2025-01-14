@@ -10,6 +10,8 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/proc"
 
 	"github.com/spf13/cobra"
+
+	traceConfig "github.com/Elbujito/2112/src/app-service/pkg/tracing/config"
 )
 
 var Version string
@@ -45,7 +47,6 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&config.DevModeFlag, "dev", "d", false, "Run in development mode")
 	rootCmd.PersistentFlags().BoolVarP(&config.EnvModeFlag, "env", "e", false, "Print environment before execution")
 	rootCmd.PersistentFlags().StringVarP(&config.LogLevelFlag, "log", "l", "", "Log Level")
-
 	// Initialize app config
 	cobra.OnInitialize(initEnv)
 
@@ -53,6 +54,21 @@ func init() {
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		execRootPersistentPreRun()
 	}
+
+	traceCfg := traceConfig.Config{
+		Type: config.ExporterType,
+		Config: map[string]interface{}{
+			"service":  &config.Env.ServiceName,
+			"endpoint": &config.PushEndpoint,
+			"fraction": &config.SamplingFraction,
+		},
+	}
+
+	err := traceCfg.NewTracer()
+	if err != nil {
+		return
+	}
+
 }
 
 func initEnv() {

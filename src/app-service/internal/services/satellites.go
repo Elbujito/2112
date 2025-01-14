@@ -9,6 +9,7 @@ import (
 	propagator "github.com/Elbujito/2112/src/app-service/internal/clients/propagate"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
+	"github.com/Elbujito/2112/src/app-service/pkg/tracing"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xspace"
 )
 
@@ -24,7 +25,9 @@ func NewSatelliteService(tleRepo repository.TleRepository, propagateClient *prop
 	return SatelliteService{tleRepo: tleRepo, propagateClient: propagateClient, celestrackClient: celestrackClient, repo: repo}
 }
 
-func (s *SatelliteService) Propagate(ctx context.Context, noradID string, duration time.Duration, interval time.Duration) ([]xspace.SatellitePosition, error) {
+func (s *SatelliteService) Propagate(ctx context.Context, noradID string, duration time.Duration, interval time.Duration) (pos []xspace.SatellitePosition, err error) {
+	ctx, span := tracing.NewSpan(ctx, "Propagate")
+	defer span.EndWithError(err)
 	// Validate inputs
 	if noradID == "" {
 		return nil, fmt.Errorf("NORAD ID is required")
@@ -102,15 +105,21 @@ func (s *SatelliteService) Propagate(ctx context.Context, noradID string, durati
 }
 
 // GetSatelliteByNoradID retrieves a satellite by NORAD ID.
-func (s *SatelliteService) GetSatelliteByNoradID(ctx context.Context, noradID string) (domain.Satellite, error) {
+func (s *SatelliteService) GetSatelliteByNoradID(ctx context.Context, noradID string) (satellite domain.Satellite, err error) {
+	ctx, span := tracing.NewSpan(ctx, "GetSatelliteByNoradID")
+	defer span.EndWithError(err)
 	return s.repo.FindByNoradID(ctx, noradID)
 }
 
 // ListAllSatellites retrieves all stored satellites.
-func (s *SatelliteService) ListAllSatellites(ctx context.Context) ([]domain.Satellite, error) {
+func (s *SatelliteService) ListAllSatellites(ctx context.Context) (satellite []domain.Satellite, err error) {
+	ctx, span := tracing.NewSpan(ctx, "ListAllSatellites")
+	defer span.EndWithError(err)
 	return s.repo.FindAll(ctx)
 }
-func (s *SatelliteService) FetchAndStoreAllSatellites(ctx context.Context, maxCount int) ([]domain.Satellite, error) {
+func (s *SatelliteService) FetchAndStoreAllSatellites(ctx context.Context, maxCount int) (satellite []domain.Satellite, err error) {
+	ctx, span := tracing.NewSpan(ctx, "FetchAndStoreAllSatellites")
+	defer span.EndWithError(err)
 	// Fetch all satellite metadata from CelestrackClient
 	rawSatellites, err := s.celestrackClient.FetchSatelliteMetadata(ctx)
 	if err != nil {
@@ -162,7 +171,9 @@ func (s *SatelliteService) FetchAndStoreAllSatellites(ctx context.Context, maxCo
 }
 
 // ListSatellitesWithPaginationAndTLE retrieves satellites with pagination and includes a flag indicating if a TLE is present.
-func (s *SatelliteService) ListSatellitesWithPagination(ctx context.Context, page int, pageSize int, search *domain.SearchRequest) ([]domain.Satellite, int64, error) {
+func (s *SatelliteService) ListSatellitesWithPagination(ctx context.Context, page int, pageSize int, search *domain.SearchRequest) (satellite []domain.Satellite, count int64, err error) {
+	ctx, span := tracing.NewSpan(ctx, "ListSatellitesWithPagination")
+	defer span.EndWithError(err)
 	// Validate inputs
 	if page <= 0 {
 		return nil, 0, fmt.Errorf("page must be greater than 0")
@@ -181,7 +192,9 @@ func (s *SatelliteService) ListSatellitesWithPagination(ctx context.Context, pag
 }
 
 // ListSatelliteInfoWithPagination retrieves SatelliteInfo objects with pagination.
-func (s *SatelliteService) ListSatelliteInfoWithPagination(ctx context.Context, page int, pageSize int, search *domain.SearchRequest) ([]domain.SatelliteInfo, int64, error) {
+func (s *SatelliteService) ListSatelliteInfoWithPagination(ctx context.Context, page int, pageSize int, search *domain.SearchRequest) (satellite []domain.SatelliteInfo, count int64, err error) {
+	ctx, span := tracing.NewSpan(ctx, "ListSatelliteInfoWithPagination")
+	defer span.EndWithError(err)
 	// Validate inputs
 	if page <= 0 {
 		return nil, 0, fmt.Errorf("page must be greater than 0")

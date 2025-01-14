@@ -8,6 +8,7 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/api/mappers"
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
+	"github.com/Elbujito/2112/src/app-service/pkg/tracing"
 )
 
 type celestrackClient interface {
@@ -35,7 +36,9 @@ func NewTleService(
 }
 
 // FetchTLEFromSatCatByCategory fetches TLEs from a given category and associates them with a context.
-func (s *TleService) FetchTLEFromSatCatByCategory(ctx context.Context, category string, contextName domain.GameContextName) ([]domain.TLE, error) {
+func (s *TleService) FetchTLEFromSatCatByCategory(ctx context.Context, category string, contextName domain.GameContextName) (ts []domain.TLE, err error) {
+	ctx, span := tracing.NewSpan(ctx, "FetchTLEFromSatCatByCategory")
+	defer span.EndWithError(err)
 	// Validate the contextID
 	if _, err := s.contextRepo.FindByUniqueName(ctx, contextName); err != nil {
 		return nil, fmt.Errorf("invalid contextID: %w", err)
@@ -71,7 +74,9 @@ func (s *TleService) FetchTLEFromSatCatByCategory(ctx context.Context, category 
 }
 
 // FetchSatelliteMetadata retrieves metadata about satellites and associates them with a context.
-func (s *TleService) FetchSatelliteMetadata(ctx context.Context, contextName domain.GameContextName) ([]domain.Satellite, error) {
+func (s *TleService) FetchSatelliteMetadata(ctx context.Context, contextName domain.GameContextName) (sats []domain.Satellite, err error) {
+	ctx, span := tracing.NewSpan(ctx, "FetchSatelliteMetadata")
+	defer span.EndWithError(err)
 	// Validate the contextID
 	if _, err := s.contextRepo.FindByUniqueName(ctx, contextName); err != nil {
 		return nil, fmt.Errorf("invalid contextID: %w", err)

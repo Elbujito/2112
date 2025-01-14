@@ -8,6 +8,7 @@ import (
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
 	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
+	"github.com/Elbujito/2112/src/app-service/pkg/tracing"
 )
 
 type TileService struct {
@@ -33,7 +34,9 @@ func NewTileService(
 }
 
 // FindAllTiles retrieves all tiles associated with a specific context.
-func (s *TileService) FindAllTiles(ctx context.Context, contextID string) ([]domain.Tile, error) {
+func (s *TileService) FindAllTiles(ctx context.Context, contextID string) (t []domain.Tile, err error) {
+	ctx, span := tracing.NewSpan(ctx, "FindAllTiles")
+	defer span.EndWithError(err)
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -53,7 +56,9 @@ func (s *TileService) FindAllTiles(ctx context.Context, contextID string) ([]dom
 }
 
 // GetTilesInRegion fetches tiles that intersect with a bounding box and belong to a specific context.
-func (s *TileService) GetTilesInRegion(ctx context.Context, contextID string, minLat, minLon, maxLat, maxLon float64) ([]domain.Tile, error) {
+func (s *TileService) GetTilesInRegion(ctx context.Context, contextID string, minLat, minLon, maxLat, maxLon float64) (t []domain.Tile, err error) {
+	ctx, span := tracing.NewSpan(ctx, "GetTilesInRegion")
+	defer span.EndWithError(err)
 	// Validate input
 	if minLat >= maxLat || minLon >= maxLon {
 		return nil, fmt.Errorf("invalid bounding box coordinates")
@@ -74,7 +79,9 @@ func (s *TileService) GetTilesInRegion(ctx context.Context, contextID string, mi
 }
 
 // ListSatellitesMappingWithPagination retrieves mappings with pagination for a specific context.
-func (s *TileService) ListSatellitesMappingWithPagination(ctx context.Context, contextID string, page int, pageSize int, search *domain.SearchRequest) ([]domain.TileSatelliteInfo, int64, error) {
+func (s *TileService) ListSatellitesMappingWithPagination(ctx context.Context, contextID string, page int, pageSize int, search *domain.SearchRequest) (ts []domain.TileSatelliteInfo, count int64, err error) {
+	ctx, span := tracing.NewSpan(ctx, "ListSatellitesMappingWithPagination")
+	defer span.EndWithError(err)
 	// Validate inputs
 	if page <= 0 {
 		return nil, 0, fmt.Errorf("page must be greater than 0")
@@ -98,7 +105,9 @@ func (s *TileService) ListSatellitesMappingWithPagination(ctx context.Context, c
 }
 
 // GetSatelliteMappingsByNoradID retrieves mappings for a specific NORAD ID and context.
-func (s *TileService) GetSatelliteMappingsByNoradID(ctx context.Context, contextID, noradID string) ([]domain.TileSatelliteInfo, error) {
+func (s *TileService) GetSatelliteMappingsByNoradID(ctx context.Context, contextID, noradID string) (ts []domain.TileSatelliteInfo, err error) {
+	ctx, span := tracing.NewSpan(ctx, "GetSatelliteMappingsByNoradID")
+	defer span.EndWithError(err)
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -114,7 +123,9 @@ func (s *TileService) GetSatelliteMappingsByNoradID(ctx context.Context, context
 }
 
 // RecomputeMappings deletes existing mappings for a NORAD ID in a specific context and computes new ones.
-func (s *TileService) RecomputeMappings(ctx context.Context, contextID, noradID string, startTime, endTime time.Time) error {
+func (s *TileService) RecomputeMappings(ctx context.Context, contextID, noradID string, startTime, endTime time.Time) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "RecomputeMappings")
+	defer span.EndWithError(err)
 	log.Printf("Recomputing mappings for NORAD ID: %s in context: %s\n", noradID, contextID)
 
 	select {

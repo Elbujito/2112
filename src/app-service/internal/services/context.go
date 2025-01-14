@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/domain"
+	"github.com/Elbujito/2112/src/app-service/pkg/tracing"
 )
 
 // ContextService definition
@@ -18,8 +19,10 @@ func NewContextService(repo domain.GameContextRepository) ContextService {
 }
 
 // Create creates a new GameContext.
-func (c *ContextService) Create(ctx context.Context, context domain.GameContext) (domain.GameContext, error) {
-	err := c.repo.Save(ctx, context)
+func (c *ContextService) Create(ctx context.Context, context domain.GameContext) (cc domain.GameContext, err error) {
+	ctx, span := tracing.NewSpan(ctx, "Create")
+	defer span.EndWithError(err)
+	err = c.repo.Save(ctx, context)
 	if err != nil {
 		return domain.GameContext{}, err
 	}
@@ -27,8 +30,10 @@ func (c *ContextService) Create(ctx context.Context, context domain.GameContext)
 }
 
 // Update updates an existing GameContext.
-func (c *ContextService) Update(ctx context.Context, context domain.GameContext) (domain.GameContext, error) {
-	err := c.repo.Update(ctx, context)
+func (c *ContextService) Update(ctx context.Context, context domain.GameContext) (cc domain.GameContext, err error) {
+	ctx, span := tracing.NewSpan(ctx, "Update")
+	defer span.EndWithError(err)
+	err = c.repo.Update(ctx, context)
 	if err != nil {
 		return domain.GameContext{}, err
 	}
@@ -36,7 +41,9 @@ func (c *ContextService) Update(ctx context.Context, context domain.GameContext)
 }
 
 // GetByUniqueName retrieves a GameContext by its unique name.
-func (c *ContextService) GetByUniqueName(ctx context.Context, name domain.GameContextName) (domain.GameContext, error) {
+func (c *ContextService) GetByUniqueName(ctx context.Context, name domain.GameContextName) (cc domain.GameContext, err error) {
+	ctx, span := tracing.NewSpan(ctx, "GetByUniqueName")
+	defer span.EndWithError(err)
 	context, err := c.repo.FindByUniqueName(ctx, name)
 	if err != nil {
 		return domain.GameContext{}, err
@@ -45,8 +52,10 @@ func (c *ContextService) GetByUniqueName(ctx context.Context, name domain.GameCo
 }
 
 // DeleteByUniqueName deletes a GameContext by its unique name.
-func (c *ContextService) DeleteByUniqueName(ctx context.Context, name domain.GameContextName) error {
-	err := c.repo.DeleteByUniqueName(ctx, string(name))
+func (c *ContextService) DeleteByUniqueName(ctx context.Context, name domain.GameContextName) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "DeleteByUniqueName")
+	defer span.EndWithError(err)
+	err = c.repo.DeleteByUniqueName(ctx, string(name))
 	if err != nil {
 		return err
 	}
@@ -54,8 +63,10 @@ func (c *ContextService) DeleteByUniqueName(ctx context.Context, name domain.Gam
 }
 
 // ActiveContext activates a GameContext by its unique name.
-func (c *ContextService) ActiveContext(ctx context.Context, name domain.GameContextName) error {
-	err := c.repo.ActivateContext(ctx, name)
+func (c *ContextService) ActiveContext(ctx context.Context, name domain.GameContextName) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "ActiveContext")
+	defer span.EndWithError(err)
+	err = c.repo.ActivateContext(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -63,8 +74,10 @@ func (c *ContextService) ActiveContext(ctx context.Context, name domain.GameCont
 }
 
 // DisableContext deactivates a GameContext by its unique name.
-func (c *ContextService) DisableContext(ctx context.Context, name domain.GameContextName) error {
-	err := c.repo.DesactiveContext(ctx, name)
+func (c *ContextService) DisableContext(ctx context.Context, name domain.GameContextName) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "DisableContext")
+	defer span.EndWithError(err)
+	err = c.repo.DesactiveContext(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -72,7 +85,9 @@ func (c *ContextService) DisableContext(ctx context.Context, name domain.GameCon
 }
 
 // GetActiveContext retrieves the currently active GameContext.
-func (c *ContextService) GetActiveContext(ctx context.Context) (domain.GameContext, error) {
+func (c *ContextService) GetActiveContext(ctx context.Context) (cc domain.GameContext, err error) {
+	ctx, span := tracing.NewSpan(ctx, "GetActiveContext")
+	defer span.EndWithError(err)
 	context, err := c.repo.GetActiveContext(ctx)
 	if err != nil {
 		return domain.GameContext{}, err
@@ -81,7 +96,9 @@ func (c *ContextService) GetActiveContext(ctx context.Context) (domain.GameConte
 }
 
 // GetAllContexts retrieves all GameContexts.
-func (c *ContextService) GetAllContexts(ctx context.Context) ([]domain.GameContext, error) {
+func (c *ContextService) GetAllContexts(ctx context.Context) (cs []domain.GameContext, err error) {
+	ctx, span := tracing.NewSpan(ctx, "GetAllContexts")
+	defer span.EndWithError(err)
 	contexts, err := c.repo.FindAll(ctx)
 	if err != nil {
 		return []domain.GameContext{}, err
@@ -90,7 +107,9 @@ func (c *ContextService) GetAllContexts(ctx context.Context) ([]domain.GameConte
 }
 
 // FindBySatelliteID retrieves all GameContexts associated with a specific satellite.
-func (c *ContextService) FindBySatelliteID(ctx context.Context, satelliteID domain.SatelliteID) (domain.GameContext, error) {
+func (c *ContextService) FindBySatelliteID(ctx context.Context, satelliteID domain.SatelliteID) (cc domain.GameContext, err error) {
+	ctx, span := tracing.NewSpan(ctx, "FindBySatelliteID")
+	defer span.EndWithError(err)
 	context, err := c.repo.FindActiveBySatelliteID(ctx, satelliteID)
 	if err != nil {
 		return domain.GameContext{}, err
@@ -99,8 +118,10 @@ func (c *ContextService) FindBySatelliteID(ctx context.Context, satelliteID doma
 }
 
 // AssignSatellite associates a satellite with a GameContext.
-func (c *ContextService) AssignSatellite(ctx context.Context, name domain.GameContextName, satelliteID domain.SatelliteID) error {
-	err := c.repo.AssignSatellite(ctx, name, satelliteID)
+func (c *ContextService) AssignSatellite(ctx context.Context, name domain.GameContextName, satelliteID domain.SatelliteID) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "AssignSatellite")
+	defer span.EndWithError(err)
+	err = c.repo.AssignSatellite(ctx, name, satelliteID)
 	if err != nil {
 		return err
 	}
@@ -108,8 +129,10 @@ func (c *ContextService) AssignSatellite(ctx context.Context, name domain.GameCo
 }
 
 // RemoveSatellite removes the association between a satellite and a GameContext.
-func (c *ContextService) RemoveSatellite(ctx context.Context, name domain.GameContextName, satelliteID domain.SatelliteID) error {
-	err := c.repo.RemoveSatellite(ctx, name, satelliteID)
+func (c *ContextService) RemoveSatellite(ctx context.Context, name domain.GameContextName, satelliteID domain.SatelliteID) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "RemoveSatellite")
+	defer span.EndWithError(err)
+	err = c.repo.RemoveSatellite(ctx, name, satelliteID)
 	if err != nil {
 		return err
 	}
@@ -117,7 +140,9 @@ func (c *ContextService) RemoveSatellite(ctx context.Context, name domain.GameCo
 }
 
 // FindAllWithPagination retrieves all contexts with pagination and optional filtering by name or description.
-func (c *ContextService) FindAllWithPagination(ctx context.Context, page int, pageSize int, wildcard string) ([]domain.GameContext, error) {
+func (c *ContextService) FindAllWithPagination(ctx context.Context, page int, pageSize int, wildcard string) (cs []domain.GameContext, err error) {
+	ctx, span := tracing.NewSpan(ctx, "FindAllWithPagination")
+	defer span.EndWithError(err)
 	contexts, err := c.repo.FindAllWithPagination(ctx, page, pageSize, wildcard)
 	if err != nil {
 		return []domain.GameContext{}, err
@@ -127,42 +152,62 @@ func (c *ContextService) FindAllWithPagination(ctx context.Context, page int, pa
 
 // Setters and Unsetters for timestamps
 
-func (c *ContextService) SetActivatedAt(ctx context.Context, name domain.GameContextName, activatedAt time.Time) error {
+func (c *ContextService) SetActivatedAt(ctx context.Context, name domain.GameContextName, activatedAt time.Time) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "SetActivatedAt")
+	defer span.EndWithError(err)
 	return c.repo.SetActivatedAt(ctx, name, activatedAt)
 }
 
-func (c *ContextService) UnsetActivatedAt(ctx context.Context, name domain.GameContextName) error {
+func (c *ContextService) UnsetActivatedAt(ctx context.Context, name domain.GameContextName) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "UnsetActivatedAt")
+	defer span.EndWithError(err)
 	return c.repo.UnsetActivatedAt(ctx, name)
 }
 
-func (c *ContextService) SetDesactivatedAt(ctx context.Context, name domain.GameContextName, desactivatedAt time.Time) error {
+func (c *ContextService) SetDesactivatedAt(ctx context.Context, name domain.GameContextName, desactivatedAt time.Time) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "SetDesactivatedAt")
+	defer span.EndWithError(err)
 	return c.repo.SetDesactivatedAt(ctx, name, desactivatedAt)
 }
 
-func (c *ContextService) UnsetDesactivatedAt(ctx context.Context, name domain.GameContextName) error {
+func (c *ContextService) UnsetDesactivatedAt(ctx context.Context, name domain.GameContextName) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "UnsetDesactivatedAt")
+	defer span.EndWithError(err)
 	return c.repo.UnsetDesactivatedAt(ctx, name)
 }
 
-func (c *ContextService) SetTriggerGeneratedMappingAt(ctx context.Context, name domain.GameContextName, timestamp time.Time) error {
+func (c *ContextService) SetTriggerGeneratedMappingAt(ctx context.Context, name domain.GameContextName, timestamp time.Time) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "SetTriggerGeneratedMappingAt")
+	defer span.EndWithError(err)
 	return c.repo.SetTriggerGeneratedMappingAt(ctx, name, timestamp)
 }
 
-func (c *ContextService) UnsetTriggerGeneratedMappingAt(ctx context.Context, name domain.GameContextName) error {
+func (c *ContextService) UnsetTriggerGeneratedMappingAt(ctx context.Context, name domain.GameContextName) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "UnsetTriggerGeneratedMappingAt")
+	defer span.EndWithError(err)
 	return c.repo.UnsetTriggerGeneratedMappingAt(ctx, name)
 }
 
-func (c *ContextService) SetTriggerImportedTLEAt(ctx context.Context, name domain.GameContextName, timestamp time.Time) error {
+func (c *ContextService) SetTriggerImportedTLEAt(ctx context.Context, name domain.GameContextName, timestamp time.Time) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "SetTriggerImportedTLEAt")
+	defer span.EndWithError(err)
 	return c.repo.SetTriggerImportedTLEAt(ctx, name, timestamp)
 }
 
-func (c *ContextService) UnsetTriggerImportedTLEAt(ctx context.Context, name domain.GameContextName) error {
+func (c *ContextService) UnsetTriggerImportedTLEAt(ctx context.Context, name domain.GameContextName) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "UnsetTriggerImportedTLEAt")
+	defer span.EndWithError(err)
 	return c.repo.UnsetTriggerImportedTLEAt(ctx, name)
 }
 
-func (c *ContextService) SetTriggerImportedSatelliteAt(ctx context.Context, name domain.GameContextName, timestamp time.Time) error {
+func (c *ContextService) SetTriggerImportedSatelliteAt(ctx context.Context, name domain.GameContextName, timestamp time.Time) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "UnsetTriggerImportedSatelliteAt")
+	defer span.EndWithError(err)
 	return c.repo.SetTriggerImportedSatelliteAt(ctx, name, timestamp)
 }
 
-func (c *ContextService) UnsetTriggerImportedSatelliteAt(ctx context.Context, name domain.GameContextName) error {
+func (c *ContextService) UnsetTriggerImportedSatelliteAt(ctx context.Context, name domain.GameContextName) (err error) {
+	ctx, span := tracing.NewSpan(ctx, "UnsetTriggerImportedSatelliteAt")
+	defer span.EndWithError(err)
 	return c.repo.UnsetTriggerImportedSatelliteAt(ctx, name)
 }

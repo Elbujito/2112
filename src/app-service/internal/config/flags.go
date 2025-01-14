@@ -49,3 +49,18 @@ var NoBorderFlag bool
 // default: 		false
 // description: Start watcher daemon
 var StartWatcherFlag bool
+
+// Flag: 				pushEndpoint (string)
+// default:
+// description:
+var PushEndpoint string
+
+// Flag: 				samplingFraction (string)
+// default:
+// description:
+var SamplingFraction string
+
+// Flag: 				exporterType (string)
+// default:
+// description:
+var ExporterType string
