@@ -183,34 +183,11 @@ services:
         condition: service_completed_successfully
     restart: "no"
 
-  # web:
-  #   build:
-  #     context: ../../.
-  #     dockerfile: deployments/docker/Dockerfile.web
-  #   image: web
-  #   container_name: web
-  #   ports:
-  #     - "3000:3000"
-  #   restart: unless-stopped
-
-  # tle-propagator-service:
-  #   build:
-  #     context: ../../.
-  #     dockerfile: deployments/docker/Dockerfile.tle-propagator
-  #   container_name: tle-propagator-service
-  #   env_file: ../config/tle-propagator-service.dev-env
-  #   ports:
-  #     - "5001:5000"
-  #   depends_on:
-  #     redis-service:
-  #       condition: service_healthy
-    # restart: always
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
-    #   interval: 10s
-    #   timeout: 5s
-    #   retries: 3
-
 volumes:
   redis-data:
   postgres-data:
+
+networks:
+  default:
+    name: 2112_net
+    external: true

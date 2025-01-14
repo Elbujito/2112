@@ -1,17 +1,19 @@
+SHELL := /bin/bash
 # Environment Variables
 VERSION_GRAPHQL_API ?= 0.0.15
 VERSION_GATEWAY_SERVICE ?= 0.0.1
 VERSION_PROPAGATOR_SERVICE ?= 0.0.1
 
+COMPOSE_FOLDER=deployments/compose
 DOCKER_COMPOSE_FILE = deployments/compose/docker-compose.yaml
 DOCKER_PROJECT_NAME = 2112_project
+DOCKER_COMPOSE_GRAFANA=-f $(COMPOSE_FOLDER)/docker-compose-grafana.yml
 
 # Service-Specific Settings
 GRAPHQL_API = src/graphql-api
 GATEWAY_SERVICE = src/gateway-service
 PROPAGATOR_SERVICE = src/propagator-service
 REDIS_SERVICE = redis-service
-
 
 ACTIVATE = $(VENV_DIR)/bin/activate
 VENV_DIR = $(GRAPHQL_API)/python/venv
@@ -23,6 +25,55 @@ export GO111MODULE := on
 
 # Default Target
 .DEFAULT_GOAL := help
+
+DOCKERNET := 2112_net
+export DOCKERNET
+
+ifndef CURDIR
+    CURDIR:=`pwd`
+endif
+
+# Define a variable to check for the --disable-pull flag
+DISABLE_PULL := false
+
+################################################################################
+# LINT
+################################################################################
+
+.PHONY: lint
+lint:
+	docker run --rm -v $(CURDIR):/app -w /app golang.org/x/lint/golint@latest:latest golangci-lint run ./src/app-service -v --timeout=4m
+
+##############################################################################
+# Docker
+##############################################################################
+.PHONY: docker-network
+docker-network: ## spin up the local mpower docker network so that all dockerized mpower components can communicate
+	if [ $$( docker network ls -q --filter 'name=$(DOCKERNET)' | wc -l ) -eq 0 ]; then\
+			docker network create $(DOCKERNET);\
+	else\
+		echo "Docker Network $(DOCKERNET) already created";\
+	fi
+
+.PHONY: docker-grafana-up -- --disable-pull
+docker-grafana-up: docker-network ## launches the docker grafana configuration in Docker
+	@if [ "$(DISABLE_PULL)" = "true" ]; then \
+		echo "Skipping docker compose pull (d)"; \
+	else \
+		docker compose $(DOCKER_COMPOSE_GRAFANA) pull; \
+	fi
+	docker compose \
+		--project-directory . \
+		$(DOCKER_COMPOSE_GRAFANA) \
+		up --force-recreate --build -d \
+		$(CONTAINERS)
+
+.PHONY: docker-grafana-down
+docker-grafana-down: ## shuts down the docker grafana configuration
+	docker-compose \
+		--project-directory . \
+		$(DOCKER_COMPOSE_GRAFANA) \
+		down --volumes \
 
 ################################################################################
 # Build
