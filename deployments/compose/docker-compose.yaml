@@ -11,6 +11,14 @@ services:
       - "8081:8081"
       - "8080:8080"
       - "8079:8079"
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
+        
     depends_on:
       db-seeder:
         condition: service_completed_successfully
@@ -37,7 +45,13 @@ services:
         condition: service_healthy
     restart: no
     command: ["app-service", "task", "exec", "generate_tiles", "radiusInMeter=1000000", "faces=8"]
-
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   tle-upload-service:
     build:
@@ -50,6 +64,13 @@ services:
         condition: service_healthy
     restart: no
     command: ["app-service", "task", "exec", "celestrack_tle_upload", "category=active", "maxCount=1"]
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   satellite-upload-service:
     build:
@@ -62,6 +83,13 @@ services:
         condition: service_healthy
     restart: no
     command: ["app-service", "task", "exec", "celestrack_satellite_upload", "maxCount=1"]
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   satellite-mappings-service:
     build:
@@ -74,8 +102,13 @@ services:
         condition: service_healthy
     restart: no
     command: ["app-service", "task", "exec", "satellites_tiles_mappings", "visibilityRadiusKm=78"]
-
-
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   satellite-visibilities-service:
     build:
@@ -88,6 +121,13 @@ services:
         condition: service_healthy
     restart: no
     command: ["app-service", "task", "exec", "compute_visibilities", "defaultHorizon=30"]
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   propagator-service:
     build:
@@ -106,6 +146,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   gateway-service:
     build:
@@ -121,6 +168,13 @@ services:
       redis-service:
         condition: service_healthy
     restart: always
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   redis-service:
     build:
@@ -137,6 +191,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   postgres-db:
     extends:
@@ -147,6 +208,13 @@ services:
       interval: 10s
       retries: 5
       start_period: 30s
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   db-creator:
     container_name: db-creator
@@ -158,6 +226,13 @@ services:
     depends_on:
       postgres-db:
         condition: service_healthy
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   db-migrator:
     build:
@@ -170,6 +245,13 @@ services:
       postgres-db:
         condition: service_healthy
     restart: "no"
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 
   db-seeder:
     build:
@@ -182,7 +264,13 @@ services:
       db-migrator:
         condition: service_completed_successfully
     restart: "no"
-
+    logging:
+      driver: loki
+      options:
+        loki-url: http://host.docker.internal:3100/loki/api/v1/push
+        mode: non-blocking
+        max-buffer-size: 4m
+        loki-retries: "3"
 volumes:
   redis-data:
   postgres-data:

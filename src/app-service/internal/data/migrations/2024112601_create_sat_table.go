@@ -104,14 +104,6 @@ func init() {
 				Tile      Tile    `gorm:"constraint:OnDelete:CASCADE;foreignKey:TileID;references:ID"`
 			}
 
-			if err := db.Exec(`
-				ALTER TABLE contexts
-				ADD CONSTRAINT unique_tenant_context_name
-				UNIQUE (tenant_id, name);
-			`).Error; err != nil {
-				return err
-			}
-
 			// AutoMigrate all tables
 			if err := db.AutoMigrate(
 				&Context{},
@@ -123,6 +115,14 @@ func init() {
 				&ContextTLE{},
 				&ContextTile{},
 			); err != nil {
+				return err
+			}
+
+			if err := db.Exec(`
+			ALTER TABLE contexts
+			ADD CONSTRAINT unique_tenant_context_name
+			UNIQUE (tenant_id, name);
+		`).Error; err != nil {
 				return err
 			}
 

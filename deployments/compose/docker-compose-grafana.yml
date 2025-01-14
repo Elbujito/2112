@@ -7,7 +7,7 @@ services:
       - GF_FEATURE_TOGGLES_ENABLE=flameGraph
       - GF_INSTALL_PLUGINS=gapit-htmlgraphics-panel
     ports:
-      - 3000:3000
+      - 3001:3000
     volumes:
       - ./assets/grafana/provisioning/grafana.ini:/etc/grafana/grafana.ini
       - ./assets/grafana/provisioning/datasources/:/etc/grafana/provisioning/datasources/

@@ -1,14 +1,31 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import AppWrappers from './AppWrappers';
-// import '@asseinfo/react-kanban/dist/styles.css';
-// import '/public/styles/Plugins.css';
-
-export default function RootLayout({ children }: { children: ReactNode }) {
+import {
+  ClerkProvider,
+  // SignInButton,
+  // SignedIn,
+  // SignedOut,
+  // UserButton
+} from '@clerk/nextjs'
+// import './globals.css'
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en">
-      <body className="dark" id={'root'}>
+    <ClerkProvider>
+      <html lang="en">
+        <body className="dark" id={'root'}>
+          {/* <SignedOut>
+            <SignInButton />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn> */}
           <AppWrappers>{children}</AppWrappers>
-      </body>
-    </html>
-  );
+        </body>
+      </html>
+    </ClerkProvider>
+  )
 }

@@ -17,16 +17,17 @@ import (
 	serviceapi "github.com/Elbujito/2112/src/app-service/internal/api/services"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
-	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 
 	"github.com/labstack/echo/v4"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // PublicRouter manages the public API router and its dependencies.
 type PublicRouter struct {
 	Echo             *echo.Echo
 	Name             string
-	ServiceComponent *serviceapi.ServiceComponent // Add ServiceComponent to Router
+	ServiceComponent *serviceapi.ServiceComponent
 }
 
 // Init initializes the Echo instance for the router.
@@ -34,94 +35,118 @@ func (r *PublicRouter) Init() {
 	r.Echo = echo.New()
 	r.Echo.HideBanner = true
 	r.Echo.Logger = logger.GetLogger()
+
+}
+
+func (r *PublicRouter) registerPrometheusMetrics() {
+	// Metrics to monitor the application and database health
+	httpRequestsTotal := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "http_requests_total",
+			Help: "Total number of HTTP requests processed, labeled by status code and method.",
+		},
+		[]string{"method", "endpoint", "status"},
+	)
+	httpRequestDuration := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_request_duration_seconds",
+			Help:    "HTTP request duration in seconds.",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"method", "endpoint", "status"},
+	)
+	httpRequestSize := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_request_size_bytes",
+			Help:    "HTTP request size in bytes.",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"method", "endpoint"},
+	)
+	httpResponseSize := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "http_response_size_bytes",
+			Help:    "HTTP response size in bytes.",
+			Buckets: prometheus.DefBuckets,
+		},
+		[]string{"method", "endpoint", "status"},
+	)
+	appUptime := prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "app_uptime_seconds",
+			Help: "Application uptime in seconds.",
+		},
+	)
+	appLiveness := prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "app_liveness",
+			Help: "Application liveness status (1 = alive, 0 = not alive).",
+		},
+	)
+
+	prometheus.MustRegister(httpRequestsTotal)
+	prometheus.MustRegister(httpRequestDuration)
+	prometheus.MustRegister(httpRequestSize)
+	prometheus.MustRegister(httpResponseSize)
+	prometheus.MustRegister(appUptime)
+	prometheus.MustRegister(appLiveness)
+
+	go func() {
+		startTime := time.Now()
+		appLiveness.Set(1) // Set liveness to 1 indicating the app is alive
+		for {
+			appUptime.Set(time.Since(startTime).Seconds())
+			time.Sleep(1 * time.Second)
+		}
+	}()
 }
 
 // InitPublicAPIRouter initializes and returns the public API router.
 func InitPublicAPIRouter(env *config.SEnv) *PublicRouter {
 	logger.Debug("Initializing public API router ...")
 
-	// Initialize ServiceComponent
 	serviceComponent := serviceapi.NewServiceComponent(env)
-
-	// Create and initialize PublicRouter
 	publicApiRouter := &PublicRouter{
 		Name:             "public API",
 		ServiceComponent: serviceComponent,
 	}
 	publicApiRouter.Init()
-
-	// Register middlewares, routes, and error handlers
-	if config.DevModeFlag {
-		publicApiRouter.registerPublicApiDevModeMiddleware()
-	}
-	publicApiRouter.registerPublicAPIMiddlewares()
-	publicApiRouter.registerPublicApiHealthCheckHandlers()
-	publicApiRouter.registerPublicApiSecurityMiddlewares()
-	publicApiRouter.registerPublicAPIRoutes()
-	publicApiRouter.registerPublicApiErrorHandlers()
+	publicApiRouter.registerMiddlewares()
+	publicApiRouter.registerRoutes()
 
 	logger.Debug("Public API registration complete.")
 	return publicApiRouter
 }
 
-// RegisterPreMiddleware registers a pre-middleware.
-func (r *PublicRouter) RegisterPreMiddleware(middleware echo.MiddlewareFunc) {
-	r.Echo.Pre(middleware)
-}
+func (r *PublicRouter) registerMiddlewares() {
+	middlewaresList := []echo.MiddlewareFunc{
+		middlewares.SlashesMiddleware(),
+		middlewares.LoggerMiddleware(),
+		middlewares.TimeoutMiddleware(),
+		// middlewares.RequestHeadersMiddleware(),
+		// middlewares.ResponseHeadersMiddleware(),
+	}
 
-// RegisterMiddleware registers a middleware.
-func (r *PublicRouter) RegisterMiddleware(middleware echo.MiddlewareFunc) {
-	r.Echo.Use(middleware)
-}
+	// if config.Feature(xconstants.FEATURE_GZIP).IsEnabled() {
+	// 	middlewaresList = append(middlewaresList, middlewares.GzipMiddleware())
+	// }
 
-// Start starts the Echo server with graceful shutdown.
-func (r *PublicRouter) Start(host string, port string) {
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	defer stop()
+	for _, middleware := range middlewaresList {
+		r.RegisterMiddleware(middleware)
+	}
 
-	// Start server
-	go func() {
-		r.Echo.Logger.Info(fmt.Sprintf("Starting %s server on port: %s", r.Name, port))
-		if err := r.Echo.Start(host + ":" + port); err != nil && err != http.ErrServerClosed {
-			r.Echo.Logger.Fatal(err)
-			r.Echo.Logger.Fatal(xconstants.MSG_SERVER_SHUTTING_DOWN)
-		}
-	}()
-
-	// Wait for interrupt signal to gracefully shut down the server with a timeout of 20 seconds.
-	<-ctx.Done()
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-	if err := r.Echo.Shutdown(ctx); err != nil {
-		r.Echo.Logger.Fatal(err)
+	if config.DevModeFlag {
+		r.RegisterMiddleware(middlewares.BodyDumpMiddleware())
 	}
 }
 
-// Register middlewares
-func (r *PublicRouter) registerPublicAPIMiddlewares() {
-	r.RegisterPreMiddleware(middlewares.SlashesMiddleware())
-	r.RegisterMiddleware(middlewares.LoggerMiddleware())
-	r.RegisterMiddleware(middlewares.TimeoutMiddleware())
-	r.RegisterMiddleware(middlewares.RequestHeadersMiddleware())
-	r.RegisterMiddleware(middlewares.ResponseHeadersMiddleware())
-
-	if config.Feature(xconstants.FEATURE_GZIP).IsEnabled() {
-		r.RegisterMiddleware(middlewares.GzipMiddleware())
-	}
-}
-
-// Register development mode middlewares
-func (r *PublicRouter) registerPublicApiDevModeMiddleware() {
-	r.RegisterMiddleware(middlewares.BodyDumpMiddleware())
-}
-
-// Register security-related middlewares
-func (r *PublicRouter) registerPublicApiSecurityMiddlewares() {
-	r.RegisterMiddleware(middlewares.XSSCheckMiddleware())
-
-	if config.Feature(xconstants.FEATURE_CORS).IsEnabled() {
-		r.RegisterMiddleware(middlewares.CORSMiddleware())
-	}
+// Consolidate route registrations
+func (r *PublicRouter) registerRoutes() {
+	r.registerPublicApiHealthCheckHandlers()
+	r.registerPrometheusMetrics()
+	r.registerMetricsEndpoint()
+	r.registerPublicAPIRoutes()
+	r.registerPublicApiErrorHandlers()
 }
 
 // Register health check handlers
@@ -129,6 +154,17 @@ func (r *PublicRouter) registerPublicApiHealthCheckHandlers() {
 	health := r.Echo.Group("/health")
 	health.GET("/alive", healthHandlers.Index)
 	health.GET("/ready", healthHandlers.Ready)
+}
+
+// Register metrics endpoint
+func (r *PublicRouter) registerMetricsEndpoint() {
+	r.Echo.GET("/metrics", func(c echo.Context) error {
+		// Set the Content-Type to text/plain; charset=utf-8
+		c.Response().Header().Set(echo.HeaderContentType, "text/plain; charset=utf-8")
+		// Use promhttp.Handler to serve the metrics
+		promhttp.Handler().ServeHTTP(c.Response(), c.Request())
+		return nil
+	})
 }
 
 // Register error handlers
@@ -139,7 +175,6 @@ func (r *PublicRouter) registerPublicApiErrorHandlers() {
 
 // Register public API routes
 func (r *PublicRouter) registerPublicAPIRoutes() {
-	// Initialize the SatelliteHandler with the SatelliteService from ServiceComponent
 	satelliteHandler := satellites.NewSatelliteHandler(r.ServiceComponent.SatelliteService)
 	contextHandler := apicontext.NewContextHandler(r.ServiceComponent.ContextService)
 	tileHandler := tiles.NewTileHandler(r.ServiceComponent.TileService)
@@ -149,7 +184,6 @@ func (r *PublicRouter) registerPublicAPIRoutes() {
 	satellite.GET("/paginated", satelliteHandler.GetPaginatedSatellites)
 	satellite.GET("/paginated/tles", satelliteHandler.GetPaginatedSatelliteInfo)
 
-	// Initialize the SatelliteHandler with the SatelliteService from ServiceComponent
 	tile := r.Echo.Group("/tiles")
 	tile.GET("/all", tileHandler.GetAllTiles)
 	tile.GET("/region", tileHandler.GetTilesInRegionHandler)
@@ -159,10 +193,46 @@ func (r *PublicRouter) registerPublicAPIRoutes() {
 
 	context := r.Echo.Group("/contexts")
 	context.GET("/all", contextHandler.GetPaginatedContexts)
-	context.POST("/", contextHandler.CreateContext)                    // Create a new context
-	context.PUT("/:name", contextHandler.UpdateContext)                // Update an existing context by name
-	context.GET("/:name", contextHandler.GetContextByName)             // Get context details by name
-	context.DELETE("/:name", contextHandler.DeleteContextByName)       // Delete a context by name
-	context.PUT("/:name/activate", contextHandler.ActivateContext)     // Activate a context by name
-	context.PUT("/:name/deactivate", contextHandler.DeactivateContext) // Deactivate a context by name
+	context.POST("/", contextHandler.CreateContext)
+	context.PUT("/:name", contextHandler.UpdateContext)
+	context.GET("/:name", contextHandler.GetContextByName)
+	context.DELETE("/:name", contextHandler.DeleteContextByName)
+	context.PUT("/:name/activate", contextHandler.ActivateContext)
+	context.PUT("/:name/deactivate", contextHandler.DeactivateContext)
+}
+
+// Middleware helpers
+func (r *PublicRouter) RegisterPreMiddleware(middleware echo.MiddlewareFunc) {
+	r.Echo.Pre(middleware)
+}
+
+func (r *PublicRouter) RegisterMiddleware(middleware echo.MiddlewareFunc) {
+	r.Echo.Use(middleware)
+}
+
+// Start the Echo server
+func (r *PublicRouter) Start(host string, port string) {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	go func() {
+		r.Echo.Logger.Info(fmt.Sprintf("Starting %s server on port: %s", r.Name, port))
+		if err := r.Echo.Start(host + ":" + port); err != nil && err != http.ErrServerClosed {
+			r.Echo.Logger.Fatalf("Server error: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+	r.shutdownServer()
+}
+
+func (r *PublicRouter) shutdownServer() {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	if err := r.Echo.Shutdown(ctx); err != nil {
+		r.Echo.Logger.Fatalf("Failed to shutdown server: %v", err)
+	}
+
+	r.Echo.Logger.Info("Server shutdown complete.")
 }
