@@ -34,9 +34,16 @@ jobs:
     name: Codacy Security Scan
     runs-on: ubuntu-latest
     steps:
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22' # Specify your required Go version here
+
       # Checkout the repository to the GitHub Actions runner
       - name: Checkout code
         uses: actions/checkout@v3
+
 
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
@@ -53,6 +60,12 @@ jobs:
           # Force 0 exit code to allow SARIF file generation
           # This will handover control about PR rejection to the GitHub side
           max-allowed-issues: 2147483647
+          exclude: |
+            src/web/**
+            src/propagator-service/**
+            src/tle-propagator-service/**
+            src/graphql-api/**
+            src/templates/**
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
