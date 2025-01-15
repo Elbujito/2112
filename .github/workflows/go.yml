@@ -47,12 +47,12 @@ jobs:
       # Build the application
       - name: Build the application
         run: |
-          cd src/app-service
-          go build -o ./out/service -ldflags="-w -s -extldflags '-static'" .
+          cd src/app-service/internal
+          go build -o ./out/service .
 
       # (Optional) Run tests
       - name: Run tests
         run: |
-          cd src/app-service
+          cd src/app-service/internal
           go test -v ./...
 
