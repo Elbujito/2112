@@ -1,13 +1,17 @@
 package routers
 
 import (
+	"time"
+
 	"github.com/Elbujito/2112/src/app-service/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/healthz"
+	metricsHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/metrics"
 	usersHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/users"
 	"github.com/Elbujito/2112/src/app-service/internal/api/middlewares"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
 	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var protectedApiRouter *PublicRouter
@@ -40,6 +44,8 @@ func InitProtectedAPIRouter() {
 	// next register all routes
 	logger.Debug("Registering protected api protected routes ...")
 	registerProtectedAPIRoutes()
+	logger.Debug("Registering metrics api protected routes ...")
+	registerMetricsAPIRoutes()
 
 	// finally register default fallback error handlers
 	// 404 is handled here as the last route
@@ -53,17 +59,39 @@ func ProtectedAPIRouter() *PublicRouter {
 	return protectedApiRouter
 }
 
+func (r *PublicRouter) registerPrometheusMetrics() {
+	appUptime := prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "app_uptime_seconds",
+			Help: "Application uptime in seconds.",
+		},
+	)
+	appLiveness := prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "app_liveness",
+			Help: "Application liveness status (1 = alive, 0 = not alive).",
+		},
+	)
+
+	prometheus.MustRegister(appUptime)
+	prometheus.MustRegister(appLiveness)
+
+	go func() {
+		startTime := time.Now()
+		appLiveness.Set(1)
+		for {
+			appUptime.Set(time.Since(startTime).Seconds())
+			time.Sleep(1 * time.Second)
+		}
+	}()
+}
+
 func registerProtectedAPIMiddlewares() {
 	protectedApiRouter.RegisterPreMiddleware(middlewares.SlashesMiddleware())
 
 	protectedApiRouter.RegisterMiddleware(middlewares.LoggerMiddleware())
 	protectedApiRouter.RegisterMiddleware(middlewares.TimeoutMiddleware())
-	protectedApiRouter.RegisterMiddleware(middlewares.RequestHeadersMiddleware())
-	protectedApiRouter.RegisterMiddleware(middlewares.ResponseHeadersMiddleware())
-
-	if config.Feature(xconstants.FEATURE_GZIP).IsEnabled() {
-		protectedApiRouter.RegisterMiddleware(middlewares.GzipMiddleware())
-	}
+	hiddenApiRouter.registerPrometheusMetrics()
 }
 
 func registerProtectedApiDevModeMiddleware() {
@@ -75,15 +103,6 @@ func registerProtectedApiSecurityMiddlewares() {
 
 	if config.Feature(xconstants.FEATURE_CORS).IsEnabled() {
 		protectedApiRouter.RegisterMiddleware(middlewares.CORSMiddleware())
-	}
-
-	if config.Feature(xconstants.FEATURE_ORY_KRATOS).IsEnabled() {
-		protectedApiRouter.RegisterMiddleware(middlewares.AuthenticationMiddleware())
-	}
-
-	if config.Feature(xconstants.FEATURE_ORY_KETO).IsEnabled() {
-		// keto middleware <- this will check if the user has the right permissions like system admin
-		// protectedApiRouter.RegisterMiddleware(middlewares.AuthenticationMiddleware())
 	}
 }
 
@@ -104,4 +123,9 @@ func registerProtectedAPIRoutes() {
 	users.GET("/:id", usersHandlers.Get)
 	users.POST("", usersHandlers.Post)
 	users.DELETE("/:id", usersHandlers.Delete)
+}
+
+func registerMetricsAPIRoutes() {
+	metrics := protectedApiRouter.Echo.Group("/metrics")
+	metrics.GET("", metricsHandlers.GetMetrics)
 }

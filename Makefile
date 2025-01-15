@@ -55,8 +55,8 @@ docker-network: ## spin up the local mpower docker network so that all dockerize
 		echo "Docker Network $(DOCKERNET) already created";\
 	fi
 
-.PHONY: docker-grafana-up -- --disable-pull
-docker-grafana-up: docker-network ## launches the docker grafana configuration in Docker
+.PHONY: grafana-up -- --disable-pull
+grafana-up: docker-network ## launches the docker grafana configuration in Docker
 	@if [ "$(DISABLE_PULL)" = "true" ]; then \
 		echo "Skipping docker compose pull (d)"; \
 	else \
@@ -68,8 +68,8 @@ docker-grafana-up: docker-network ## launches the docker grafana configuration i
 		up --force-recreate --build -d \
 		$(CONTAINERS)
 
-.PHONY: docker-grafana-down
-docker-grafana-down: ## shuts down the docker grafana configuration
+.PHONY: grafana-down
+grafana-down: ## shuts down the docker grafana configuration
 	docker-compose \
 		--project-directory . \
 		$(DOCKER_COMPOSE_GRAFANA) \

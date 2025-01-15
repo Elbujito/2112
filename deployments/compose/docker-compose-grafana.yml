@@ -31,11 +31,11 @@ services:
     volumes:
       - ./assets/grafana/provisioning/tempo-config.yaml:/etc/tempo.yaml
     ports:
-      - "14268:14268" # jaeger ingest
-      - "3200:3200" # tempo
-      - "4317:4317" # otlp grpc
-      - "4318:4318" # otlp http
-      - "9411:9411" # zipkin
+      - "14268:14268" 
+      - "3200:3200"
+      - "4317:4317" 
+      - "4318:4318" 
+      - "9411:9411"
 
   prometheus:
     container_name: prometheus
@@ -49,14 +49,24 @@ services:
     ports:
       - "9090:9090"
 
-  phlare:
-    container_name: phlare
-    image: grafana/phlare:latest
+  # periscope:
+  #   container_name: periscope
+  #   image: grafana/periscope:latest
+  #   ports:
+  #     - "4100:4100"
+  #   command: -config.file=/etc/periscope/config.yaml
+  #   volumes:
+  #     - ./assets/grafana/provisioning/periscope.yaml:/etc/periscope/config.yaml
+
+  blackbox-exporter:
+    container_name: blackbox-exporter
+    image: prom/blackbox-exporter:latest
     ports:
-      - "4100:4100"
-    command: -config.file=/etc/phlare/config.yaml
+      - "9115:9115"
     volumes:
-      - ./assets/grafana/provisioning/phlare.yaml:/etc/phlare/config.yaml
+      - ./assets/grafana/provisioning/blackbox.yml:/etc/blackbox_exporter/config.yml
+    command:
+      - '--config.file=/etc/blackbox_exporter/config.yml'
 
 networks:
   default:
