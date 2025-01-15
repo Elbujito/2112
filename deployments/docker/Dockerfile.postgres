@@ -1,0 +1,15 @@
+FROM postgis/postgis:latest
+
+# install the migrate tool
+ENV PATH="$PATH:/go/bin"
+
+USER postgres
+
+ENV POSTGRES_DB 2112
+ENV POSTGRES_USER 2112
+ENV POSTGRES_PASSWORD 2112
+
+# docker-entrypoint.sh call for adding additional initialization
+# it will run any *.sql files scripts found in that directory to do further initialization before starting the service.
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["postgres"]
