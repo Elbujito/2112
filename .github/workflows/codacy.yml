@@ -48,7 +48,15 @@ jobs:
             echo "SARIF file is empty or does not exist."
             exit 1
           fi
-
+      - name: Debug SARIF file generation
+        run: |
+          if [ -f results.sarif ]; then
+            echo "SARIF file contents:"
+            cat results.sarif
+          else
+            echo "SARIF file was not generated."
+            exit 1
+          fi
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@v3
         with:
