@@ -88,6 +88,7 @@ func RadiansToDegrees(radians float64) float64 {
 	return radians * 180.0 / math.Pi
 }
 
+// ComputeAverageAltitude computes avarage altitude from apogee and perigeee
 func ComputeAverageAltitude(apogee, perigee float64) float64 {
 	apogeeActual := apogee + xconstants.EARTH_RADIUS_KM
 	perigeeActual := perigee + xconstants.EARTH_RADIUS_KM
@@ -105,6 +106,7 @@ func calculateFraction(altitude float64) float64 {
 	}
 }
 
+// CalculateOptimalTimestep calculates optimal timesteps
 func CalculateOptimalTimestep(altitude, tileRadius float64) time.Duration {
 
 	orbitalVelocity := math.Sqrt(xconstants.GM / (xconstants.EARTH_RADIUS + altitude)) // Orbital velocity (m/s)
