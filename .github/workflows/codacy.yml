@@ -1,4 +1,4 @@
-name: Codacy Security Scan
+ame: Codacy Security Scan
 
 on:
   push:
@@ -8,28 +8,16 @@ on:
   schedule:
     - cron: '17 22 * * 4'
 
-permissions:
-  contents: read
-
 jobs:
   codacy-security-scan:
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
     name: Codacy Security Scan
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.22'
-
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Run Codacy Analysis CLI
-        uses: codacy/codacy-analysis-cli-action@d840f886c4bd4edc059706d09c6a1586111c540b
+        uses: codacy/codacy-analysis-cli-action@4.45.0
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           verbose: true
@@ -41,15 +29,7 @@ jobs:
           include_paths: |
             src/app-service/**
 
-      - name: Verify SARIF file
-        run: |
-          if [ ! -f results.sarif ] || [ ! -s results.sarif ]; then
-            echo "SARIF file is empty or does not exist."
-            exit 1
-          fi
-
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@v3
-        if: success() && steps.verify.outputs.file-not-empty == 'true'
         with:
           sarif_file: results.sarif
