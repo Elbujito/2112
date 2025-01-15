@@ -28,8 +28,8 @@ jobs:
       - name: Run Codacy Analysis CLI
         uses: codacy/codacy-analysis-cli-action@v4
         run: |
-            cd src/app-service
-            codacy-analysis-cli --project-token ${{ secrets.CODACY_PROJECT_TOKEN }} --verbose --output results.sarif --format sarif --gh-code-scanning-compat true --max-allowed-issues 2147483647
+          cd src/app-service
+          codacy-analysis-cli --project-token ${{ secrets.CODACY_PROJECT_TOKEN }} --verbose --output results.sarif --format sarif --gh-code-scanning-compat true --max-allowed-issues 2147483647
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
