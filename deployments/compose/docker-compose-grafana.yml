@@ -49,14 +49,14 @@ services:
     ports:
       - "9090:9090"
 
-  # periscope:
-  #   container_name: periscope
-  #   image: grafana/periscope:latest
-  #   ports:
-  #     - "4100:4100"
-  #   command: -config.file=/etc/periscope/config.yaml
-  #   volumes:
-  #     - ./assets/grafana/provisioning/periscope.yaml:/etc/periscope/config.yaml
+  periscope:
+    container_name: periscope
+    image: grafana/pyroscope:latest
+    ports:
+      - "4100:4100"
+    command: -config.file=/etc/periscope/config.yaml
+    volumes:
+      - ./assets/grafana/provisioning/periscope.yaml:/etc/periscope/config.yaml
 
   blackbox-exporter:
     container_name: blackbox-exporter

@@ -1,17 +1,13 @@
 server:
   http_listen_port: 4100
 
-positions:
-  filename: /tmp/positions.yaml
-
 memberlist:
   abort_if_cluster_join_fails: false
-  join:
+  join_members:
     - periscope
 
 compactor:
   data_dir: /tmp/periscope/compactor
-  retention_enabled: true
 
 distributor:
   ring:
@@ -25,24 +21,3 @@ ingester:
         store: memberlist
       replication_factor: 1
     final_sleep: 0s
-  chunk_idle_period: 5m       # Any chunk not receiving new logs in this time will be flushed
-  chunk_retain_period: 30s    # Ready chunks are retained in memory for this period before deletion
-  max_transfer_retries: 0
-
-querier:
-  query_ingesters_within: 2h
-
-query_range:
-  align_queries_with_step: true
-
-limits:
-  enforce_metric_name: false
-  reject_old_samples: true
-  reject_old_samples_max_age: 168h
-
-ruler:
-  rule_path: /tmp/periscope/rules
-  ring:
-    kvstore:
-      store: memberlist
-  enable_api: true
