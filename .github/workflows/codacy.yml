@@ -38,7 +38,6 @@ jobs:
           gh-code-scanning-compat: true
           max-allowed-issues: 2147483647
           tool: revive
-          directory: src/app-service
           exclude_paths: |
             src/**
             !src/app-service/**
