@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+// GzipMiddleware returns GZIP Middleware
 func GzipMiddleware() echo.MiddlewareFunc {
 	GzipCli := gzip.GetClient()
 	config := GzipCli.GetConfig()

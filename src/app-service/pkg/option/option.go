@@ -6,6 +6,7 @@ import (
 	"fmt"
 )
 
+// GetOrDefault generic functional type to explicitly handle both existing values or not
 func GetOrDefault[T any](opt Option[T], defaultValue T) T {
 	if opt.HasValue {
 		return opt.Value
@@ -96,6 +97,7 @@ func (o *Option[T]) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// AsOption generic functional type to explicitly handle both existing values or not
 func AsOption[T any](value *T) Option[T] {
 	if value != nil {
 		return NewValueOption(*value)

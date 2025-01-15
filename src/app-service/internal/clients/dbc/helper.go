@@ -21,6 +21,7 @@ func init() {
 	}
 }
 
+// GetDBClient definition
 func GetDBClient() *DBClient {
 	return dbClient
 }

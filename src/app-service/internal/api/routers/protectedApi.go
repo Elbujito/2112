@@ -103,8 +103,5 @@ func registerProtectedAPIRoutes() {
 	users.GET("", usersHandlers.Index)
 	users.GET("/:id", usersHandlers.Get)
 	users.POST("", usersHandlers.Post)
-	// users.PUT("/:id", usersHandlers.Put)
 	users.DELETE("/:id", usersHandlers.Delete)
-
-	// add more routes here ...
 }

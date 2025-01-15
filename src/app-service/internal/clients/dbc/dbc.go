@@ -14,6 +14,7 @@ import (
 	gLogger "gorm.io/gorm/logger"
 )
 
+// DBClient definition
 type DBClient struct {
 	name       string
 	config     features.DatabaseConfig
@@ -25,10 +26,12 @@ type DBClient struct {
 	dsn        string
 }
 
+// Name definition
 func (dbc *DBClient) Name() string {
 	return dbc.name
 }
 
+// SetSilent definition
 func (dbc *DBClient) SetSilent(val bool) {
 	dbc.silent = val
 	if !dbc.IsSilent() {
@@ -38,21 +41,25 @@ func (dbc *DBClient) SetSilent(val bool) {
 	}
 }
 
+// IsSilent definition
 func (dbc *DBClient) IsSilent() bool {
 	return dbc.silent
 }
 
 // clean up all this
-
+// InitServerConnection definition
 func (dbc *DBClient) InitServerConnection() {
 	dbc.ResolveServerDriver()
 	dbc.Connect()
 }
+
+// InitDBConnection definition
 func (dbc *DBClient) InitDBConnection() {
 	dbc.ResolveDriver()
 	dbc.Connect()
 }
 
+// Configure definition
 func (dbc *DBClient) Configure(v any) {
 	dbc.config = v.(reflect.Value).Interface().(features.DatabaseConfig)
 	dbc.adapter.SetConfig(dbc.config)
@@ -62,6 +69,7 @@ func (dbc *DBClient) Configure(v any) {
 	}
 }
 
+// ResolveDriver definition
 func (dbc *DBClient) ResolveDriver() {
 	dsn, err := dbc.adapter.GetDSN()
 	if err != nil {
@@ -78,6 +86,7 @@ func (dbc *DBClient) ResolveDriver() {
 	dbc.driver = driver
 }
 
+// ResolveServerDriver definition
 func (dbc *DBClient) ResolveServerDriver() {
 	dsn, err := dbc.adapter.GetServerDSN()
 	if err != nil {
@@ -94,6 +103,7 @@ func (dbc *DBClient) ResolveServerDriver() {
 	dbc.driver = driver
 }
 
+// Connect definition
 func (dbc *DBClient) Connect() {
 	var err error
 	dbc.DB, err = gorm.Open(dbc.driver, dbc.gormConfig)
@@ -103,6 +113,7 @@ func (dbc *DBClient) Connect() {
 	}
 }
 
+// Ping definition
 func (dbc *DBClient) Ping() error {
 	var err error
 	var d *sql.DB
@@ -121,6 +132,7 @@ func (dbc *DBClient) Ping() error {
 	return nil
 }
 
+// CreateDatabase definition
 func (dbc *DBClient) CreateDatabase() error {
 	sql, err := dbc.adapter.GetDbCreateStatement()
 	if err != nil {
@@ -133,6 +145,7 @@ func (dbc *DBClient) CreateDatabase() error {
 	return nil
 }
 
+// DropDatabase definition
 func (dbc *DBClient) DropDatabase() error {
 	sql, err := dbc.adapter.GetDbDropStatement()
 	if err != nil {

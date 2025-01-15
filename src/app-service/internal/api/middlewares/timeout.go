@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+// TimeoutMiddleware returns timeout Middleware
 func TimeoutMiddleware() echo.MiddlewareFunc {
 	serviceCli := service.GetClient()
 	config := serviceCli.GetConfig()

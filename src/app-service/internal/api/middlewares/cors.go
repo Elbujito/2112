@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// CORSMiddleware returns CORS Middleware
 func CORSMiddleware() echo.MiddlewareFunc {
 	corsCli := cors.GetClient()
 	config := corsCli.GetConfig()

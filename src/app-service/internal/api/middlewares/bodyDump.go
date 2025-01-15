@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+// BodyDumpMiddleware returns Body dump Middleware
 func BodyDumpMiddleware() echo.MiddlewareFunc {
 	return middleware.BodyDump(func(c echo.Context, reqBody, resBody []byte) {
 		if len(reqBody) > 0 {

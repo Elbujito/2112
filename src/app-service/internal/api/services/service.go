@@ -22,7 +22,6 @@ type ServiceComponent struct {
 
 // NewServiceComponent initializes and returns a new ServiceComponent.
 func NewServiceComponent(env *config.SEnv) *ServiceComponent {
-	// Initialize database connection
 	database := data.NewDatabase()
 
 	redisClient, err := redis.NewRedisClient(config.Env)
@@ -31,18 +30,15 @@ func NewServiceComponent(env *config.SEnv) *ServiceComponent {
 		return nil
 	}
 
-	// Initialize repositories
 	tleRepo := repository.NewTLERepository(&database, redisClient, 24*7*time.Hour)
 	satelliteRepo := repository.NewSatelliteRepository(&database)
 	tileRepo := repository.NewTileRepository(&database)
 	mappingRepo := repository.NewTileSatelliteMappingRepository(&database)
 	contextRepo := repository.NewContextRepository(&database)
 
-	// Initialize external clients
 	propagteClient := propagator.NewPropagatorClient(env)
 	celestrackClient := celestrack.NewCelestrackClient(env)
 
-	// Create services
 	satelliteService := services.NewSatelliteService(tleRepo, propagteClient, celestrackClient, satelliteRepo)
 	tileService := services.NewTileService(tileRepo, tleRepo, satelliteRepo, mappingRepo)
 	contextService := services.NewContextService(contextRepo)

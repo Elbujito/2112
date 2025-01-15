@@ -7,12 +7,14 @@ import (
 	"gorm.io/gorm"
 )
 
+// Adapter constructor
 var Adapters = &Adapter{
 	defaultPlatform: xconstants.DEFAULT_DB_PLATFORM,
 	currentPlatform: xconstants.DEFAULT_DB_PLATFORM,
 	adapters:        make(map[string]IAdapter),
 }
 
+// IAdapter interface
 type IAdapter interface {
 	SetConfig(config features.DatabaseConfig)
 	GetDriver() (gorm.Dialector, error)
@@ -24,6 +26,7 @@ type IAdapter interface {
 	ValidateConfig() error
 }
 
+// Adapter definition
 type Adapter struct {
 	IAdapter
 	adapters        map[string]IAdapter
@@ -32,6 +35,7 @@ type Adapter struct {
 	config          features.DatabaseConfig
 }
 
+// SetConfig sets configs
 func (a *Adapter) SetConfig(config features.DatabaseConfig) {
 	a.config = config
 	a.currentPlatform = config.Platform
@@ -40,6 +44,7 @@ func (a *Adapter) SetConfig(config features.DatabaseConfig) {
 	}
 }
 
+// GetDriver sets configs
 func (a *Adapter) GetDriver() (gorm.Dialector, error) {
 	if adapter, ok := a.adapters[a.currentPlatform]; ok {
 		return adapter.GetDriver()
@@ -47,6 +52,7 @@ func (a *Adapter) GetDriver() (gorm.Dialector, error) {
 	return nil, xconstants.ERROR_UNKNOWN_DB_PLATFORM
 }
 
+// GetServerDriver return server driver
 func (a *Adapter) GetServerDriver() (gorm.Dialector, error) {
 	if adapter, ok := a.adapters[a.currentPlatform]; ok {
 		return adapter.GetDriver()
@@ -54,6 +60,7 @@ func (a *Adapter) GetServerDriver() (gorm.Dialector, error) {
 	return nil, xconstants.ERROR_UNKNOWN_DB_PLATFORM
 }
 
+// GetDSN returns DSN
 func (a *Adapter) GetDSN() (string, error) {
 	if adapter, ok := a.adapters[a.currentPlatform]; ok {
 		return adapter.GetDSN()
@@ -61,6 +68,7 @@ func (a *Adapter) GetDSN() (string, error) {
 	return "", xconstants.ERROR_UNKNOWN_DB_PLATFORM
 }
 
+// GetServerDSN returns DSN
 func (a *Adapter) GetServerDSN() (string, error) {
 	if adapter, ok := a.adapters[a.currentPlatform]; ok {
 		return adapter.GetServerDSN()
@@ -68,10 +76,12 @@ func (a *Adapter) GetServerDSN() (string, error) {
 	return "", xconstants.ERROR_UNKNOWN_DB_PLATFORM
 }
 
+// AppendAdapter add adapter
 func (a *Adapter) AppendAdapter(name string, adapter IAdapter) {
 	a.adapters[name] = adapter
 }
 
+// AppendAdapter get db create statement
 func (a *Adapter) GetDbCreateStatement() (string, error) {
 	if adapter, ok := a.adapters[a.currentPlatform]; ok {
 		return adapter.GetDbCreateStatement()
@@ -79,6 +89,7 @@ func (a *Adapter) GetDbCreateStatement() (string, error) {
 	return "", xconstants.ERROR_UNKNOWN_DB_PLATFORM
 }
 
+// AppendAdapter get db statement
 func (a *Adapter) GetDbDropStatement() (string, error) {
 	if adapter, ok := a.adapters[a.currentPlatform]; ok {
 		return adapter.GetDbDropStatement()
@@ -86,6 +97,7 @@ func (a *Adapter) GetDbDropStatement() (string, error) {
 	return "", xconstants.ERROR_UNKNOWN_DB_PLATFORM
 }
 
+// ValidateConfig validates config
 func (a *Adapter) ValidateConfig() error {
 	if adapter, ok := a.adapters[a.currentPlatform]; ok {
 		return adapter.ValidateConfig()

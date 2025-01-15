@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+// LoggerMiddleware returns Logger Middleware
 func LoggerMiddleware() echo.MiddlewareFunc {
 	return middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format:           "${time_custom} ${user_agent} ${remote_ip} ${status} ${method} ${uri} ${latency_human} ${bytes_out}\n",
