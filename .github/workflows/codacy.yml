@@ -38,9 +38,8 @@ jobs:
           gh-code-scanning-compat: true
           max-allowed-issues: 2147483647
           tool: revive
-          exclude_paths: |
-            src/**
-            !src/app-service/**
+          include_paths: |
+            src/app-service/**
 
       - name: Verify SARIF file
         run: |
@@ -48,16 +47,9 @@ jobs:
             echo "SARIF file is empty or does not exist."
             exit 1
           fi
-      - name: Debug SARIF file generation
-        run: |
-          if [ -f results.sarif ]; then
-            echo "SARIF file contents:"
-            cat results.sarif
-          else
-            echo "SARIF file was not generated."
-            exit 1
-          fi
+
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@v3
+        if: success() && steps.verify.outputs.file-not-empty == 'true'
         with:
           sarif_file: results.sarif
