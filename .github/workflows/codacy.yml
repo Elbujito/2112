@@ -23,7 +23,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.22' # Specify your required Go version here
+          go-version: '1.22'
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -44,7 +44,7 @@ jobs:
 
       - name: Verify SARIF file
         run: |
-          if [ ! -s results.sarif ]; then
+          if [ ! -f results.sarif ] || [ ! -s results.sarif ]; then
             echo "SARIF file is empty or does not exist."
             exit 1
           fi
