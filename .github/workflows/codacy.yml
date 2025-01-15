@@ -24,10 +24,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Navigate to the src/app-service directory
-      - name: Change to src/app-service directory
-        run: cd src/app-service
-
       # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
         uses: codacy/codacy-analysis-cli-action@v4
@@ -38,10 +34,9 @@ jobs:
           format: sarif
           gh-code-scanning-compat: true
           max-allowed-issues: 2147483647
-          tool: revive
 
       # Upload the SARIF file generated in the previous step
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: src/app-service/results.sarif
+          sarif_file: results.sarif
