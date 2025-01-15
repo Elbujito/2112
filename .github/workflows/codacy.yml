@@ -60,7 +60,7 @@ jobs:
           # Force 0 exit code to allow SARIF file generation
           # This will handover control about PR rejection to the GitHub side
           max-allowed-issues: 2147483647
-          exclude: |
+          exclude_paths: |
             src/web/**
             src/propagator-service/**
             src/tle-propagator-service/**
