@@ -11,15 +11,18 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/tasks/handlers"
 )
 
+// TaskHandler definition
 type TaskHandler interface {
 	GetTask() handlers.Task
 	Run(ctx context.Context, args map[string]string) error
 }
 
+// TaskMonitor definition
 type TaskMonitor struct {
 	Tasks map[handlers.TaskName]TaskHandler
 }
 
+// TaskMonitor constructor
 func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository.TleRepository, tileRepo domain.TileRepository, visibilityRepo domain.MappingRepository, tleService services.TleService, satelliteService services.SatelliteService, redisClient *redis.RedisClient) (TaskMonitor, error) {
 
 	celestrackTleUpload := handlers.NewCelestrackTleUploadHandler(
@@ -65,6 +68,7 @@ func NewTaskMonitor(satelliteRepo domain.SatelliteRepository, tleRepo repository
 	}, nil
 }
 
+// Process execute processor
 func (t *TaskMonitor) Process(ctx context.Context, taskName handlers.TaskName, args map[string]string) error {
 	handler, err := t.GetMatchingTask(taskName)
 	if err != nil {
@@ -73,6 +77,7 @@ func (t *TaskMonitor) Process(ctx context.Context, taskName handlers.TaskName, a
 	return handler.Run(ctx, args)
 }
 
+// GetMatchingTask finds matching task
 func (t *TaskMonitor) GetMatchingTask(taskName handlers.TaskName) (task TaskHandler, err error) {
 	hh, ok := t.Tasks[taskName]
 	if !ok {
@@ -81,6 +86,7 @@ func (t *TaskMonitor) GetMatchingTask(taskName handlers.TaskName) (task TaskHand
 	return hh, nil
 }
 
+// RunTaskAsGoroutine runs as go routine
 func (t *TaskMonitor) RunTaskAsGoroutine(ctx context.Context, taskName handlers.TaskName, args map[string]string) error {
 	handler, err := t.GetMatchingTask(taskName)
 	if err != nil {

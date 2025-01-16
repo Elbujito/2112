@@ -6,7 +6,6 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/healthz"
 	metricsHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/metrics"
-	usersHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/users"
 	"github.com/Elbujito/2112/src/app-service/internal/api/middlewares"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
@@ -118,11 +117,6 @@ func registerProtectedApiHealthCheckHandlers() {
 }
 
 func registerProtectedAPIRoutes() {
-	users := protectedApiRouter.Echo.Group("/users")
-	users.GET("", usersHandlers.Index)
-	users.GET("/:id", usersHandlers.Get)
-	users.POST("", usersHandlers.Post)
-	users.DELETE("/:id", usersHandlers.Delete)
 }
 
 func registerMetricsAPIRoutes() {

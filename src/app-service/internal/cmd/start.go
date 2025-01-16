@@ -21,15 +21,11 @@ available options.
 
 Use -d or --dev to start in development mode.`,
 
-	// Uncomment the following line if you wish to execute the command
-	// by default this command does not execute anything as it is a parent command
-	//
 	Run: execStartCmd,
 }
 
 func init() {
 	// This is auto executed upon start
-	// Initialization processes can go here ...
 
 	// Register sub commands
 	startCmd.AddCommand(start.PublicApiCmd)
@@ -61,10 +57,6 @@ func execStartPersistentPreRun() {
 	proc.ConfigureClients()
 	proc.InitDbConnection()
 	proc.InitModels()
-	// You can initialize other features here ...
-	// this will run before any command, make sure to put only global initializations here
-	// to avoid running into nil pointers or undefined variables
-	// ...
 }
 
 func execStartCmd(cmd *cobra.Command, args []string) {

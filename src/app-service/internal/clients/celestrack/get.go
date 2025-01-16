@@ -16,16 +16,19 @@ import (
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xspace"
 )
 
+// CelestrackClient definition
 type CelestrackClient struct {
 	env *config.SEnv
 }
 
+// NewCelestrackClient constructor
 func NewCelestrackClient(env *config.SEnv) *CelestrackClient {
 	return &CelestrackClient{
 		env: env,
 	}
 }
 
+// FetchTLEFromSatCatByCategory fetches TLE from satcat catalog
 func (client *CelestrackClient) FetchTLEFromSatCatByCategory(ctx context.Context, category string) ([]*mappers.RawTLE, error) {
 	if category == "" {
 		return nil, fmt.Errorf("category is required")

@@ -53,7 +53,6 @@ func (e *SEnv) CheckAndSetDevMode() {
 	if !DevModeFlag {
 		return
 	}
-	// fmt.Println("Running in development mode. don't do this in production!")
 	logger.Warn("Running in development mode. don't do this in production!")
 
 	e.EnvVars.SetDevMode()

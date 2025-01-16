@@ -90,9 +90,4 @@ func initEnv() {
 
 func execRootPersistentPreRun() {
 	logger.Debug("Executing root cmd persistent pre run ...")
-
-	// You can initialize other features here ...
-	// this will run before any command, make sure to put only global initializations here
-	// to avoid running into nil pointers or undefined variables
-	// ...
 }

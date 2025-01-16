@@ -11,6 +11,7 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/config"
 )
 
+// PropagatorClient definition
 type PropagatorClient struct {
 	env *config.SEnv
 }
@@ -33,6 +34,7 @@ type SatellitePosition struct {
 	Time      string  `json:"timestamp"`
 }
 
+// PropagationResponse definition
 type PropagationResponse struct {
 	Positions []*SatellitePosition `json:"positions"`
 }

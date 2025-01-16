@@ -17,7 +17,6 @@ import (
 	serviceapi "github.com/Elbujito/2112/src/app-service/internal/api/services"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
-	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 	"github.com/labstack/echo/v4"
 )
 
@@ -60,10 +59,6 @@ func (r *PublicRouter) registerMiddlewares() {
 		middlewares.TimeoutMiddleware(),
 		middlewares.RequestHeadersMiddleware(),
 		middlewares.ResponseHeadersMiddleware(),
-	}
-
-	if config.Feature(xconstants.FEATURE_GZIP).IsEnabled() {
-		middlewaresList = append(middlewaresList, middlewares.GzipMiddleware())
 	}
 
 	for _, middleware := range middlewaresList {

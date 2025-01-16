@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
+// LogLevel alias
 type LogLevel string
 
 const (

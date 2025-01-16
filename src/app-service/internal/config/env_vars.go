@@ -19,15 +19,10 @@ type EnvVars struct {
 	DisableFeatures []string                  `mapstructure:"DISABLE_FEATURES"`
 	Service         features.ServiceConfig    `mapstructure:",squash"`
 	Database        features.DatabaseConfig   `mapstructure:",squash"`
-	Kratos          features.KratosConfig     `mapstructure:",squash"`
-	Keto            features.KetoConfig       `mapstructure:",squash"`
 	Redis           features.RedisConfig      `mapstructure:",squash"`
 	Cors            features.CorsConfig       `mapstructure:",squash"`
-	Gzip            features.GzipConfig       `mapstructure:",squash"`
 	Celestrack      features.CelestrackConfig `mapstructure:",squash"` // add additional features here
 	Propagator      features.PropagatorConfig `mapstructure:",squash"` // add additional features here
-	// to enable env vars reading and setting
-	// ...
 }
 
 func (c *EnvVars) Init() {
@@ -88,8 +83,6 @@ func (c *EnvVars) setDefaults() {
 	viper.SetDefault("DB_TIMEZONE", xconstants.DEFAULT_DB_TIMEZONE)
 
 	viper.SetDefault("CORS_ALLOW_ORIGINS", xconstants.DEFAULT_CORS_ALLOW_ORIGINS)
-
-	viper.SetDefault("GZIP_LEVEL", xconstants.DEFAULT_GZIP_LEVEL)
 
 	viper.SetDefault("CELESTRACK_URL", xconstants.DEFAULT_PUBLIC_CESLESTRACK_URL)
 	viper.SetDefault("PROPAGATOR_URL", xconstants.DEFAULT_PRIVATE_PROPAGATOR_URL)

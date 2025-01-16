@@ -10,6 +10,7 @@ func init() {
 	}
 }
 
+// GetClient getters
 func GetClient() *CorsClient {
 	return client
 }

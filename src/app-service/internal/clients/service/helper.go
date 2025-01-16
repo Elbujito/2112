@@ -10,6 +10,7 @@ func init() {
 	}
 }
 
+// GetClient getters
 func GetClient() *ServiceClient {
 	return client
 }

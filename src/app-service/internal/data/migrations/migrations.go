@@ -7,25 +7,33 @@ import (
 	"gorm.io/gorm"
 )
 
+// Migrations definition
 var Migrations *gormigrate.Gormigrate
+
+// MigrationsList definition
 var MigrationsList = []*gormigrate.Migration{}
 
+// Init init
 func Init(db *gorm.DB) {
 	Migrations = gormigrate.New(db, gormigrate.DefaultOptions, MigrationsList)
 }
 
+// AddMigration definition
 func AddMigration(migration *gormigrate.Migration) {
 	MigrationsList = append(MigrationsList, migration)
 }
 
+// Migrate definition
 func Migrate() error {
 	return Migrations.Migrate()
 }
 
+// Rollback definition
 func Rollback() error {
 	return Migrations.RollbackLast()
 }
 
+// AutoMigrateAndLog definition
 func AutoMigrateAndLog(db *gorm.DB, model interface{}, id string) error {
 	if err := db.AutoMigrate(model); err != nil {
 		logFail(id, err)

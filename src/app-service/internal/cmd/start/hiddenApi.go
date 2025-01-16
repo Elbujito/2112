@@ -21,7 +21,6 @@ func init() {
 }
 
 func execHiddenApiCmd(cmd *cobra.Command, args []string) {
-	// Command execution goes here ...
 	if config.StartWatcherFlag {
 		go WatcherCmd.Run(cmd, args)
 	}

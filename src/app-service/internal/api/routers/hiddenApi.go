@@ -67,10 +67,6 @@ func registerHiddenApiSecurityMiddlewares() {
 	if config.Feature(xconstants.FEATURE_CORS).IsEnabled() {
 		hiddenApiRouter.RegisterMiddleware(middlewares.CORSMiddleware())
 	}
-
-	if config.Feature(xconstants.FEATURE_ORY_KRATOS).IsEnabled() {
-		hiddenApiRouter.RegisterMiddleware(middlewares.AuthenticationMiddleware())
-	}
 }
 
 func registerHiddenApiErrorHandlers() {

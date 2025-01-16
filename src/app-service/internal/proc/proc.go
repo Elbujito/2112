@@ -7,8 +7,6 @@ import (
 	clientsPkg "github.com/Elbujito/2112/src/app-service/internal/clients"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/cors"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/dbc"
-	"github.com/Elbujito/2112/src/app-service/internal/clients/gzip"
-	"github.com/Elbujito/2112/src/app-service/internal/clients/kratos"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/service"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
@@ -31,9 +29,7 @@ var clients []clientsPkg.IClient
 func InitClients() {
 	InitServiceClient()
 	InitCorsClient()
-	InitGzipClient()
 	InitDbClient()
-	InitOryKratosClient()
 	// ...
 }
 
@@ -66,22 +62,10 @@ func InitCorsClient() {
 	addClient(client)
 }
 
-func InitGzipClient() {
-	client := gzip.GetClient()
-	logger.Debug("Activating %s client ...", client.Name())
-	addClient(client)
-}
-
 func InitDbClient() {
 	client := dbc.GetDBClient()
 	logger.Debug("Activating %s client ...", client.Name())
 	client.SetSilent(!config.DevModeFlag)
-	addClient(client)
-}
-
-func InitOryKratosClient() {
-	client := kratos.GetClient()
-	logger.Debug("Activating %s client ...", client.Name())
 	addClient(client)
 }
 
