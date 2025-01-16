@@ -3,11 +3,14 @@ package proc
 import (
 	"github.com/Elbujito/2112/src/app-service/internal/api/routers"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/service"
+	"github.com/Elbujito/2112/src/app-service/internal/config"
+	"github.com/Elbujito/2112/src/app-service/internal/services"
 )
 
-func StartProtectedApi() {
+// StartPublicApi starts de protected http server
+func StartProtectedApi(services *services.ServiceComponent) {
 	serviceCli := service.GetClient()
-	config := serviceCli.GetConfig()
-	routers.InitProtectedAPIRouter()
-	routers.ProtectedAPIRouter().Start(config.Host, config.ProtectedApiPort)
+	c := serviceCli.GetConfig()
+	protectedApiRouter := routers.InitProtectedAPIRouter(config.Env, services)
+	protectedApiRouter.Start(c.Host, c.ProtectedApiPort)
 }

@@ -1,93 +1,48 @@
 package cmd
 
 import (
-	"io"
-	"os"
-	"runtime/debug"
-	"strings"
+	"context"
 
+	"github.com/Elbujito/2112/src/app-service/internal/app"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
-	"github.com/Elbujito/2112/src/app-service/internal/config"
-	"github.com/Elbujito/2112/src/app-service/internal/proc"
 
 	"github.com/spf13/cobra"
-
-	log "github.com/Elbujito/2112/src/app-service/pkg/log"
-	traceConfig "github.com/Elbujito/2112/src/app-service/pkg/tracing/config"
 )
 
+// Global variable to hold the application version
 var Version string
-var runtimeInfo, _ = debug.ReadBuildInfo()
-var runtimeModuleInfo = strings.Split(runtimeInfo.Main.Path, "/")
-var runtimeModuleName = runtimeModuleInfo[len(runtimeModuleInfo)-1]
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   runtimeModuleName,
-	Short: runtimeModuleName + " cli",
-	Long: `
-` + runtimeModuleName + ` cli`,
+	Use:   "app",
+	Short: "CLI for managing services",
+	Long:  "CLI for managing services, databases, and tasks.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		logger.Debug("Root command persistent pre-run executed.")
+	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
+// Execute runs the root command and its subcommands
+func Execute(ctx context.Context) {
+	app, err := app.NewApp(ctx, rootCmd.Use, Version)
 	if err != nil {
-		os.Exit(1)
-	}
-}
-
-func init() {
-	// This is auto executed upon start
-	// Initialization processes can go here ...
-
-	// Configure cobra
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
-
-	// Set global flags
-	rootCmd.PersistentFlags().BoolVarP(&config.DevModeFlag, "dev", "d", false, "Run in development mode")
-	rootCmd.PersistentFlags().BoolVarP(&config.EnvModeFlag, "env", "e", false, "Print environment before execution")
-	rootCmd.PersistentFlags().StringVarP(&config.LogLevelFlag, "log", "l", "", "Log Level")
-	// Initialize app config
-	cobra.OnInitialize(initEnv)
-
-	// Register persistent function for all commands
-	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		execRootPersistentPreRun()
-	}
-
-	traceCfg := traceConfig.Config{
-		Type: config.ExporterType,
-		Config: map[string]interface{}{
-			"service":  &config.Env.ServiceName,
-			"endpoint": &config.PushEndpoint,
-			"fraction": &config.SamplingFraction,
-		},
-	}
-
-	err := traceCfg.NewTracer()
-	if err != nil {
+		logger.Error("Command execution failed: %v", err)
 		return
 	}
 
-	var logWriter io.Writer
-	logger, err := log.NewLogger(logWriter, log.Level("debug"), log.LoggerTypes.Logrus())
-	if err != nil {
-		panic(err)
-	}
-	log.SetDefaultLogger(logger)
+	// Register subcommands with the App instance
+	registerSubcommands(&app)
 
+	// Execute the root command
+	if err := rootCmd.Execute(); err != nil {
+		logger.Error("Command execution failed: %v", err)
+	}
 }
 
-func initEnv() {
-	if config.DevModeFlag {
-		logger.SetDevMode()
-	}
-	config.OverrideLoggerUsingFlags()
-	proc.InitServiceEnv(runtimeModuleName, Version)
-}
-
-func execRootPersistentPreRun() {
-	logger.Debug("Executing root cmd persistent pre run ...")
+// registerSubcommands dynamically registers all subcommands
+func registerSubcommands(app *app.App) {
+	rootCmd.AddCommand(StartCmd(app))
+	rootCmd.AddCommand(DbCmd(app))
+	rootCmd.AddCommand(InfoCmd(app))
+	rootCmd.AddCommand(TaskCmd(app))
 }

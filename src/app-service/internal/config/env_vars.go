@@ -20,7 +20,6 @@ type EnvVars struct {
 	Service         features.ServiceConfig    `mapstructure:",squash"`
 	Database        features.DatabaseConfig   `mapstructure:",squash"`
 	Redis           features.RedisConfig      `mapstructure:",squash"`
-	Cors            features.CorsConfig       `mapstructure:",squash"`
 	Celestrack      features.CelestrackConfig `mapstructure:",squash"` // add additional features here
 	Propagator      features.PropagatorConfig `mapstructure:",squash"` // add additional features here
 }
@@ -72,7 +71,6 @@ func (c *EnvVars) setDefaults() {
 	viper.SetDefault("HOST", xconstants.DEFAULT_HOST)
 	viper.SetDefault("PROTECTED_API_PORT", xconstants.DEFAULT_PROTECTED_API_PORT)
 	viper.SetDefault("PUBLIC_API_PORT", xconstants.DEFAULT_PUBLIC_API_PORT)
-	viper.SetDefault("HIDDEN_API_PORT", xconstants.DEFAULT_HIDDEN_API_PORT)
 	viper.SetDefault("LOG_LEVEL", xconstants.DEFAULT_LOG_LEVEL)
 	viper.SetDefault("REQUEST_TIMEOUT_DURATION", strconv.Itoa(xconstants.DEFAULT_REQUEST_TIMEOUT_DURATION))
 	viper.SetDefault("WATCHER_SLEEP_INTERVAL", strconv.Itoa(xconstants.DEFAULT_WATCHER_SLEEP_INTERVAL))
@@ -98,9 +96,6 @@ func (c *EnvVars) OverrideUsingFlags() {
 	}
 	if PublicPortFlag != "" {
 		c.Service.PublicApiPort = PublicPortFlag
-	}
-	if HiddenPortFlag != "" {
-		c.Service.HiddenApiPort = HiddenPortFlag
 	}
 }
 

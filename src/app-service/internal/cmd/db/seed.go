@@ -1,25 +1,19 @@
 package db
 
 import (
+	"github.com/Elbujito/2112/src/app-service/internal/app"
 	"github.com/Elbujito/2112/src/app-service/internal/proc"
-
 	"github.com/spf13/cobra"
 )
 
-// SeedCmd represents the seed command
-var SeedCmd = &cobra.Command{
-	Use:   "seed",
-	Short: "Seed database",
-	Long:  `Backfill database with seed data.`,
-	Run:   execSeedCmd,
-}
-
-func init() {
-	// This is auto executed upon start
-	// Initialization processes can go here ...
-}
-
-func execSeedCmd(cmd *cobra.Command, args []string) {
-	// Command execution goes here ...
-	proc.DBSeed()
+// SeedCmd creates the `seed` command
+func SeedCmd(app *app.App) *cobra.Command {
+	return &cobra.Command{
+		Use:   "seed",
+		Short: "Seed database",
+		Long:  "Backfill database with seed data.",
+		Run: func(cmd *cobra.Command, args []string) {
+			proc.DBSeed()
+		},
+	}
 }

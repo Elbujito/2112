@@ -38,7 +38,7 @@ RUN mkdir -p /var/app-service/logs /var/2112/config /var/2112/data
 COPY --from=builder /out/app-service /usr/local/bin/app-service
 
 # Expose ports
-EXPOSE 8081 8080 8079
+EXPOSE 8081 8080
 
 # Set default command (placeholder or shell)
 CMD ["/usr/local/bin/app-service"]

@@ -10,7 +10,6 @@ services:
     ports:
       - "8081:8081"
       - "8080:8080"
-      - "8079:8079"
     logging:
       driver: loki
       options:

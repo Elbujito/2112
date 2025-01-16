@@ -14,9 +14,9 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/api/handlers/satellites"
 	"github.com/Elbujito/2112/src/app-service/internal/api/handlers/tiles"
 	"github.com/Elbujito/2112/src/app-service/internal/api/middlewares"
-	serviceapi "github.com/Elbujito/2112/src/app-service/internal/api/services"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
+	"github.com/Elbujito/2112/src/app-service/internal/services"
 	"github.com/labstack/echo/v4"
 )
 
@@ -24,7 +24,7 @@ import (
 type PublicRouter struct {
 	Echo             *echo.Echo
 	Name             string
-	ServiceComponent *serviceapi.ServiceComponent
+	ServiceComponent *services.ServiceComponent
 }
 
 // Init initializes the Echo instance for the router.
@@ -36,13 +36,12 @@ func (r *PublicRouter) Init() {
 }
 
 // InitPublicAPIRouter initializes and returns the public API router.
-func InitPublicAPIRouter(env *config.SEnv) *PublicRouter {
+func InitPublicAPIRouter(env *config.SEnv, services *services.ServiceComponent) *PublicRouter {
 	logger.Debug("Initializing public API router ...")
 
-	serviceComponent := serviceapi.NewServiceComponent(env)
 	publicApiRouter := &PublicRouter{
 		Name:             "public API",
-		ServiceComponent: serviceComponent,
+		ServiceComponent: services,
 	}
 	publicApiRouter.Init()
 	publicApiRouter.registerMiddlewares()

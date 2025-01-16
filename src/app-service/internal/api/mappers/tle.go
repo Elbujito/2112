@@ -2,6 +2,7 @@ package mappers
 
 import "time"
 
+// RawTLE definition
 type RawTLE struct {
 	NoradID string `json:"norad_id"`
 	Line1   string `json:"line1"`
@@ -22,5 +23,5 @@ type SatelliteMetadata struct {
 	Apogee         *float64
 	Perigee        *float64
 	RCS            *float64
-	Altitude       *float64 // New field for altitude
+	Altitude       *float64
 }

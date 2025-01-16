@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/Elbujito/2112/src/app-service/internal/app"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/cmd/db"
 	"github.com/Elbujito/2112/src/app-service/internal/proc"
@@ -9,40 +10,35 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// dbCmd represents the db command
-var dbCmd = &cobra.Command{
-	Use:   "db <option>",
-	Short: "Start db related operations",
-	Long: `Start a database operation.
+// DbCmd creates the `db` command with its subcommands
+func DbCmd(app *app.App) *cobra.Command {
+	dbCmd := &cobra.Command{
+		Use:   "db <option>",
+		Short: "Start db-related operations",
+		Long: `Start a database operation.
 Please key in an option to start. Type 'db -h' for more information.
 
 Popular options are:
 - db migrate
 - db rollback`,
-}
-
-func init() {
-	// This is auto executed upon start
-	// Initialization processes can go here ...
-
-	// Register sub commands
-	dbCmd.AddCommand(db.CreateCmd)
-	dbCmd.AddCommand(db.DropCmd)
-	dbCmd.AddCommand(db.MigrateCmd)
-	dbCmd.AddCommand(db.RollbackCmd)
-	dbCmd.AddCommand(db.SeedCmd)
-
-	// Register persistent function for all sub commands
-	dbCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		rootCmd.PersistentPreRun(cmd, args)
-		execDbPersistentPreRun(cmd)
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			rootCmd.PersistentPreRun(cmd, args)
+			execDbPersistentPreRun(app, cmd)
+		},
 	}
 
-	// Register db command
-	rootCmd.AddCommand(dbCmd)
+	// Register subcommands
+	dbCmd.AddCommand(db.CreateCmd(app))
+	dbCmd.AddCommand(db.DropCmd(app))
+	dbCmd.AddCommand(db.MigrateCmd(app))
+	dbCmd.AddCommand(db.RollbackCmd(app))
+	dbCmd.AddCommand(db.SeedCmd(app))
+
+	return dbCmd
 }
 
-func execDbPersistentPreRun(cmd *cobra.Command) {
+// execDbPersistentPreRun handles shared setup logic before any db subcommand
+func execDbPersistentPreRun(app *app.App, cmd *cobra.Command) {
 	logger.Debug("Executing db persistent pre run ...")
 
 	proc.InitDbClient()
@@ -50,9 +46,7 @@ func execDbPersistentPreRun(cmd *cobra.Command) {
 
 	ca := cmd.CalledAs()
 
-	// here we don't always establish the connection because different
-	// commands may require different database connections
-	// so we only establish the connection when calling migrate, rollback or seed
+	// Establish connection only for specific commands
 	switch ca {
 	case xconstants.NAME_CMD_DB_MIGRATE,
 		xconstants.NAME_CMD_DB_ROLLBACK,
@@ -61,9 +55,5 @@ func execDbPersistentPreRun(cmd *cobra.Command) {
 		proc.InitModels()
 	}
 
-	// You can initialize other features here ...
-	// this will run before any command, make sure to put only global initializations here
-	// to avoid running into nil pointers or undefined variables
-	// ...
-
+	// Additional global initializations can be added here if needed
 }

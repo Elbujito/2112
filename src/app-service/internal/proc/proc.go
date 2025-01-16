@@ -1,17 +1,12 @@
 package proc
 
 import (
-	"fmt"
-
-	"github.com/Elbujito/2112/src/app-service/internal/api/routers"
 	clientsPkg "github.com/Elbujito/2112/src/app-service/internal/clients"
-	"github.com/Elbujito/2112/src/app-service/internal/clients/cors"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/dbc"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/service"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
 	"github.com/Elbujito/2112/src/app-service/internal/data/models"
-	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xutils"
 )
 
 func InitServiceEnv(serviceName string, version string) {
@@ -28,9 +23,7 @@ var clients []clientsPkg.IClient
 
 func InitClients() {
 	InitServiceClient()
-	InitCorsClient()
 	InitDbClient()
-	// ...
 }
 
 func ConfigureClients() {
@@ -56,12 +49,6 @@ func InitServiceClient() {
 	addClient(client)
 }
 
-func InitCorsClient() {
-	client := cors.GetClient()
-	logger.Debug("Activating %s client ...", client.Name())
-	addClient(client)
-}
-
 func InitDbClient() {
 	client := dbc.GetDBClient()
 	logger.Debug("Activating %s client ...", client.Name())
@@ -77,34 +64,4 @@ func InitDbConnection() {
 func InitModels() {
 	logger.Debug("Activating models ...")
 	models.Init(dbc.GetDBClient().DB)
-}
-
-func PrintHiddenRoutesTable() {
-	routers.InitHiddenAPIRouter()
-	routes := routers.HiddenAPIRouter().Echo.Routes()
-
-	t := xutils.PrepareRoutesTable(routes, "Hidden API Routes")
-	xutils.SetTableBorderStyle(t, config.NoBorderFlag)
-
-	fmt.Println(t.Render())
-}
-
-func PrintProtectedRoutesTable() {
-	routers.InitProtectedAPIRouter()
-	routes := routers.ProtectedAPIRouter().Echo.Routes()
-
-	t := xutils.PrepareRoutesTable(routes, "Protected API Routes")
-	xutils.SetTableBorderStyle(t, config.NoBorderFlag)
-
-	fmt.Println(t.Render())
-}
-
-func PrintPublicRoutesTable() {
-	publicApiRouter := routers.InitPublicAPIRouter(config.Env)
-	routes := publicApiRouter.Echo.Routes()
-
-	t := xutils.PrepareRoutesTable(routes, "Public API Routes")
-	xutils.SetTableBorderStyle(t, config.NoBorderFlag)
-
-	fmt.Println(t.Render())
 }

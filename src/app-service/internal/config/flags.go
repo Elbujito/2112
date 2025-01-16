@@ -30,11 +30,6 @@ var ProtectedPortFlag string
 // description: Set the public api port for the server. Overrides env var PORT
 var PublicPortFlag string
 
-// Flag: 				HiddenPortFlag (string)
-// default: 		""
-// description: Set the hidden api port for the server. Overrides env var PORT
-var HiddenPortFlag string
-
 // Flag: 				LogLevel (string)
 // default: 		""
 // description: Set the log level. Overrides env var LOG_LEVEL

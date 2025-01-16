@@ -1,24 +1,20 @@
 package task
 
 import (
+	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/proc"
-
 	"github.com/spf13/cobra"
 )
 
-// ExecCmd represents the exec command
-var ExecCmd = &cobra.Command{
-	Use:   "exec",
-	Short: "Start exec task",
-	Long:  `Start the exec task.`,
-	Run:   execExecCmd,
-}
-
-func init() {
-	// This is auto executed upon start
-	// Initialization processes can go here ...
-}
-
-func execExecCmd(cmd *cobra.Command, args []string) {
-	proc.TaskExec(cmd.Context(), args)
+// ExecCmd creates the `exec` subcommand
+func ExecCmd(serviceComponent interface{}) *cobra.Command {
+	return &cobra.Command{
+		Use:   "exec",
+		Short: "Start exec task",
+		Long:  `Start the exec task.`,
+		Run: func(cmd *cobra.Command, args []string) {
+			logger.Debug("Executing a task...")
+			proc.TaskExec(cmd.Context(), args)
+		},
+	}
 }

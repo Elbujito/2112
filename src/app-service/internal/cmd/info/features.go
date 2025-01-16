@@ -1,25 +1,19 @@
 package info
 
 import (
-	"github.com/Elbujito/2112/src/app-service/internal/config"
-
+	"github.com/Elbujito/2112/src/app-service/internal/app"
+	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/spf13/cobra"
 )
 
-// FeaturesCmd represents the features command
-var FeaturesCmd = &cobra.Command{
-	Use:   "features",
-	Short: "Print service features configuration",
-	Long:  `Print service features configuration based on environment`,
-	Run:   execFeaturesCmd,
-}
-
-func init() {
-	// This is auto executed upon start
-	// Initialization processes can go here ...
-}
-
-func execFeaturesCmd(cmd *cobra.Command, args []string) {
-	// Command execution goes here ...
-	config.Env.PrintServiceFeatures()
+// FeaturesCmd creates the `features` subcommand
+func FeaturesCmd(app *app.App) *cobra.Command {
+	return &cobra.Command{
+		Use:   "features",
+		Short: "List enabled features",
+		Long:  "Display the list of enabled features for the service.",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger.Debug("Listing enabled features...")
+		},
+	}
 }

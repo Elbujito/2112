@@ -1,64 +1,64 @@
 package routers
 
 import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/Elbujito/2112/src/app-service/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/healthz"
 	metricsHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/metrics"
-	"github.com/Elbujito/2112/src/app-service/internal/api/middlewares"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
-	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
+	"github.com/Elbujito/2112/src/app-service/internal/services"
+	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var protectedApiRouter *PublicRouter
+// ProtectedRouter manages the public API router and its dependencies.
+type ProtectedRouter struct {
+	Echo             *echo.Echo
+	Name             string
+	ServiceComponent *services.ServiceComponent
+}
 
-func InitProtectedAPIRouter() {
+// Init initializes the Echo instance for the router.
+func (r *ProtectedRouter) Init() {
+	r.Echo = echo.New()
+	r.Echo.HideBanner = true
+	r.Echo.Logger = logger.GetLogger()
+
+}
+
+func InitProtectedAPIRouter(env *config.SEnv, services *services.ServiceComponent) *ProtectedRouter {
 	logger.Debug("Initializing protected api router ...")
-	protectedApiRouter = &PublicRouter{}
-	protectedApiRouter.Name = "protected API"
-	protectedApiRouter.Init()
-
-	// order is important here
-	// first register development middlewares
-	if config.DevModeFlag {
-		logger.Debug("Registering protected api development middlewares ...")
-		registerProtectedApiDevModeMiddleware()
+	protectedApiRouter := &ProtectedRouter{
+		Name:             "public API",
+		ServiceComponent: services,
 	}
-
-	// next register middlwares
-	logger.Debug("Registering protected api middlewares ...")
-	registerProtectedAPIMiddlewares()
+	protectedApiRouter.Init()
+	protectedApiRouter.registerPrometheusMetrics()
 
 	// next register all health check routes
 	logger.Debug("Registering protected api health routes ...")
-	registerProtectedApiHealthCheckHandlers()
+	protectedApiRouter.registerProtectedApiHealthCheckHandlers()
 
-	// next register security related middleware
-	logger.Debug("Registering protected api security middlewares ...")
-	registerProtectedApiSecurityMiddlewares()
-
-	// next register all routes
-	logger.Debug("Registering protected api protected routes ...")
-	registerProtectedAPIRoutes()
 	logger.Debug("Registering metrics api protected routes ...")
-	registerMetricsAPIRoutes()
+	protectedApiRouter.registerMetricsAPIRoutes()
 
 	// finally register default fallback error handlers
 	// 404 is handled here as the last route
 	logger.Debug("Registering protected api error handlers ...")
-	registerProtectedApiErrorHandlers()
+	protectedApiRouter.registerProtectedApiErrorHandlers()
 
 	logger.Debug("Protected api registration complete.")
-}
-
-func ProtectedAPIRouter() *PublicRouter {
 	return protectedApiRouter
 }
 
-func (r *PublicRouter) registerPrometheusMetrics() {
+func (r *ProtectedRouter) registerPrometheusMetrics() {
 	appUptime := prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "app_uptime_seconds",
@@ -85,41 +85,44 @@ func (r *PublicRouter) registerPrometheusMetrics() {
 	}()
 }
 
-func registerProtectedAPIMiddlewares() {
-	protectedApiRouter.RegisterPreMiddleware(middlewares.SlashesMiddleware())
-
-	protectedApiRouter.RegisterMiddleware(middlewares.LoggerMiddleware())
-	protectedApiRouter.RegisterMiddleware(middlewares.TimeoutMiddleware())
-	hiddenApiRouter.registerPrometheusMetrics()
+func (r *ProtectedRouter) registerProtectedApiErrorHandlers() {
+	r.Echo.HTTPErrorHandler = errors.AutomatedHttpErrorHandler()
+	r.Echo.RouteNotFound("/*", errors.NotFound)
 }
 
-func registerProtectedApiDevModeMiddleware() {
-	protectedApiRouter.RegisterMiddleware(middlewares.BodyDumpMiddleware())
-}
-
-func registerProtectedApiSecurityMiddlewares() {
-	protectedApiRouter.RegisterMiddleware(middlewares.XSSCheckMiddleware())
-
-	if config.Feature(xconstants.FEATURE_CORS).IsEnabled() {
-		protectedApiRouter.RegisterMiddleware(middlewares.CORSMiddleware())
-	}
-}
-
-func registerProtectedApiErrorHandlers() {
-	protectedApiRouter.Echo.HTTPErrorHandler = errors.AutomatedHttpErrorHandler()
-	protectedApiRouter.Echo.RouteNotFound("/*", errors.NotFound)
-}
-
-func registerProtectedApiHealthCheckHandlers() {
-	health := protectedApiRouter.Echo.Group("/health")
+func (r *ProtectedRouter) registerProtectedApiHealthCheckHandlers() {
+	health := r.Echo.Group("/health")
 	health.GET("/alive", healthHandlers.Index)
 	health.GET("/ready", healthHandlers.Ready)
 }
-
-func registerProtectedAPIRoutes() {
+func (r *ProtectedRouter) registerMetricsAPIRoutes() {
+	metrics := r.Echo.Group("/metrics")
+	metrics.GET("", metricsHandlers.GetMetrics)
 }
 
-func registerMetricsAPIRoutes() {
-	metrics := protectedApiRouter.Echo.Group("/metrics")
-	metrics.GET("", metricsHandlers.GetMetrics)
+// Start the Echo server
+func (r *ProtectedRouter) Start(host string, port string) {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
+	go func() {
+		r.Echo.Logger.Info(fmt.Sprintf("Starting %s server on port: %s", r.Name, port))
+		if err := r.Echo.Start(host + ":" + port); err != nil && err != http.ErrServerClosed {
+			r.Echo.Logger.Fatalf("Server error: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+	r.shutdownServer()
+}
+
+func (r *ProtectedRouter) shutdownServer() {
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	if err := r.Echo.Shutdown(ctx); err != nil {
+		r.Echo.Logger.Fatalf("Failed to shutdown server: %v", err)
+	}
+
+	r.Echo.Logger.Info("Server shutdown complete.")
 }

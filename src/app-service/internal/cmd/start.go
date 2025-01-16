@@ -1,71 +1,72 @@
 package cmd
 
 import (
+	"github.com/Elbujito/2112/src/app-service/internal/app"
 	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
-	"github.com/Elbujito/2112/src/app-service/internal/cmd/start"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
 	"github.com/Elbujito/2112/src/app-service/internal/proc"
-
 	"github.com/spf13/cobra"
 )
 
-// startCmd represents the start command
-var startCmd = &cobra.Command{
-	Use:   "start <option>",
-	Short: "Start service or daemon",
-	Long: `Start web server, daemons or other services.
+// StartCmd creates the `start` command
+func StartCmd(app *app.App) *cobra.Command {
+	startCmd := &cobra.Command{
+		Use:   "start",
+		Short: "Start public and protected API services",
+		Long:  "Start both public and protected API services, as well as optional daemons.",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger.Debug("Starting public and protected API services...")
+			proc.StartPublicApi(app.Services)
+			proc.StartProtectedApi(app.Services)
+		},
+	}
 
-When running this command without options, it will start all http servers.
-If you wish to start a single server instead, you can choose from the 
-available options.
-
-Use -d or --dev to start in development mode.`,
-
-	Run: execStartCmd,
-}
-
-func init() {
-	// This is auto executed upon start
-
-	// Register sub commands
-	startCmd.AddCommand(start.PublicApiCmd)
-	startCmd.AddCommand(start.ProtectedApiCmd)
-	startCmd.AddCommand(start.HiddenApiCmd)
-	startCmd.AddCommand(start.WatcherCmd)
+	// Add subcommands
+	startCmd.AddCommand(PublicApiCmd(app))
+	startCmd.AddCommand(ProtectedApiCmd(app))
+	startCmd.AddCommand(WatcherCmd(app))
 
 	// Set global flags
 	startCmd.PersistentFlags().BoolVar(&config.StartWatcherFlag, "watcher", false, "Start watcher daemon in background")
 	startCmd.PersistentFlags().StringVarP(&config.HostFlag, "host", "H", "", "Service host")
 	startCmd.PersistentFlags().StringVar(&config.ProtectedPortFlag, "protected-api-port", "", "Protected API Service port")
 	startCmd.PersistentFlags().StringVar(&config.PublicPortFlag, "public-api-port", "", "Public API Service port")
-	startCmd.PersistentFlags().StringVar(&config.HiddenPortFlag, "hidden-api-port", "", "Hidden API Service port")
 
-	// Register persistent function for all sub commands
-	startCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		rootCmd.PersistentPreRun(cmd, args)
-		execStartPersistentPreRun()
-	}
-
-	// Register start command
-	rootCmd.AddCommand(startCmd)
+	return startCmd
 }
 
-func execStartPersistentPreRun() {
-	logger.Debug("Executing start persistent pre run ...")
-
-	proc.InitClients()
-	proc.ConfigureClients()
-	proc.InitDbConnection()
-	proc.InitModels()
+// PublicApiCmd creates the `publicApi` subcommand
+func PublicApiCmd(app *app.App) *cobra.Command {
+	return &cobra.Command{
+		Use:   "publicApi",
+		Short: "Start public API service",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger.Debug("Starting public API service...")
+			proc.StartPublicApi(app.Services)
+		},
+	}
 }
 
-func execStartCmd(cmd *cobra.Command, args []string) {
-	// Command execution goes here ...
-	if config.StartWatcherFlag {
-		go start.WatcherCmd.Run(cmd, args)
+// ProtectedApiCmd creates the `protectedApi` subcommand
+func ProtectedApiCmd(app *app.App) *cobra.Command {
+	return &cobra.Command{
+		Use:   "protectedApi",
+		Short: "Start protected API service",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger.Debug("Starting protected API service...")
+			proc.StartProtectedApi(app.Services)
+		},
 	}
-	cmd.Flags().Set("watcher", "false")
-	go start.HiddenApiCmd.Run(cmd, args)
-	go start.PublicApiCmd.Run(cmd, args)
-	start.ProtectedApiCmd.Run(cmd, args)
+}
+
+// WatcherCmd creates the `watcher` subcommand
+func WatcherCmd(app *app.App) *cobra.Command {
+	return &cobra.Command{
+		Use:   "watcher",
+		Short: "Start the watcher daemon",
+		Run: func(cmd *cobra.Command, args []string) {
+			logger.Debug("Starting watcher daemon...")
+			// Add watcher logic here
+		},
+	}
 }

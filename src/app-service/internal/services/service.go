@@ -1,4 +1,4 @@
-package serviceapi
+package services
 
 import (
 	"log"
@@ -10,14 +10,13 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/config"
 	"github.com/Elbujito/2112/src/app-service/internal/data"
 	repository "github.com/Elbujito/2112/src/app-service/internal/repositories"
-	"github.com/Elbujito/2112/src/app-service/internal/services"
 )
 
 // ServiceComponent holds all service instances for dependency injection.
 type ServiceComponent struct {
-	SatelliteService services.SatelliteService
-	TileService      services.TileService
-	ContextService   services.ContextService
+	SatelliteService SatelliteService
+	TileService      TileService
+	ContextService   ContextService
 }
 
 // NewServiceComponent initializes and returns a new ServiceComponent.
@@ -39,9 +38,9 @@ func NewServiceComponent(env *config.SEnv) *ServiceComponent {
 	propagteClient := propagator.NewPropagatorClient(env)
 	celestrackClient := celestrack.NewCelestrackClient(env)
 
-	satelliteService := services.NewSatelliteService(tleRepo, propagteClient, celestrackClient, satelliteRepo)
-	tileService := services.NewTileService(tileRepo, tleRepo, satelliteRepo, mappingRepo)
-	contextService := services.NewContextService(contextRepo)
+	satelliteService := NewSatelliteService(tleRepo, propagteClient, celestrackClient, satelliteRepo)
+	tileService := NewTileService(tileRepo, tleRepo, satelliteRepo, mappingRepo)
+	contextService := NewContextService(contextRepo)
 
 	return &ServiceComponent{
 		SatelliteService: satelliteService,

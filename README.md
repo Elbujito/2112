@@ -10,7 +10,6 @@
 ```
 ⇨ http server started on [::]:8081
 ⇨ http server started on [::]:8080
-⇨ http server started on [::]:8079
 ```
 7. List available routes using `go run . info protected-api-routes` and use your favourite API client to test. or use the following to get started and make sure you're up and running.
 ```bash
