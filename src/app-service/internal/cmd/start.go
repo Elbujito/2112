@@ -66,7 +66,6 @@ func WatcherCmd(app *app.App) *cobra.Command {
 		Short: "Start the watcher daemon",
 		Run: func(cmd *cobra.Command, args []string) {
 			logger.Debug("Starting watcher daemon...")
-			// Add watcher logic here
 		},
 	}
 }

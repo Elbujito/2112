@@ -56,7 +56,6 @@ func (r *PublicRouter) registerMiddlewares() {
 		middlewares.SlashesMiddleware(),
 		middlewares.LoggerMiddleware(),
 		middlewares.TimeoutMiddleware(),
-		middlewares.RequestHeadersMiddleware(),
 		middlewares.ResponseHeadersMiddleware(),
 	}
 
