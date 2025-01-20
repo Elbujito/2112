@@ -1,8 +1,6 @@
 package seeds
 
 import (
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
-
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )
@@ -20,12 +18,4 @@ func AddSeed(seed *gormigrate.Migration) {
 
 func Apply() error {
 	return Seeds.Migrate()
-}
-
-func logSuccess(id string) {
-	logger.Info("Applied seed: %s", id)
-}
-
-func logFail(id string, err error) {
-	logger.Error("Failed to apply seed: %s, error: %s", id, err)
 }

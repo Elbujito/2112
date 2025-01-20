@@ -12,6 +12,17 @@ func init() {
 	m := &gormigrate.Migration{
 		ID: "2025011102_init",
 		Migrate: func(db *gorm.DB) error {
+
+			type AuditTrail struct {
+				models.ModelBase
+				TableName   string    `gorm:"size:255;not null"` // Name of the table affected
+				RecordID    string    `gorm:"size:255;not null"` // ID of the record affected
+				Action      string    `gorm:"size:50;not null"`  // Action performed (e.g., "INSERT", "UPDATE", "DELETE")
+				ChangesJSON string    `gorm:"type:json"`         // JSON representation of the changes
+				PerformedBy string    `gorm:"size:255;not null"` // User or system that performed the action
+				PerformedAt time.Time `gorm:"not null"`          // Timestamp of the action
+			}
+
 			// Define the Context table
 			type Context struct {
 				models.ModelBase
@@ -114,6 +125,7 @@ func init() {
 				&ContextSatellite{},
 				&ContextTLE{},
 				&ContextTile{},
+				&AuditTrail{},
 			); err != nil {
 				return err
 			}
@@ -146,6 +158,7 @@ func init() {
 				"tles",
 				"satellites",
 				"contexts",
+				"audit_trails",
 			)
 		},
 	}

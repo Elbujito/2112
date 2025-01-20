@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/Elbujito/2112/src/app-service/internal/app"
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 
+	logger "github.com/Elbujito/2112/src/app-service/pkg/log"
 	"github.com/spf13/cobra"
 )
 
@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 func Execute(ctx context.Context) {
 	app, err := app.NewApp(ctx, rootCmd.Use, Version)
 	if err != nil {
-		logger.Error("Command execution failed: %v", err)
+		logger.Errorf("Command execution failed: %v", err)
 		return
 	}
 
@@ -35,7 +35,7 @@ func Execute(ctx context.Context) {
 
 	// Execute the root command
 	if err := rootCmd.Execute(); err != nil {
-		logger.Error("Command execution failed: %v", err)
+		logger.Errorf("Command execution failed: %v", err)
 	}
 }
 

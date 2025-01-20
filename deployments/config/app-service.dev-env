@@ -11,3 +11,4 @@ DB_SSL_MODE=disable
 LOG_LEVEL=debug
 DISABLE_FEATURES=ory_keto,ory_kratos,redis
 PROPAGATOR_URL=http://propagator-service:5000/satellite/propagate
+CLERK_API_KEY=sk_test_GkqI0OhxlxMiywMZ2zgoNhGZ5H4RYymSdfDfdiTPBc

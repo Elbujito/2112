@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"github.com/Elbujito/2112/src/app-service/internal/app"
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/cmd/task"
 	"github.com/Elbujito/2112/src/app-service/internal/proc"
 
+	logger "github.com/Elbujito/2112/src/app-service/pkg/log"
 	"github.com/spf13/cobra"
 )
 

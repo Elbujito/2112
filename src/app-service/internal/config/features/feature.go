@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
-
+	log "github.com/Elbujito/2112/src/app-service/pkg/log"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 
@@ -24,7 +23,7 @@ type SFeatures struct {
 }
 
 func (f *SFeatures) Init(v reflect.Value) {
-	logger.Debug("Initializing features ...")
+	log.Debug("Initializing features ...")
 	for _, feature := range f.f {
 		feature.ResolveFeatureEnabledState(v)
 		feature.Configure(v)
@@ -97,15 +96,15 @@ func (f *Feature) CanStart() bool {
 
 func (f *Feature) ValidateReadiness() {
 	if !f.IsEnabled() {
-		logger.Debug("Feature: %s - is not enabled, skipping ...", f.Name)
+		log.Debugf("Feature: %s - is not enabled, skipping ...", f.Name)
 		return
 	}
 	if !f.IsConfigured() {
-		logger.Debug("Feature: %s - is not configured correctly.", f.Name)
+		log.Debugf("Feature: %s - is not configured correctly.", f.Name)
 		return
 	}
 	if !f.CanStart() {
-		logger.Debug("Feature: %s - is not ready. Config not satisfied. %s. %s. Use cmd: 'info feature %s' for more.",
+		log.Debugf("Feature: %s - is not ready. Config not satisfied. %s. %s. Use cmd: 'info feature %s' for more.",
 			f.Name,
 			f.getRequirementsString(),
 			f.getCurrentConfigString(),
@@ -113,7 +112,7 @@ func (f *Feature) ValidateReadiness() {
 		return
 	}
 	f.ready = true
-	logger.Debug("Feature: %s - is ready.", f.Name)
+	log.Debugf("Feature: %s - is ready.", f.Name)
 
 }
 

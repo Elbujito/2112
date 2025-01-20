@@ -11,9 +11,9 @@ import (
 	"github.com/Elbujito/2112/src/app-service/internal/api/handlers/errors"
 	healthHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/healthz"
 	metricsHandlers "github.com/Elbujito/2112/src/app-service/internal/api/handlers/metrics"
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
 	"github.com/Elbujito/2112/src/app-service/internal/services"
+	logger "github.com/Elbujito/2112/src/app-service/pkg/log"
 	"github.com/labstack/echo/v4"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -29,7 +29,6 @@ type ProtectedRouter struct {
 func (r *ProtectedRouter) Init() {
 	r.Echo = echo.New()
 	r.Echo.HideBanner = true
-	r.Echo.Logger = logger.GetLogger()
 
 }
 

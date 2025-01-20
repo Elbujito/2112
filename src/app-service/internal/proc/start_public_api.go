@@ -11,6 +11,6 @@ import (
 func StartPublicApi(services *services.ServiceComponent) {
 	serviceCli := service.GetClient()
 	c := serviceCli.GetConfig()
-	publicApiRouter := routers.InitPublicAPIRouter(config.Env, services)
+	publicApiRouter := routers.NewPublicRouter(config.Env, services)
 	publicApiRouter.Start(c.Host, c.PublicApiPort)
 }

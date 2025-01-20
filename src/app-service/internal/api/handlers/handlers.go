@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config"
 	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 
+	logger "github.com/Elbujito/2112/src/app-service/pkg/log"
 	"github.com/go-playground/validator/v10"
 )
 

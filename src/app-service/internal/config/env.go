@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config/features"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xutils"
 
+	logger "github.com/Elbujito/2112/src/app-service/pkg/log"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
 

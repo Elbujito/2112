@@ -7,11 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	"github.com/Elbujito/2112/src/app-service/internal/config/features"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 	"github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xutils"
 
+	logger "github.com/Elbujito/2112/src/app-service/pkg/log"
 	"github.com/spf13/viper"
 )
 
@@ -20,8 +20,9 @@ type EnvVars struct {
 	Service         features.ServiceConfig    `mapstructure:",squash"`
 	Database        features.DatabaseConfig   `mapstructure:",squash"`
 	Redis           features.RedisConfig      `mapstructure:",squash"`
-	Celestrack      features.CelestrackConfig `mapstructure:",squash"` // add additional features here
-	Propagator      features.PropagatorConfig `mapstructure:",squash"` // add additional features here
+	Celestrack      features.CelestrackConfig `mapstructure:",squash"`
+	Propagator      features.PropagatorConfig `mapstructure:",squash"`
+	Clerk           features.ClerkConfig      `mapstructure:",squash"`
 }
 
 func (c *EnvVars) Init() {
@@ -104,10 +105,8 @@ func (c *EnvVars) OverrideLoggerUsingFlags() {
 		return
 	}
 	if !xutils.StrInArr(LogLevelFlag, xconstants.LOG_LEVELS) {
-		logger.SetLogger("panic")
-		logger.Panic("Invalid log level: %s. Valid options: %s", LogLevelFlag, xconstants.LOG_LEVELS)
+		panic("Invalid log level Valid options")
 	}
-	logger.SetLogger(LogLevelFlag)
 	c.Service.LogLevel = LogLevelFlag
 }
 

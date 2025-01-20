@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
 	xconstants "github.com/Elbujito/2112/src/templates/go-server/pkg/fx/xconstants"
 
 	"github.com/labstack/echo/v4"
@@ -22,9 +21,9 @@ type Router struct {
 
 // Init init func
 func (r *Router) Init() {
+
 	r.Echo = echo.New()
 	r.Echo.HideBanner = true
-	r.Echo.Logger = logger.GetLogger()
 }
 
 // RegisterPreMiddleware registers pre middleware

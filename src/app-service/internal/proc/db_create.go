@@ -2,15 +2,22 @@ package proc
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/Elbujito/2112/src/app-service/internal/clients/dbc"
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
+	log "github.com/Elbujito/2112/src/app-service/pkg/log"
 )
 
 func DBCreate() {
-	// init feature [database]
-	logger.SetLogger(string(logger.DebugLvl))
 
+	var logWriter io.Writer
+	logWriter = os.Stdout
+	logger, err := log.NewLogger(logWriter, log.DebugLevel, log.LoggerTypes.Logrus())
+	if err != nil {
+		panic(err)
+	}
+	log.SetDefaultLogger(logger)
 	dbClient := dbc.GetDBClient()
 
 	dbClient.InitServerConnection()
@@ -19,6 +26,6 @@ func DBCreate() {
 		panic(fmt.Errorf("failed to create database: %w", err))
 	}
 
-	// logger.Info("Database '" + config.Env.Config.DBName + "' created successfully.")
+	logger.Info("Database created successfully.")
 
 }

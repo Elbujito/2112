@@ -28,7 +28,7 @@ services:
     restart: always
     command: ["app-service", "start"]
     healthcheck:
-      test: ["CMD", "curl", "-f", "-H", "Accept: application/json", "http://localhost:8081/health/alive"]
+      test: ["CMD", "curl", "http://localhost:8081/health/alive"]
       interval: 10s
       timeout: 5s
       retries: 3

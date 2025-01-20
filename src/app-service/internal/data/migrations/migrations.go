@@ -1,8 +1,7 @@
 package migrations
 
 import (
-	"github.com/Elbujito/2112/src/app-service/internal/clients/logger"
-
+	log "github.com/Elbujito/2112/src/app-service/pkg/log"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )
@@ -45,16 +44,16 @@ func AutoMigrateAndLog(db *gorm.DB, model interface{}, id string) error {
 
 func logSuccess(id string, rollback ...bool) {
 	if len(rollback) > 0 && rollback[0] {
-		logger.Info("Rolled back migration: %s", id)
+		log.Infof("Rolled back migration: %s", id)
 		return
 	}
-	logger.Info("Applied migration: %s", id)
+	log.Infof("Applied migration: %s", id)
 }
 
 func logFail(id string, err error, rollback ...bool) {
 	if len(rollback) > 0 && rollback[0] {
-		logger.Error("Failed to rollback migration: %s, error: %s", id, err)
+		log.Errorf("Failed to rollback migration: %s, error: %s", id, err)
 		return
 	}
-	logger.Error("Failed to apply migration: %s, error: %s", id, err)
+	log.Errorf("Failed to apply migration: %s, error: %s", id, err)
 }
