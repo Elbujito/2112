@@ -2,7 +2,6 @@ import { Button } from 'components/shared/ui/button';
 
 import { LandingProductFeature } from 'components/landing/LandingProductFeature';
 import { LandingProductFeatureKeyPoints } from 'components/landing/LandingProductFeatureKeyPoints';
-import satelliteTrackingImg from '/public/img/satellites/satellites-operations.webp';
 
 export default function Component() {
   const keyPoints = [
@@ -58,7 +57,6 @@ export default function Component() {
           <p className="text-sm">No subscription required for basic features.</p>
         </>
       }
-      // imageSrc={satelliteTrackingImg.src}
       imageAlt="Real-time satellite tracking interface"
       imagePosition="right"
       imagePerspective="none"
