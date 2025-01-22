@@ -21,12 +21,8 @@ const LandingHeader = ({
 
   const basicNavLinks = [
     { title: 'Home', href: '/' },
-    { title: 'Features', href: '/features' },
-    { title: 'Pricing', href: '/pricing' },
-    { title: 'About', href: '/about' },
-    { title: 'Contact', href: '/contact' },
+    { title: 'Pricing', href: '/home/pricing' },
   ];
-
 
   useEffect(() => {
     setMounted(true);
@@ -38,11 +34,14 @@ const LandingHeader = ({
 
   return (
     <header
-      className={`flex items-center justify-between py-10 flex-wrap w-full mb-20 lg:mb-32 pt-6 wide-container ${className}`}
+      className={`flex items-center justify-between py-6 px-6 lg:px-12 w-full mb-20 lg:mb-32 wide-container ${className}`}
     >
-      <div>
-        <Link href="/" aria-label="Home">
+      <div className="flex items-center gap-4">
+        <Link href="/" aria-label="Home" className="flex items-center gap-2">
           {theme === 'dark' ? <div>{logoDark}</div> : <div>{logo}</div>}
+          <span className="text-2xl font-bold tracking-wide text-gray-900 dark:text-gray-100">
+            2112
+          </span>
         </Link>
       </div>
       <div className="flex items-center leading-5 gap-4 sm:gap-6">
@@ -56,6 +55,14 @@ const LandingHeader = ({
               {link.title}
             </Link>
           ))}
+        {!hideMenuItems && (
+          <Link
+            href="/home/login"
+            className="hidden sm:inline-block px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-500 dark:bg-blue-800 dark:hover:bg-blue-700 font-semibold shadow-md"
+          >
+            Sign In
+          </Link>
+        )}
         <ThemeSwitch />
         {!hideMenuItems && (
           <button

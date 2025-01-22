@@ -1,7 +1,6 @@
 'use client';
 import { useUser } from '@clerk/nextjs';
 import { Specta } from 'components/home/HomePage';
-import LandingPage from 'components/home/LandingPage';
 
 
 const HomePage = () => {
@@ -13,9 +12,6 @@ const HomePage = () => {
 
   return (
     <Specta></Specta>
-    // <LandingPage
-    //   user={isSignedIn ? { name: user?.fullName || 'User' } : undefined}
-    // />
   );
 };
 

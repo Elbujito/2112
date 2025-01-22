@@ -48,7 +48,7 @@ export default function Component() {
           className="w-full mt-6 justify-center"
           showRating
           numberOfUsers={25000}
-          suffixText="happy users"
+          suffixText="satellite enthusiasts"
           avatarItems={avatarItems}
           size="large"
           disableAnimation

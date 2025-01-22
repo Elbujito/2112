@@ -7,7 +7,7 @@ import ThreeTestimonialInline from 'components/home/specta/bricks/3-testimonial-
 import FourProductFeature from 'components/home/specta/bricks/4-product-feature';
 import SixProductFeature from 'components/home/specta/bricks/6-product-feature';
 import NineSaleCta from 'components/home/specta/bricks/9-sale-cta';
-import LandingHeader from './specta/template-header';
+import LandingHeader from './specta/HomeHeader';
 import Footer from 'components/footer/Footer';
 
 export const Specta = () => {
@@ -15,7 +15,7 @@ export const Specta = () => {
         <div className="flex flex-col w-full min-h-screen">
             <header className="relative z-50">
                 <LandingHeader
-                    className="absolute top-0 w-full pointer-events-none"
+                    className="absolute top-0 w-full"
                     logo={<Logo className="h-9 w-auto" />}
                     logoDark={<Logo className="h-9 w-auto" />}
                 />
