@@ -36,8 +36,8 @@ function LoginPage(props: {
                                 <SignIn />
                             </div>
                         ) : (
-                            <NavLink href="/admin/default" className="mt-0 w-max lg:pt-10">
-                                <div className="mx-auto flex h-fit w-fit items-center hover:cursor-pointer">
+                            <NavLink href="/admin/default" className="flex items-center h-screen mt-0 w-max lg:pt-10">
+                                <div className="mx-auto flex h-fit w-fit items-center cursor-pointer">
                                     <svg
                                         width="8"
                                         height="12"
@@ -55,6 +55,7 @@ function LoginPage(props: {
                                     </p>
                                 </div>
                             </NavLink>
+
                         )}
                         <div className="absolute right-0 hidden h-full min-h-screen md:block lg:w-[49vw] 2xl:w-[44vw]">
                             <div
