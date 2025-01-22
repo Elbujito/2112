@@ -1,6 +1,6 @@
 'use client';
 import { useUser } from '@clerk/nextjs';
-import { Specta } from 'components/home/HomePage';
+import { Specta } from 'components/home/index';
 
 
 const HomePage = () => {

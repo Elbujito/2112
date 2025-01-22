@@ -12,7 +12,7 @@ export const VideoPlayer = ({
   src,
   width,
   height,
-  loop,
+  loop = true,
   preload = 'metadata',
   variant = 'primary',
   className,
@@ -93,7 +93,7 @@ export const VideoPlayer = ({
           src={src}
           width={width}
           height={height}
-          controls={autoPlay || isPlaying || controls}
+          controls={controls}
           autoPlay={autoPlay}
           loop={loop}
           className={className}

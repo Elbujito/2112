@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import ThemeSwitch from 'components/shared/ThemeSwitch';
 import { useState, useEffect } from 'react';
+import { useUser } from '@clerk/clerk-react';
 
 const LandingHeader = ({
   className,
@@ -16,8 +16,9 @@ const LandingHeader = ({
   logoDark: React.ReactNode;
   hideMenuItems?: boolean;
 }) => {
-  const { theme = 'system', setTheme } = useTheme();
+  const { theme = 'dark', setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { isSignedIn } = useUser(); // Check if the user is logged in
 
   const basicNavLinks = [
     { title: 'Home', href: '/' },
@@ -57,13 +58,12 @@ const LandingHeader = ({
           ))}
         {!hideMenuItems && (
           <Link
-            href="/home/login"
+            href={isSignedIn ? '/admin/default' : '/home/login'}
             className="hidden sm:inline-block px-4 py-2 rounded-md text-white bg-blue-600 hover:bg-blue-500 dark:bg-blue-800 dark:hover:bg-blue-700 font-semibold shadow-md"
           >
-            Sign In
+            {isSignedIn ? 'My Dashboard' : 'Sign In'}
           </Link>
         )}
-        <ThemeSwitch />
         {!hideMenuItems && (
           <button
             aria-label="Toggle mobile menu"

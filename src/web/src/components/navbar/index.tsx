@@ -2,18 +2,16 @@ import React from 'react';
 import Dropdown from 'components/dropdown';
 import { FiAlignJustify } from 'react-icons/fi';
 import NavLink from 'components/link/NavLink';
-import navbarimage from '/public/img/layout/Navbar.png';
 import { BsArrowBarUp } from 'react-icons/bs';
 import { FiSearch } from 'react-icons/fi';
 import Configurator from './Configurator';
-// import { RiMoonFill, RiSunFill } from 'react-icons/ri';
-// import Configurator from './Configurator';
 import {
   IoMdNotificationsOutline,
   IoMdInformationCircleOutline,
 } from 'react-icons/io';
 import avatar from '/public/img/avatars/avatar4.png';
 import Image from 'next/image';
+import { SignOutButton, useUser } from '@clerk/clerk-react';
 
 const Navbar = (props: {
   onOpenSidenav: () => void;
@@ -22,18 +20,20 @@ const Navbar = (props: {
   [x: string]: any;
 }) => {
   const { onOpenSidenav, brandText, mini, hovered } = props;
+
+  const { isSignedIn, user } = useUser();
   const [darkmode, setDarkmode] = React.useState(
-    document.body.classList.contains('dark'),
+    document.body.classList.contains('dark')
   );
+
   return (
     <nav
-      className={`duration-175 linear fixed right-3 top-3 flex flex-row flex-wrap items-center justify-between rounded-xl bg-white/30 transition-all ${
-        mini === false
+      className={`duration-175 linear fixed right-3 top-3 flex flex-row flex-wrap items-center justify-between rounded-xl bg-white/30 transition-all ${mini === false
           ? 'w-[calc(100vw_-_6%)] md:w-[calc(100vw_-_8%)] lg:w-[calc(100vw_-_6%)] xl:w-[calc(100vw_-_350px)] 2xl:w-[calc(100vw_-_365px)]'
           : mini === true && hovered === true
-          ? 'w-[calc(100vw_-_6%)] md:w-[calc(100vw_-_8%)] lg:w-[calc(100vw_-_6%)] xl:w-[calc(100vw_-_350px)] 2xl:w-[calc(100vw_-_365px)]'
-          : 'w-[calc(100vw_-_6%)] md:w-[calc(100vw_-_8%)] lg:w-[calc(100vw_-_6%)] xl:w-[calc(100vw_-_180px)] 2xl:w-[calc(100vw_-_195px)]'
-      }  p-2 backdrop-blur-xl dark:bg-[#0b14374d] md:right-[30px] md:top-4 xl:top-[20px]`}
+            ? 'w-[calc(100vw_-_6%)] md:w-[calc(100vw_-_8%)] lg:w-[calc(100vw_-_6%)] xl:w-[calc(100vw_-_350px)] 2xl:w-[calc(100vw_-_365px)]'
+            : 'w-[calc(100vw_-_6%)] md:w-[calc(100vw_-_8%)] lg:w-[calc(100vw_-_6%)] xl:w-[calc(100vw_-_180px)] 2xl:w-[calc(100vw_-_195px)]'
+        }  p-2 backdrop-blur-xl dark:bg-[#0b14374d] md:right-[30px] md:top-4 xl:top-[20px]`}
     >
       <div className="ml-[6px]">
         <div className="h-6 w-[224px] pt-1">
@@ -81,7 +81,6 @@ const Navbar = (props: {
         >
           <FiAlignJustify className="h-5 w-5" />
         </span>
-        {/* start Notification */}
         <Dropdown
           button={
             <p className="cursor-pointer">
@@ -106,23 +105,6 @@ const Navbar = (props: {
                 <BsArrowBarUp />
               </div>
               <div className="ml-2 flex h-full w-full flex-col justify-center rounded-lg px-1 text-sm">
-                {/* <p className="mb-1 text-left text-base font-bold text-gray-900 dark:text-white">
-                  New Update: Horizon UI Dashboard PRO
-                </p> */}
-                <p className="font-base text-left text-xs text-gray-900 dark:text-white">
-                  A new update for your downloaded item is available!
-                </p>
-              </div>
-            </button>
-
-            <button className="flex w-full items-center">
-              <div className="flex h-full w-[85px] items-center justify-center rounded-xl bg-gradient-to-b from-brand-400 to-brand-500 py-4 text-2xl text-white">
-                <BsArrowBarUp />
-              </div>
-              <div className="ml-2 flex h-full w-full flex-col justify-center rounded-lg px-1 text-sm">
-                {/* <p className="mb-1 text-left text-base font-bold text-gray-900 dark:text-white">
-                  New Update: Horizon UI Dashboard PRO
-                </p> */}
                 <p className="font-base text-left text-xs text-gray-900 dark:text-white">
                   A new update for your downloaded item is available!
                 </p>
@@ -130,7 +112,6 @@ const Navbar = (props: {
             </button>
           </div>
         </Dropdown>
-        {/* start Horizon PRO */}
         <Dropdown
           button={
             <p className="cursor-pointer">
@@ -141,35 +122,13 @@ const Navbar = (props: {
           animation="origin-[75%_0%] md:origin-top-right transition-all duration-300 ease-in-out"
         >
           <div className="flex w-[350px] flex-col gap-2 rounded-[20px] bg-white p-4 shadow-xl shadow-shadow-500 dark:!bg-navy-700 dark:text-white dark:shadow-none">
-            {/* <div
-              style={{
-                backgroundImage: `url(${navbarimage.src})`,
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: 'cover',
-              }}
-              className="mb-2 aspect-video w-full rounded-lg"
-            />
             <a
               target="blank"
-              href="https://horizon-ui.com/pro?ref=live-pro-tailwind-react"
-              className="px-full linear flex cursor-pointer items-center justify-center rounded-xl bg-brand-500 py-[11px] font-bold text-white transition duration-200 hover:bg-brand-600 hover:text-white active:bg-brand-700 dark:bg-brand-400 dark:hover:bg-brand-300 dark:active:bg-brand-200"
-            >
-              Buy Horizon UI PRO
-            </a> */}
-            <a
-              target="blank"
-              href="https://horizon-ui.com/docs-tailwind/docs/react/installation?ref=live-pro-tailwind-react"
+              href="2112"
               className="px-full linear flex cursor-pointer items-center justify-center rounded-xl border py-[11px] font-bold text-navy-700 transition duration-200 hover:bg-gray-200 hover:text-navy-700 dark:!border-white/10 dark:text-white dark:hover:bg-white/20 dark:hover:text-white dark:active:bg-white/10"
             >
               See Documentation
             </a>
-            {/* <a
-              target="blank"
-              href="https://horizon-ui.com/?ref=live-pro-tailwind-react"
-              className="px-full linear hover:bg-black flex cursor-pointer items-center justify-center rounded-xl py-[11px] font-bold text-navy-700 transition duration-200 hover:text-navy-700 dark:text-white dark:hover:text-white"
-            >
-              Try Horizon Free
-            </a> */}
           </div>
         </Dropdown>
         <Configurator
@@ -192,7 +151,6 @@ const Navbar = (props: {
             }
           }}
         ></div>
-        {/* Profile & Dropdown */}
         <Dropdown
           button={
             <Image
@@ -200,7 +158,7 @@ const Navbar = (props: {
               height="20"
               className="h-10 w-10 rounded-full"
               src={avatar}
-              alt="Elon Musk"
+              alt="User Avatar"
             />
           }
           classNames={'py-2 top-8 -left-[180px] w-max'}
@@ -209,30 +167,24 @@ const Navbar = (props: {
             <div className="ml-4 mt-3">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-bold text-navy-700 dark:text-white">
-                  👋 Hey, Elbujito
-                </p>{' '}
+                  👋 Hey, {user?.firstName || 'User'}
+                </p>
               </div>
             </div>
             <div className="mt-3 h-px w-full bg-gray-200 dark:bg-white/20 " />
 
             <div className="ml-4 mt-3 flex flex-col">
               <a
-                href=" "
+                href="/profile/settings"
                 className="text-sm text-gray-800 dark:text-white hover:dark:text-white"
               >
                 Profile Settings
               </a>
               <a
-                href=" "
-                className="mt-3 text-sm text-gray-800 dark:text-white hover:dark:text-white"
-              >
-                Newsletter Settings
-              </a>
-              <a
                 href="/home/default"
                 className="mt-3 text-sm font-medium text-red-500 hover:text-red-500"
               >
-                Log Out
+                <SignOutButton>Log Out</SignOutButton>
               </a>
             </div>
           </div>

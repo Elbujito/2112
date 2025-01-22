@@ -296,7 +296,7 @@ export const LandingPrimaryVideoCtaSection = ({
     >
       <div
         className={clsx(
-          'w-full p-6 flex flex-col gap-8 relative',
+          'w-full flex flex-col gap-8 relative',
           videoPosition === 'center'
             ? 'container-narrow'
             : 'max-w-full container-wide grid lg:grid-cols-2 items-center',

@@ -11,7 +11,6 @@ import { ConfiguratorContext } from 'contexts/ConfiguratorContext';
 import { ApolloProvider } from '@apollo/client';
 import ApolloClientInstance from '../lib/ApolloClient';
 import { ThemeProvider } from 'next-themes';
-import { ChakraProvider } from "@chakra-ui/react";
 const _NoSSR = ({ children }: { children: ReactNode }) => <React.Fragment>{children}</React.Fragment>;
 
 const NoSSR = dynamic(() => Promise.resolve(_NoSSR), {
@@ -38,7 +37,6 @@ export default function AppWrappers({ children }: { children: ReactNode }) {
     '--color-900': '#11047A',
   });
 
-  // Update CSS variables dynamically when the theme changes
   useEffect(() => {
     Object.entries(theme).forEach(([key, value]) => {
       document.documentElement.style.setProperty(key, value as string);

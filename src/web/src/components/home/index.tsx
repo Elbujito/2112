@@ -1,7 +1,6 @@
 'use client';
 
 import Logo from './specta/Logo';
-
 import OneVideoCta from 'components/home/specta/bricks/1-video-cta';
 import ThreeTestimonialInline from 'components/home/specta/bricks/3-testimonial-inline';
 import FourProductFeature from 'components/home/specta/bricks/4-product-feature';
@@ -11,6 +10,7 @@ import LandingHeader from './specta/HomeHeader';
 import Footer from 'components/footer/Footer';
 
 export const Specta = () => {
+
     return (
         <div className="flex flex-col w-full min-h-screen">
             <header className="relative z-50">
@@ -49,3 +49,5 @@ export const Specta = () => {
         </div>
     );
 };
+
+export default Specta;

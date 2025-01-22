@@ -33,7 +33,7 @@ function LoginPage(props: {
                     <div className="mb-auto flex flex-col pl-5 pr-5 md:pl-12 md:pr-0 lg:max-w-[48%] lg:pl-0 xl:max-w-full">
                         {!user ? (
                             <div className="flex items-center h-screen">
-                                <SignIn />
+                                <SignIn routing="hash" />
                             </div>
                         ) : (
                             <NavLink href="/admin/default" className="flex items-center h-screen mt-0 w-max lg:pt-10">
