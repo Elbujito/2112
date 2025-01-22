@@ -2,7 +2,7 @@ import {
   MdDashboard,
   MdHome,
 } from 'react-icons/md';
-
+import ProfileIcon from 'components/icons/ProfileIcon';
 const routes = [
   {
     name: 'My 2112',
@@ -24,7 +24,7 @@ const routes = [
     ],
   },
   {
-    name: 'Game Management',
+    name: 'Games Management',
     path: '/admin',
     icon: <MdDashboard className="text-inherit h-5 w-5" />,
     collapse: true,
@@ -45,6 +45,20 @@ const routes = [
         name: 'Reports',
         layout: '/admin/games',
         path: '/reports',
+        exact: false,
+      },
+    ],
+  },
+  {
+    name: 'Users Management',
+    path: '/admin',
+    icon: <ProfileIcon />,
+    collapse: true,
+    items: [
+      {
+        name: 'Overview',
+        layout: '/admin/users',
+        path: '/overview',
         exact: false,
       },
     ],

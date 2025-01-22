@@ -10,7 +10,8 @@ import dynamic from 'next/dynamic';
 import { ConfiguratorContext } from 'contexts/ConfiguratorContext';
 import { ApolloProvider } from '@apollo/client';
 import ApolloClientInstance from '../lib/ApolloClient';
-
+import { ThemeProvider } from 'next-themes';
+import { ChakraProvider } from "@chakra-ui/react";
 const _NoSSR = ({ children }: { children: ReactNode }) => <React.Fragment>{children}</React.Fragment>;
 
 const NoSSR = dynamic(() => Promise.resolve(_NoSSR), {
@@ -46,22 +47,25 @@ export default function AppWrappers({ children }: { children: ReactNode }) {
 
   return (
     <NoSSR>
-      <ApolloProvider client={ApolloClientInstance}>
-        <ConfiguratorContext.Provider
-          value={{
-            mini,
-            setMini,
-            theme,
-            setTheme,
-            hovered,
-            setHovered,
-            contrast,
-            setContrast,
-          }}
-        >
-          {children}
-        </ConfiguratorContext.Provider>
-      </ApolloProvider>
+
+      <ThemeProvider attribute="class">
+          <ApolloProvider client={ApolloClientInstance}>
+            <ConfiguratorContext.Provider
+              value={{
+                mini,
+                setMini,
+                theme,
+                setTheme,
+                hovered,
+                setHovered,
+                contrast,
+                setContrast,
+              }}
+            >
+              {children}
+            </ConfiguratorContext.Provider>
+          </ApolloProvider>
+      </ThemeProvider>
     </NoSSR>
   );
 }

@@ -1,4 +1,25 @@
 import axios from "axios";
+import { useSession } from "@clerk/nextjs";
+
+// Helper function to make authenticated API calls using Clerk's `getToken`
+const apiCallWithAuth = async () => {
+    const session = useSession(); // Access the session object
+    const token = await session.session?.getToken(); // Fetch the current user's token dynamically
+    if (!token) {
+        console.error("Failed to retrieve token. User might not be signed in.");
+        return;
+    }
+
+    const response = await fetch("/api/endpoint", {
+        method: "GET",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    const data = await response.json();
+    console.log(data);
+};
 
 // Create Axios instance
 const apiClient = axios.create({
@@ -7,13 +28,17 @@ const apiClient = axios.create({
     timeout: 30000, // Timeout in milliseconds
 });
 
-// Request interceptor
+// Request interceptor for dynamic token injection
 apiClient.interceptors.request.use(
-    (config) => {
-        // Attach Authorization token if available
-        const token = localStorage.getItem("authToken");
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+    async (config) => {
+        const session = useSession(); // Access Clerk session
+        if (session.isLoaded && session.isSignedIn) {
+            const token = await session.session?.getToken(); // Fetch token dynamically
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+        } else {
+            console.warn("Session not loaded or user not signed in. Skipping Authorization header.");
         }
         return config;
     },
@@ -36,10 +61,15 @@ apiClient.interceptors.response.use(
                     console.error("HTTP 406: Not Acceptable. Check headers or payload.");
                     break;
                 case 500:
-                    console.error("HTTP 500: Internal Server Error:", error.response.data.message || "No details provided.");
+                    console.error(
+                        "HTTP 500: Internal Server Error:",
+                        error.response.data.message || "No details provided."
+                    );
                     break;
                 default:
-                    console.warn(`HTTP ${error.response.status}: ${error.response.data.message || "No details provided."}`);
+                    console.warn(
+                        `HTTP ${error.response.status}: ${error.response.data.message || "No details provided."}`
+                    );
             }
         } else if (error.request) {
             console.error("Network error or no response received.");
