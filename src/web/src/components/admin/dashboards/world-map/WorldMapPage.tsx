@@ -3,7 +3,7 @@ import MapTileView from "./MapTileView";
 import MappingTableView from "./MappingTableView";
 import TileTableView from "./TileTableView";
 import SatelliteTableView from "./SatelliteTableView";
-import SearchBar from "components/search/SearchBar";
+// import SearchBar from "components/search/SearchBar";
 import { Box, Grid, GridItem } from "@chakra-ui/react";
 import { OrbitDataItem } from "types/satellites";
 
@@ -50,11 +50,11 @@ const WorldMapPage: React.FC = () => {
     return (
         <Box p={4} w="100%" h="100%">
             <Box mb={4}>
-                <SearchBar
+                {/* <SearchBar
                     searchValue={searchQuery}
                     onSearchChange={handleSearchChange}
                     onSearchSubmit={handleSearchSubmit}
-                />
+                /> */}
             </Box>
 
             <Grid

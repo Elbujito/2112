@@ -1,31 +1,28 @@
+"use client"
+
 import React from 'react';
+import { ClerkProvider } from '@clerk/clerk-react'; // Correct import for clerk-react
 import AppWrappers from './AppWrappers';
-import {
-  ClerkProvider,
-  // SignInButton,
-  // SignedIn,
-  // SignedOut,
-  // UserButton
-} from '@clerk/nextjs'
-// import './globals.css'
+import { useRouter } from 'next/navigation';
+
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
+  const router = useRouter();
+
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} // Use Clerk's publishable key from .env
+      routerPush={(to) => router.push(to)} // Provide routerPush implementation
+      routerReplace={(to) => router.replace(to)} // Provide routerReplace implementation
+    >
       <html lang="en">
-        <body className="dark" id={'root'}>
-          {/* <SignedOut>
-            <SignInButton />
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn> */}
+        <body className="dark" id="root">
           <AppWrappers>{children}</AppWrappers>
         </body>
       </html>
     </ClerkProvider>
-  )
+  );
 }

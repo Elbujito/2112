@@ -2,24 +2,24 @@ import axios from "axios";
 import { useSession } from "@clerk/nextjs";
 
 // Helper function to make authenticated API calls using Clerk's `getToken`
-const apiCallWithAuth = async () => {
-    const session = useSession(); // Access the session object
-    const token = await session.session?.getToken(); // Fetch the current user's token dynamically
-    if (!token) {
-        console.error("Failed to retrieve token. User might not be signed in.");
-        return;
-    }
+// const apiCallWithAuth = async () => {
+//     const session = useSession(); // Access the session object
+//     const token = await session.session?.getToken(); // Fetch the current user's token dynamically
+//     if (!token) {
+//         console.error("Failed to retrieve token. User might not be signed in.");
+//         return;
+//     }
 
-    const response = await fetch("/api/endpoint", {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+//     const response = await fetch("/api/endpoint", {
+//         method: "GET",
+//         headers: {
+//             Authorization: `Bearer ${token}`,
+//         },
+//     });
 
-    const data = await response.json();
-    console.log(data);
-};
+//     const data = await response.json();
+//     console.log(data);
+// };
 
 // Create Axios instance
 const apiClient = axios.create({
