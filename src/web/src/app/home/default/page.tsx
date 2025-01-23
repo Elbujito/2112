@@ -1,17 +1,11 @@
 'use client';
 import { useUser } from '@clerk/nextjs';
-import { Specta } from 'components/home/index';
-
+import Home from 'components/home/landing/Home';
 
 const HomePage = () => {
-  const { isLoaded, isSignedIn, user } = useUser();
-
-  if (!isLoaded) {
-    return <div>Loading...</div>;
-  }
 
   return (
-    <Specta></Specta>
+    <Home></Home>
   );
 };
 
