@@ -23,8 +23,8 @@ export const ExploreFeature = () => {
             keyPoints={keyPoints}
             buttonText="Start Exploring for Free"
             buttonColor="bg-brand-500 text-white hover:bg-brand-600"
-            // containerBg="bg-navy-900 text-white"
-            // cardBg="bg-navy-800"
+        // containerBg="bg-navy-900 text-white"
+        // cardBg="bg-navy-800"
         />
     );
 };

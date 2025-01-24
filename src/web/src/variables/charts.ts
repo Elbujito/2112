@@ -1,5 +1,49 @@
 // Sidebar
 
+// variables/charts.js
+
+export const barChartDataContextActivity = [
+  {
+    name: 'Contexts Created', // Use 'name' instead of 'label'
+    data: [5, 8, 6, 10, 15, 12, 20], // Data points
+  },
+];
+
+export const barChartOptionsContextActivity = {
+  chart: {
+    type: 'bar',
+    toolbar: {
+      show: false,
+    },
+  },
+  plotOptions: {
+    bar: {
+      borderRadius: 4,
+      horizontal: false,
+    },
+  },
+  dataLabels: {
+    enabled: false,
+  },
+  xaxis: {
+    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'], // Example categories
+    labels: {
+      style: {
+        colors: '#A3AED0',
+      },
+    },
+  },
+  yaxis: {
+    labels: {
+      style: {
+        colors: '#A3AED0',
+      },
+    },
+  },
+  colors: ['#4481EB'], // Bar colors
+};
+
+
 export const lineChartDataSidebar = [
   {
     name: 'Balance',

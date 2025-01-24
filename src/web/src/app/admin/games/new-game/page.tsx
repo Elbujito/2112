@@ -1,21 +1,24 @@
 'use client';
 import { useState } from 'react';
-import Stepper from 'components/admin/main/users/new-user/Stepper';
-import StepperControl from 'components/admin/main/users/new-user/StepperControl';
-import { UseContextProvider } from 'components/admin/main/users/new-user/contexts/StepperContext';
-import UserInfo from 'components/admin/main/users/new-user/steps/UserInfo';
-import Address from 'components/admin/main/users/new-user/steps/Address';
-import Profile from 'components/admin/main/users/new-user/steps/Profile';
+import Stepper from 'components/admin/contexts/Stepper';
+import StepperControl from 'components/admin/contexts/StepperControl';
+import { UseContextProvider } from 'components/admin/contexts/StepperContext';
+import ContextDetails from 'components/admin/contexts/new-context/steps/ContextDetails';
+import AdditionalSettings from 'components/admin/contexts/new-context/steps/AdditionalSettings';
+import ReviewAndSubmit from 'components/admin/contexts/new-context/steps/ReviewAndSubmit';
 import Card from 'components/card';
 
-const NewUser = () => {
+const NewContext = () => {
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Steps for context creation
   const steps = [
-    { stepNo: 1, name: 'User Info' },
-    { stepNo: 2, name: 'Address' },
-    { stepNo: 3, name: 'Profile' },
+    { stepNo: 1, name: 'Context Details' },
+    { stepNo: 2, name: 'Additional Settings' },
+    { stepNo: 3, name: 'Review and Submit' },
   ];
+
+  // Render the step content based on the current step
   const displayStep = (step: {
     stepNo: number;
     name: string;
@@ -25,22 +28,25 @@ const NewUser = () => {
   }) => {
     switch (step.stepNo) {
       case 1:
-        return <UserInfo />;
+        return <ContextDetails />;
       case 2:
-        return <Address />;
+        return <AdditionalSettings />;
       case 3:
-        return <Profile />;
+        return <ReviewAndSubmit />;
       default:
+        return null;
     }
   };
 
+  // Handle navigation between steps
   const handleClick = (direction: string) => {
     let newStep = currentStep;
 
     direction === 'next' ? newStep++ : newStep--;
-    // check if steps are within bounds
+    // Ensure the step is within bounds
     newStep > 0 && newStep <= steps.length && setCurrentStep(newStep);
   };
+
   return (
     <div className="mt-3 h-full w-full">
       <div className="h-[350px] w-full rounded-[20px] bg-gradient-to-br from-brand-400 to-brand-600 md:h-[390px]" />
@@ -59,8 +65,7 @@ const NewUser = () => {
               {displayStep(steps[currentStep - 1])}
             </UseContextProvider>
           </div>
-          {/* navigation button */}
-
+          {/* Navigation buttons */}
           <StepperControl
             handleClick={handleClick}
             currentStep={currentStep}
@@ -72,4 +77,4 @@ const NewUser = () => {
   );
 };
 
-export default NewUser;
+export default NewContext;

@@ -66,7 +66,7 @@ const Stepper = (props: {
         {},
         {
           stepNo: step.stepNo,
-          name: step.name,
+          description: step.name,
           completed: false,
           highlighted: index === 0 ? true : false,
           selected: index === 0 ? true : false,

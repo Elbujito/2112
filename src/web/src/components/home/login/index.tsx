@@ -1,6 +1,6 @@
 import Footer from 'components/footer/FooterAuthDefault';
 import NavLink from 'components/link/NavLink';
-import { SignIn } from '@clerk/nextjs';
+import { SignIn, Waitlist } from '@clerk/nextjs';
 import Logo from '../landing/Logo';
 import LandingHeader from '../landing/Header';
 
@@ -32,7 +32,7 @@ function LoginPage(props: {
                     <div className="mb-auto flex flex-col pl-5 pr-5 md:pl-12 md:pr-0 lg:max-w-[48%] lg:pl-0 xl:max-w-full">
                         {!user ? (
                             <div className="flex items-center h-screen">
-                                <SignIn routing="hash" />
+                                <SignIn routing="hash" withSignUp={false} fallbackRedirectUrl={"/admin/default"} />
                             </div>
                         ) : (
                             <NavLink href="/admin/default" className="flex items-center h-screen mt-0 w-max lg:pt-10">
@@ -62,15 +62,20 @@ function LoginPage(props: {
                             >
                                 <div className="relative flex h-full w-full">
                                     <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/3 text-center">
-                                        <p className="text-gray-300 mt-4">{footerText}</p>
-                                        <a
-                                            href={learnMoreLink}
-                                            className="text-gray-100 underline mt-2 inline-block px-4 py-2 border border-gray-400 rounded hover:bg-gray-700 hover:border-gray-500"
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            {learnMoreLink}
-                                        </a>
+                                        <div className="flex flex-col items-center justify-center h-full">
+                                            <h2 className="text-3xl font-bold text-white mb-6">
+                                                No account yet? <br></br>
+                                            </h2>
+                                            <Waitlist
+                                                appearance={{
+                                                    elements: {
+                                                        card: 'shadow-lg rounded-lg p-6',
+                                                        button: 'rounded-md px-4 py-2 hover:bg-blue-400 text-white font-semibold',
+                                                    },
+                                                }}
+                                                afterJoinWaitlistUrl="/thank-you"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
