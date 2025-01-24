@@ -3,6 +3,7 @@ import {
   MdHome,
 } from 'react-icons/md';
 import ProfileIcon from 'components/icons/ProfileIcon';
+import TablesIcon from 'components/icons/TablesIcon';
 const routes = [
   {
     name: 'My 2112',
@@ -59,6 +60,26 @@ const routes = [
         name: 'Overview',
         layout: '/admin/users',
         path: '/overview',
+        exact: false,
+      },
+    ],
+  },
+  {
+    name: 'Monitoring',
+    path: '/admin',
+    icon: <TablesIcon />,
+    collapse: true,
+    items: [
+      {
+        name: 'Health Service',
+        layout: '/admin/monitoring',
+        path: '/default',
+        exact: false,
+      },
+      {
+        name: 'Application logs',
+        layout: '/admin/monitoring',
+        path: '/logs',
         exact: false,
       },
     ],

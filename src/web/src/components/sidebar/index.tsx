@@ -17,22 +17,23 @@ import { IRoute } from 'types/navigation';
 import { useContext } from 'react';
 import { ConfiguratorContext } from 'contexts/ConfiguratorContext';
 import Image from 'next/image';
+import { useUser } from '@clerk/clerk-react';
 
-function SidebarHorizon(props: { routes: IRoute[]; [x: string]: any }) {
+function SidebarHorizon(props: { routes: IRoute[];[x: string]: any }) {
   const { routes, open, setOpen, variant, setHovered, hovered } = props;
   const context = useContext(ConfiguratorContext);
   const { mini } = context;
+
+  const { user } = useUser();
   return (
     <div
-      className={`sm:none ${
-        mini === false
+      className={`sm:none ${mini === false
           ? 'w-[285px]'
           : mini === true && hovered === true
-          ? 'w-[285px]'
-          : 'w-[285px] xl:!w-[120px]'
-      } duration-175 linear fixed !z-50 min-h-full transition-all md:!z-50 lg:!z-50 xl:!z-0 ${
-        variant === 'auth' ? 'xl:hidden' : 'xl:block'
-      } ${open ? '' : '-translate-x-[110%] xl:translate-x-[unset]'}`}
+            ? 'w-[285px]'
+            : 'w-[285px] xl:!w-[120px]'
+        } duration-175 linear fixed !z-50 min-h-full transition-all md:!z-50 lg:!z-50 xl:!z-0 ${variant === 'auth' ? 'xl:hidden' : 'xl:block'
+        } ${open ? '' : '-translate-x-[110%] xl:translate-x-[unset]'}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -47,8 +48,8 @@ function SidebarHorizon(props: { routes: IRoute[]; [x: string]: any }) {
             mini === false
               ? renderView
               : mini === true && hovered === true
-              ? renderView
-              : renderViewMini
+                ? renderView
+                : renderViewMini
           }
         >
           <div className="flex h-full flex-col justify-between">
@@ -61,24 +62,22 @@ function SidebarHorizon(props: { routes: IRoute[]; [x: string]: any }) {
               </span>
               <div className={`ml-[52px] mt-[44px] flex items-center `}>
                 <div
-                  className={`ml-1 mt-1 h-2.5 font-poppins text-[26px] font-bold uppercase text-navy-700 dark:text-white ${
-                    mini === false
+                  className={`ml-1 mt-1 h-2.5 font-poppins text-[26px] font-bold uppercase text-navy-700 dark:text-white ${mini === false
                       ? 'block'
                       : mini === true && hovered === true
-                      ? 'block'
-                      : 'hidden'
-                  }`}
+                        ? 'block'
+                        : 'hidden'
+                    }`}
                 >
-                2112 <span className="font-medium">Project</span>
+                  2112 <span className="font-medium">Project</span>
                 </div>
                 <div
-                  className={`ml-1 mt-1 h-2.5 font-poppins text-[26px] font-bold uppercase text-navy-700 dark:text-white ${
-                    mini === false
+                  className={`ml-1 mt-1 h-2.5 font-poppins text-[26px] font-bold uppercase text-navy-700 dark:text-white ${mini === false
                       ? 'hidden'
                       : mini === true && hovered === true
-                      ? 'hidden'
-                      : 'block'
-                  }`}
+                        ? 'hidden'
+                        : 'block'
+                    }`}
                 >
                   H
                 </div>
@@ -89,7 +88,6 @@ function SidebarHorizon(props: { routes: IRoute[]; [x: string]: any }) {
                 <Links mini={mini} hovered={hovered} routes={routes} />
               </ul>
             </div>
-            {/* Free Horizon Card    */}
             <div className="mb-[30px] mt-[28px]">
               {/* <div className="flex justify-center">
                 <SidebarCard mini={mini} hovered={hovered} />
@@ -105,19 +103,18 @@ function SidebarHorizon(props: { routes: IRoute[]; [x: string]: any }) {
                   />
                 </div>
                 <div
-                  className={`ml-1 ${
-                    mini === false
+                  className={`ml-1 ${mini === false
                       ? 'block'
                       : mini === true && hovered === true
-                      ? 'block'
-                      : 'block xl:hidden'
-                  }`}
+                        ? 'block'
+                        : 'block xl:hidden'
+                    }`}
                 >
                   <h4 className="text-base font-bold text-navy-700 dark:text-white">
-                    Elbujito
+                    {user?.username || 'User'}
                   </h4>
                   <p className="text-sm font-medium text-gray-600">
-                    Adrien Roques
+                    {user?.fullName || 'Guest'}
                   </p>
                 </div>
               </div>
