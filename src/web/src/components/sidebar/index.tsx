@@ -20,7 +20,7 @@ import Image from 'next/image';
 import { useUser } from '@clerk/clerk-react';
 import Link from 'next/link';
 
-function SidebarHorizon(props: { routes: IRoute[];[x: string]: any }) {
+function Sidebar2112(props: { routes: IRoute[];[x: string]: any }) {
   const { routes, open, setOpen, variant, setHovered, hovered } = props;
   const context = useContext(ConfiguratorContext);
   const { mini } = context;
@@ -129,4 +129,4 @@ function SidebarHorizon(props: { routes: IRoute[];[x: string]: any }) {
   );
 }
 
-export default SidebarHorizon;
+export default Sidebar2112;

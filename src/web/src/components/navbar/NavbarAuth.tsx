@@ -129,12 +129,11 @@ function NavbarAuth(props: {
       {...rest}
       className="z-[1] mx-auto flex h-[80px] w-full max-w-screen-xl items-center justify-between px-3 xl:items-end"
     >
-      {/* horizon logo */}
       <a
         href="/admin/dashboards/default"
         className="leading-1 font-poppins text-[26px] font-bold uppercase text-white"
       >
-        Horizon <span className="font-medium"> PRO</span>
+        2112 <span className="font-medium"> PROJECT</span>
       </a>
       <span
         className="flex cursor-pointer text-xl text-white xl:hidden"
@@ -155,9 +154,8 @@ function NavbarAuth(props: {
             <GoChevronDown />
           </p>
           <div
-            className={`duration-125 linear absolute -left-4 top-6 z-10 w-max origin-top-left py-2 transition-all ${
-              openDashboard ? 'scale-100' : 'scale-0'
-            }`}
+            className={`duration-125 linear absolute -left-4 top-6 z-10 w-max origin-top-left py-2 transition-all ${openDashboard ? 'scale-100' : 'scale-0'
+              }`}
           >
             <div
               className={`grid h-fit w-fit grid-cols-2 items-center gap-4 rounded-2xl bg-white px-3 py-3 shadow-xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none`}
@@ -183,9 +181,8 @@ function NavbarAuth(props: {
             <GoChevronDown />
           </p>
           <div
-            className={`duration-125 linear absolute -left-4 top-6 z-10 w-max origin-top-left py-2 transition-all ${
-              openNft ? 'scale-100' : 'scale-0'
-            }`}
+            className={`duration-125 linear absolute -left-4 top-6 z-10 w-max origin-top-left py-2 transition-all ${openNft ? 'scale-100' : 'scale-0'
+              }`}
           >
             <div
               className={`grid h-fit w-fit grid-cols-2 items-center gap-4 rounded-2xl bg-white px-3 py-3 shadow-xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none`}
@@ -211,9 +208,8 @@ function NavbarAuth(props: {
             <GoChevronDown />
           </p>
           <div
-            className={`duration-125 linear absolute -left-4 top-6 z-10 w-max origin-top-left py-2 transition-all ${
-              openMain ? 'scale-100' : 'scale-0'
-            }`}
+            className={`duration-125 linear absolute -left-4 top-6 z-10 w-max origin-top-left py-2 transition-all ${openMain ? 'scale-100' : 'scale-0'
+              }`}
           >
             <div className="grid h-fit w-fit grid-cols-2 gap-4 rounded-2xl bg-white px-3 py-3 shadow-xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none">
               <div className="grid grid-cols-2 gap-4">
@@ -237,9 +233,8 @@ function NavbarAuth(props: {
             <GoChevronDown />
           </p>
           <div
-            className={`duration-125 linear absolute -left-4 top-6 z-10 w-max origin-top-left py-2 transition-all ${
-              openAuth ? 'scale-100' : 'scale-0'
-            }`}
+            className={`duration-125 linear absolute -left-4 top-6 z-10 w-max origin-top-left py-2 transition-all ${openAuth ? 'scale-100' : 'scale-0'
+              }`}
           >
             <div className="grid h-fit w-fit grid-cols-2 gap-4 rounded-xl bg-white px-3 py-3 shadow-xl shadow-shadow-500 dark:!bg-navy-700 dark:shadow-none">
               <div className="grid grid-cols-2 gap-4">
@@ -254,15 +249,6 @@ function NavbarAuth(props: {
           </div>
         </div>
       </div>
-      {/* <a
-        target="blank"
-        href="https://horizon-ui.com/pro?ref=live-pro-tailwind-react"
-        className="hidden xl:flex"
-      >
-        <button className="linear hidden items-center justify-center rounded-3xl bg-white px-8 py-2 text-base font-medium text-brand-500 transition duration-200 hover:opacity-90 active:opacity-80 xl:flex">
-          Buy Now
-        </button>
-      </a> */}
     </div>
   );
 }

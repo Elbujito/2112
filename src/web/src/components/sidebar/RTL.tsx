@@ -16,7 +16,7 @@ import routes from 'routes';
 import Card from 'components/card';
 import Image from 'next/image';
 
-function SidebarHorizon(props: { variant?: string; [x: string]: any }) {
+function Sidebar2112(props: { variant?: string; [x: string]: any }) {
   const { open, onClose, variant, mini, hovered, setHovered } = props;
   return (
     <div
@@ -85,7 +85,6 @@ function SidebarHorizon(props: { variant?: string; [x: string]: any }) {
                 <Links mini={mini} hovered={hovered} routes={routes} />
               </ul>
             </div>
-            {/* Free Horizon Card    */}
             <div className="mb-[30px] mt-[28px]">
               {/* <div className="flex justify-center">
                 <SidebarCard mini={mini} hovered={hovered} />
@@ -126,4 +125,4 @@ function SidebarHorizon(props: { variant?: string; [x: string]: any }) {
   );
 }
 
-export default SidebarHorizon;
+export default Sidebar2112;

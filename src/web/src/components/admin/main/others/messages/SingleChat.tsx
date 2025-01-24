@@ -26,11 +26,10 @@ function SingleChat(props: {
   const { open, onClose } = props;
   return (
     <div
-      className={`duration-175 !fixed left-0 top-[20px] !z-[50] h-[calc(100vh-40px)] w-[calc(100vw-40px)] flex-col !font-dm transition-all md:h-[calc(100vh-40px)] lg:!relative lg:left-[unset] lg:top-[unset] lg:!z-[unset] lg:my-0 lg:flex lg:h-full lg:w-[unset] ${
-        open
-          ? 'translate-x-[20px] lg:translate-x-[0px]'
-          : '-translate-x-[120%] lg:translate-x-[0px]'
-      }`}
+      className={`duration-175 !fixed left-0 top-[20px] !z-[50] h-[calc(100vh-40px)] w-[calc(100vw-40px)] flex-col !font-dm transition-all md:h-[calc(100vh-40px)] lg:!relative lg:left-[unset] lg:top-[unset] lg:!z-[unset] lg:my-0 lg:flex lg:h-full lg:w-[unset] ${open
+        ? 'translate-x-[20px] lg:translate-x-[0px]'
+        : '-translate-x-[120%] lg:translate-x-[0px]'
+        }`}
     >
       <Card extra={'w-full h-full p-4 !font-dm'}>
         {/* header */}
@@ -87,7 +86,7 @@ function SingleChat(props: {
                   timecolor="text-gray-400 dark:text-white"
                 />
                 <SingleMessage
-                  message="I saw an amazing dashboard called Horizon UI Dashboard, is made by Simmmple, I want to know what you think about it, because I like it so much! 😁"
+                  message=" 2112 Dashboard"
                   time="09:00 PM"
                   extra="!bg-lightPrimary w-full md:w-[480px] rounded-r-xl rounded-bl-xl"
                   text="text-navy-700"
@@ -95,7 +94,7 @@ function SingleChat(props: {
                 />
                 <SingleMessage
                   message="Go and check it out! Here is the link: 
-          horizon-ui.com/chakra-pro/"
+          2112.lu/pro/"
                   time="09:00 PM"
                   extra="!bg-lightPrimary w-fit md:w-[300px] rounded-r-xl rounded-bl-xl"
                   text="text-navy-700"

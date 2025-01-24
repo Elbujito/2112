@@ -36,8 +36,7 @@ function Pricing() {
             Flexible pricing that scales with your business
           </h2>
           <p className="mt-[8px] px-8 text-sm text-white md:px-9 md:text-base">
-            See our pricing plans for all Premium and Free products & templates.
-            Try now our new Horizon UI Dashboard!
+            Try now our new 2112 Dashboard!
           </p>
           <div className="mt-7 rounded-lg bg-[#ffffff1f] px-[10px] py-[4px] text-sm font-bold text-white">
             No credit card required
@@ -234,7 +233,7 @@ function Pricing() {
       {/* more than section */}
       <div className="mx-auto mb-20 flex w-full max-w-screen-xl flex-col items-center justify-center pb-3 font-medium md:mb-[150px]">
         <h2 className="mb-8 text-center text-[35px] font-bold text-navy-700 dark:text-white md:mb-6 md:text-left">
-          More than 25,000 users use Horizon
+          More than 25,000 users use 2112
         </h2>
         <div className="grid grid-cols-3 gap-16 xl:grid-cols-6">
           <div className="w-30 relative h-[42px] w-[112px]">

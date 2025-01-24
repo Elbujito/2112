@@ -4,13 +4,13 @@ export default function Footer() {
   return (
     <div className="z-[1.5] mx-auto flex w-full max-w-[90%] flex-col items-center justify-between px-0 pt-12 pb-8 xl:w-[1170px] xl:max-w-[1170px] xl:flex-row">
       <p className="mb-4 text-center text-sm text-gray-600 sm:!mb-0 md:text-base">
-        ©{new Date().getFullYear()} Horizon UI. All Rights Reserved.
+        ©{new Date().getFullYear()} 2112 PROJECT. All Rights Reserved.
       </p>
       <ul className="flex flex-wrap items-center sm:flex-nowrap">
         <li className="mr-12">
           <a
             target="blank"
-            href="mailto:hello@simmmple.com"
+            href="mailto:hello@2112.lu"
             className="text-sm text-gray-600 hover:text-gray-600 md:text-base"
           >
             Support
@@ -19,7 +19,7 @@ export default function Footer() {
         <li className="mr-12">
           <a
             target="blank"
-            href="https://simmmple.com/licenses"
+            href="https://2112.lu/licenses"
             className="text-sm text-gray-600 hover:text-gray-600 md:text-base"
           >
             License
@@ -28,7 +28,7 @@ export default function Footer() {
         <li className="mr-12">
           <a
             target="blank"
-            href="https://simmmple.com/terms-of-service"
+            href="https://2112.lu/terms-of-service"
             className="text-sm text-gray-600 hover:text-gray-600 md:text-base"
           >
             Terms of Use
@@ -37,7 +37,7 @@ export default function Footer() {
         <li>
           <a
             target="blank"
-            href="https://blog.horizon-ui.com/"
+            href="https://blog.2112.lu/"
             className="text-sm text-gray-600 hover:text-gray-600 md:text-base"
           >
             Blog
