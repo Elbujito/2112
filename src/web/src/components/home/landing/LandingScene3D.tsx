@@ -1,6 +1,6 @@
 import React from 'react';
-import Logo from '../specta/Logo';
-import LandingHeader from '../specta/HomeHeader';
+import Logo from './Logo';
+import LandingHeader from './Header';
 import Earth from './Earth';
 
 export const LandingScene3D = () => {

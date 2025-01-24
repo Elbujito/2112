@@ -1,35 +1,20 @@
 import React from 'react';
 import Earth from './Earth';
-import ThreeTestimonialInline from 'components/home/specta/bricks/3-testimonial-inline';
-import FourProductFeature from 'components/home/specta/bricks/4-product-feature';
-import SixProductFeature from 'components/home/specta/bricks/6-product-feature';
-import NineSaleCta from 'components/home/specta/bricks/9-sale-cta';
-import LandingHeader from '../specta/HomeHeader';
+import LandingHeader from './Header';
 import Footer from 'components/footer/Footer';
-import Logo from '../specta/Logo';
-import { LandingPrimaryVideoCtaSection } from 'components/landing/cta/LandingPrimaryCta';
+import Logo from './Logo';
+import CTA from './Cta';
+import Testimonials from './Testimonials';
+import ExploreFeature from './FeatureExplore';
+import FeatureSatelliteThreat from './FeatureSatelliteThreat';
 import { Button } from 'components/shared/ui/button';
-import { colors } from 'components/data/config/colors';
+import { LandingPrimaryVideoCtaSection } from './SectionEarth';
+import { motion } from 'framer-motion';
 
 const Home = () => {
-
-    const avatarItems = [
-        {
-            imageSrc: 'https://picsum.photos/id/64/100/100',
-            name: 'John Doe',
-        },
-        {
-            imageSrc: 'https://picsum.photos/id/65/100/100',
-            name: 'Jane Doe',
-        },
-        {
-            imageSrc: 'https://picsum.photos/id/669/100/100',
-            name: 'Alice Doe',
-        },
-    ];
-
     return (
-        <div className="flex flex-col w-full min-h-screen">
+        <div className="flex flex-col w-full min-h-screen bg-[#001020] text-white relative">
+            {/* Header */}
             <header className="relative z-50">
                 <LandingHeader
                     className="absolute top-0 w-full"
@@ -38,16 +23,43 @@ const Home = () => {
                 />
             </header>
 
-            <main className="flex flex-col items-center w-full space-y-16">
+            {/* SVG Decoration at the Top */}
+            <div
+                className="absolute top-0 left-0 w-full"
+                style={{
+                    height: '520px', // Match SVG height
+                    zIndex: 1,
+                    backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(`
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+                            <path fill="url(#gradient)" fill-opacity="1" d="M0,128L60,160C120,192,240,256,360,266.7C480,277,600,235,720,213.3C840,192,960,192,1080,208C1200,224,1320,256,1380,272L1440,288L1440,320L1380,320C1320,320,1200,320,1080,320C960,320,840,320,720,320C600,320,480,320,360,320C240,320,120,320,60,320L0,320Z"></path>
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#001020;stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:#001530;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#000810;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    `)}')`,
+                    backgroundSize: 'cover',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundAttachment: 'fixed',
+                    transform: 'rotate(180deg)', // Rotate the SVG
+                    transformOrigin: 'center', // Center the rotation
+                }}
+            ></div>
+
+            {/* Main Content */}
+            <main className="flex flex-col items-center w-full space-y-16 relative z-10">
+                {/* Earth Section with Title */}
                 <section className="w-full relative">
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <h1 className="text-white text-4xl font-bold"></h1>
                         <LandingPrimaryVideoCtaSection
                             title="Master the Art of Space Warfare"
-                            description=""
+                            description="The Future of Warfare in the Final Frontier"
                             textPosition="center"
                             videoPosition="center"
-                            videoSrc={""}
+                            videoSrc=""
                             withBackground
                             variant="secondary"
                             leadingComponent={
@@ -55,48 +67,47 @@ const Home = () => {
                                     The Future of Warfare in the Final Frontier
                                 </p>
                             }
-                        > <Button size="xl" className="p-7 mt-6 text-xl z-10" variant="outlineSecondary" asChild>
-                                <a href="/home/default">Start free today</a>
-                            </Button></LandingPrimaryVideoCtaSection>
-
-
-
+                        >
+                            <motion.button className="z-10" whileHover={{ scale: 1.05 }}>
+                                <Button size="xl" className="p-7 mt-6 text-xl" variant="outlineSecondary">
+                                    <a href="/home/default">Start free today</a>
+                                </Button>
+                            </motion.button>
+                        </LandingPrimaryVideoCtaSection>
                     </div>
                     <Earth />
                 </section>
 
-                <section className="w-full">
-                    <ThreeTestimonialInline />
-                </section>
-
+                {/* Testimonials Section */}
                 <section className="w-full py-16">
-                    <FourProductFeature />
+                    <Testimonials />
                 </section>
 
-                <section className="w-full">
-                    <SixProductFeature />
-                </section>
-
+                {/* Explore Features Section */}
                 <section className="w-full py-16">
-                    <NineSaleCta />
+                    <ExploreFeature />
+                </section>
+
+                {/* Satellite Threat Feature Section */}
+                <section className="w-full py-16">
+                    <FeatureSatelliteThreat />
+                </section>
+
+                {/* CTA Section */}
+                <section className="w-full py-16">
+                    <CTA />
                 </section>
             </main>
 
-            <div
-                className="fixed top-0 left-0 w-full h-full -z-10"
-                style={{
-                    backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(
-                        ` <svg xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="a" cx="50%" cy="56.6%" r="50%" fx="50%" fy="56.6%" gradientUnits="userSpaceOnUse"><stop offset="0%" style="stop-color:${colors.primary.dark};stop-opacity:0.1"/><stop offset="54.99%" style="stop-color:${colors.primary.darker};stop-opacity:0.1"/><stop offset="100%" style="stop-color:${colors.secondary.darker};stop-opacity:0.1"/></radialGradient></defs><rect width="100%" height="100%" fill="url(#a)"/></svg>`,
-                    )}')`,
-                    backgroundSize: 'cover',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundAttachment: 'fixed',
-                }}
-            ></div>
-
-            <footer className="w-full mt-16">
+            {/* Footer */}
+            <footer className="w-full mt-5 relative z-10">
                 <Footer />
             </footer>
+
+            {/* Solid Background Below SVG */}
+            <div
+                className="absolute top-[520px] left-0 w-full h-[calc(100%-520px)] z-0 from-[#001020] via-[#001530] to-[#000810]"
+            ></div>
         </div>
     );
 };

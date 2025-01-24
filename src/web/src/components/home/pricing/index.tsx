@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import Footer from 'components/footer/Footer';
 import Card from 'components/card';
-import Logo from '../specta/Logo';
-import LandingHeader from '../specta/HomeHeader';
+import Logo from '../landing/Logo';
+import LandingHeader from '../landing/Header';
 
 function Pricing() {
   const [activeButton, setActiveButton] = useState('monthly');
@@ -18,7 +18,7 @@ function Pricing() {
           logoDark={<Logo className="h-9 w-auto" />}
         />
       </header>
-      <div className="relative h-full w-full px-3 font-dm dark:bg-navy-900">
+      <div className="relative h-full w-full px-3 font-dm bg-gradient-to-r from-[#001020] via-[#001530] to-[#000810]">
         {/* Header Content */}
         <div className="mx-auto mt-[96px] flex w-full max-w-screen-md flex-col items-center text-center md:px-3">
           <h2 className="text-[28px] font-bold text-white md:text-[44px]">

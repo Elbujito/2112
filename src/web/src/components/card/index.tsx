@@ -11,7 +11,7 @@ function Card(props: {
         props.default
           ? 'shadow-shadow-500 dark:shadow-none'
           : 'shadow-shadow-100 dark:shadow-none'
-      }  dark:!bg-navy-800 dark:text-white  ${extra}`}
+      }  dark:!bg-[#001A33] dark:text-white  ${extra}`}
       {...rest}
     >
       {children}
